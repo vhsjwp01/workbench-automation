@@ -1,0 +1,930 @@
+====================================================================================================
+|                                            Preparing                                             |
+====================================================================================================
+Execute command:
+  [ cd /home/ICG/pgauthi/workspace/PTVisit/scripts; gmake -f
+  /home/ICG/pgauthi/workspace/PTVisit/scripts/makefile.prepare all ]
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-job/IBBPAS4' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBBPAS4'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBBPAS4'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBBPAS4 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-job/IBIT964' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBIT964'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBIT964'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBIT964 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-job/IBIT853' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBIT853'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBIT853'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBIT853 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-job/IBOE355' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBOE355'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBOE355'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBOE355 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-job/BFOE960' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/BFOE960'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/BFOE960'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/BFOE960 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-job/IBTL60D' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBTL60D'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBTL60D'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-job/IBTL60D to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-proc/IBBPAS4J' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/IBBPAS4J'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/IBBPAS4J'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/IBBPAS4J to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-proc/DBT1STPJ' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBT1STPJ'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBT1STPJ'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBT1STPJ to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-proc/DBT1JOBJ' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBT1JOBJ'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBT1JOBJ'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBT1JOBJ to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-proc/DBP1STPJ' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBP1STPJ'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBP1STPJ'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBP1STPJ to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-proc/FTPBATCH' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/FTPBATCH'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/FTPBATCH'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/FTPBATCH to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-proc/DBP1JOBJ' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBP1JOBJ'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBP1JOBJ'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-proc/DBP1JOBJ to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBBP912G' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBBP912G'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBBP912G'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBBP912G to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBCDATES' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBCDATES'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBCDATES'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBCDATES to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBBPSECO' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBBPSECO'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBBPSECO'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBBPSECO to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBOE610G' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBOE610G'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBOE610G'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBOE610G to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBFP000N' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBFP000N'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBFP000N'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBFP000N to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZADLAAT0' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAAT0'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAAT0'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAAT0 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBXS006B' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS006B'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS006B'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS006B to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBTL0ZON' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBTL0ZON'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBTL0ZON'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBTL0ZON to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBOE503N' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBOE503N'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBOE503N'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBOE503N to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZOMXCASE' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOMXCASE'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOMXCASE'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOMXCASE to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZADRABND' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADRABND'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADRABND'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADRABND to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBXS079B' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS079B'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS079B'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS079B to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBWORDSG' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBWORDSG'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBWORDSG'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBWORDSG to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZIIYNCHK' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIIYNCHK'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIIYNCHK'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIIYNCHK to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBBP000G' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBBP000G'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBBP000G'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBBP000G to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZADLAATX' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAATX'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAATX'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAATX to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZINUMERI' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZINUMERI'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZINUMERI'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZINUMERI to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZOJULIAN' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOJULIAN'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOJULIAN'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOJULIAN to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZIFORMAT' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIFORMAT'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIFORMAT'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIFORMAT to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBXS009B' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS009B'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS009B'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS009B to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBXS012B' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS012B'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS012B'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS012B to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZIFULLNO' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIFULLNO'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIFULLNO'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIFULLNO to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZADLAATI' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAATI'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAATI'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAATI to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZADLAATR' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAATR'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAATR'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZADLAATR to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZDRASTG1' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZDRASTG1'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZDRASTG1'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZDRASTG1 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZOFORMAT' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOFORMAT'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOFORMAT'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOFORMAT to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBXS0ZAG' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS0ZAG'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS0ZAG'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS0ZAG to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZOCENTER' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOCENTER'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOCENTER'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOCENTER to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZOHEADNG' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOHEADNG'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOHEADNG'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZOHEADNG to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBXS016B' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS016B'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS016B'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS016B to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZIUPCASE' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIUPCASE'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIUPCASE'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZIUPCASE to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBOE501N' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBOE501N'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBOE501N'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBOE501N to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/IBXS060B' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS060B'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS060B'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/IBXS060B to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-cics/ZILALPHA' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZILALPHA'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZILALPHA'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-cics/ZILALPHA to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ABENDFIN' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ABENDFIN'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ABENDFIN'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ABENDFIN to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFK4' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK4'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK4'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK4 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP912O' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912O'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912O'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912O to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP000' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/FBPREVAL' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/FBPREVAL'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/FBPREVAL'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/FBPREVAL to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZXS0ZAU' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAU'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAU'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAU to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXFERT1' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERT1'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERT1'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERT1 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFK3O' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK3O'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK3O'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK3O to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/OUTTRM9D' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OUTTRM9D'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OUTTRM9D'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OUTTRM9D to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZWORDSO' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSO'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSO'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSO to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFKOT' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKOT'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKOT'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKOT to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFKSAV' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKSAV'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKSAV'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKSAV to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/VPRRQ' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/VPRRQ'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/VPRRQ'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/VPRRQ to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBSTGSTD' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBSTGSTD'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBSTGSTD'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBSTGSTD to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXFERFB' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERFB'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERFB'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERFB to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/XSMENUC' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/XSMENUC'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/XSMENUC'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/XSMENUC to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CUSABEND' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CUSABEND'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CUSABEND'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CUSABEND to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/DCITM' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/DCITM'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/DCITM'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/DCITM to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/BPNTFLLW' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/BPNTFLLW'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/BPNTFLLW'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/BPNTFLLW to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/FF00080' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/FF00080'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/FF00080'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/FF00080 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/DCITAL' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/DCITAL'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/DCITAL'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/DCITAL to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZOE610' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZWORDSU' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSU'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSU'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSU to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP912U' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912U'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912U'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912U to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CDBCHDTR' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CDBCHDTR'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CDBCHDTR'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CDBCHDTR to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/OORLN' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OORLN'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OORLN'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OORLN to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CBFP060I' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFP060I'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFP060I'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFP060I to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/OLMUENA' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMUENA'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMUENA'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMUENA to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/OUTTERM' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OUTTERM'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OUTTERM'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OUTTERM to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZOE610O' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610O'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610O'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610O to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CMQODV' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQODV'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQODV'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQODV to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXFERBP' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERBP'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERBP'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERBP to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/RSITAL' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/RSITAL'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/RSITAL'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/RSITAL to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/TLEXCP' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/TLEXCP'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/TLEXCP'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/TLEXCP to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/DARPROF' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/DARPROF'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/DARPROF'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/DARPROF to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/COBRWSWR' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/COBRWSWR'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/COBRWSWR'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/COBRWSWR to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CBFPAREA' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFPAREA'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFPAREA'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFPAREA to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ASSOCIAT' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ASSOCIAT'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ASSOCIAT'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ASSOCIAT to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZWORDSI' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSI'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSI'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSI to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXFER05' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFER05'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFER05'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFER05 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP912S' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912S'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912S'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912S to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ACAL' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ACAL'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ACAL'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ACAL to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CUOR' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CUOR'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CUOR'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CUOR to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXS060C' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS060C'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS060C'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS060C to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CMSKIT' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMSKIT'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMSKIT'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMSKIT to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXS009C' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS009C'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS009C'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS009C to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFKPG' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKPG'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKPG'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKPG to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP912B' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912B'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912B'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912B to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXCASEC' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXCASEC'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXCASEC'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXCASEC to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/FASTPATH' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/FASTPATH'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/FASTPATH'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/FASTPATH to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBCABEND' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBCABEND'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBCABEND'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBCABEND to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CBFP060O' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFP060O'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFP060O'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFP060O to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXS006C' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS006C'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS006C'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS006C to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CBFPLINK' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFPLINK'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFPLINK'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBFPLINK to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CBASTBRW' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBASTBRW'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBASTBRW'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CBASTBRW to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXFERDT' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERDT'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERDT'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERDT to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/OECT' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OECT'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OECT'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OECT to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/OLMU' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMU'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMU'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMU to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/BP' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/BP'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/BP'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/BP to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP912I' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912I'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912I'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912I to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZXS0ZA' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZA'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZA'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZA to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZOE610S' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610S'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610S'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610S to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ZMERGREC3F' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ZMERGREC3F'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ZMERGREC3F'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ZMERGREC3F to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/PROATTR' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/PROATTR'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/PROATTR'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/PROATTR to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ORSG' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORSG'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORSG'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORSG to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/SHPLOC' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/SHPLOC'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/SHPLOC'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/SHPLOC to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZWORDS' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDS'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDS'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDS to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZXS0ZAI' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAI'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAI'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAI to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/TSSCPLC' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/TSSCPLC'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/TSSCPLC'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/TSSCPLC to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP000O' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000O'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000O'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000O to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBWKAREA' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBWKAREA'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBWKAREA'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBWKAREA to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP000B' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000B'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000B'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000B to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZXS0ZAB' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAB'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAB'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAB to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXS016C' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS016C'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS016C'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS016C to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CMQMD2V' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQMD2V'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQMD2V'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQMD2V to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ORDREC5' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORDREC5'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORDREC5'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORDREC5 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/BLAC' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/BLAC'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/BLAC'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/BLAC to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CDBCHDT' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CDBCHDT'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CDBCHDT'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CDBCHDT to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFK3M' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK3M'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK3M'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK3M to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IIACPF' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IIACPF'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IIACPF'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IIACPF to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZWORDSB' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSB'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSB'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSB to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/OLMUEN' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMUEN'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMUEN'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMUEN to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFK5' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK5'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK5'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK5 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/OPRATID' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OPRATID'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OPRATID'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OPRATID to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP912' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP912 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZOE610B' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610B'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610B'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610B to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXFERTL' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERTL'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERTL'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERTL to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ZTABFILE' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ZTABFILE'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ZTABFILE'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ZTABFILE to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/OLMUENXR' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMUENXR'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMUENXR'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OLMUENXR to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP000S' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000S'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000S'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000S to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/SECCHK' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/SECCHK'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/SECCHK'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/SECCHK to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ORCG' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORCG'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORCG'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORCG to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZOE610U' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610U'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610U'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610U to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/OEMD' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OEMD'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OEMD'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OEMD to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXS012C' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS012C'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS012C'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS012C to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZOE610I' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610I'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610I'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZOE610I to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZXS0ZAS' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAS'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAS'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAS to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/XSMENUW' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/XSMENUW'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/XSMENUW'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/XSMENUW to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CTMESTPD' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CTMESTPD'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CTMESTPD'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CTMESTPD to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/SQLCA' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/SQLCA'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/SQLCA'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/SQLCA to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXS079C' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS079C'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS079C'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXS079C to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBOMITEM' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBOMITEM'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBOMITEM'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBOMITEM to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP000U' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000U'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000U'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000U to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CTMESTPP' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CTMESTPP'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CTMESTPP'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CTMESTPP to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFKOTM' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKOTM'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKOTM'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKOTM to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXFEROE' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFEROE'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFEROE'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFEROE to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXFERPG' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERPG'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERPG'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERPG to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ITM' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ITM'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ITM'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ITM to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBXFERWK' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERWK'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERWK'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBXFERWK to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/COMMIT' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/COMMIT'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/COMMIT'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/COMMIT to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ACSY' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ACSY'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ACSY'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ACSY to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/MENUTBLE' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/MENUTBLE'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/MENUTBLE'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/MENUTBLE to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/HOLDTEMP' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/HOLDTEMP'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/HOLDTEMP'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/HOLDTEMP to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFKABC' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKABC'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKABC'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFKABC to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFK3' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK3'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK3'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK3 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZWORDSS' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSS'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSS'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZWORDSS to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CUSCOR' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CUSCOR'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CUSCOR'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CUSCOR to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/OE_ORD_TRMN_COND' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OE_ORD_TRMN_COND'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OE_ORD_TRMN_COND'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/OE_ORD_TRMN_COND to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CMQV' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQV'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQV'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQV to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ABENDFIX' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ABENDFIX'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ABENDFIX'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ABENDFIX to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZXS0ZAO' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAO'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAO'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZXS0ZAO to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CMQMDV' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQMDV'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQMDV'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQMDV to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CMQGMOV' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQGMOV'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQGMOV'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQGMOV to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/ORTRCN' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORTRCN'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORTRCN'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/ORTRCN to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/CMQPMOV' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQPMOV'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQPMOV'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/CMQPMOV to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFK1' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK1'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK1'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK1 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFK09A' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK09A'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK09A'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK09A to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/TLSTOP' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/TLSTOP'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/TLSTOP'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/TLSTOP to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IBPFK2' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK2'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK2'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IBPFK2 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/copy/IZBP000I' '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000I'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000I'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/copy/IZBP000I to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/map/IZBP000' '/home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZBP000'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZBP000'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZBP000 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/map/IZOE610' '/home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZOE610'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZOE610'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZOE610 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/map/IZXS0ZA' '/home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZXS0ZA'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZXS0ZA'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZXS0ZA to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/map/IZWORDS' '/home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZWORDS'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZWORDS'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZWORDS to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/map/IZBP912' '/home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZBP912'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZBP912'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/map/IZBP912 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBCABTBL' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBCABTBL'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBCABTBL'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBCABTBL to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/ZADMAATR' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/ZADMAATR'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/ZADMAATR'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/ZADMAATR to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBBPAD5P' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD5P'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD5P'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD5P to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBOE960P' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBOE960P'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBOE960P'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBOE960P to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBBPAD4P' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD4P'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD4P'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD4P to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBMI360P' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBMI360P'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBMI360P'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBMI360P to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBOM790P' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBOM790P'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBOM790P'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBOM790P to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/ZADMAATX' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/ZADMAATX'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/ZADMAATX'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/ZADMAATX to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBCABEND' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBCABEND'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBCABEND'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBCABEND to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBBPAD2P' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD2P'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD2P'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD2P to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBBPAD6P' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD6P'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD6P'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD6P to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBIT853P' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBIT853P'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBIT853P'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBIT853P to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBBPAD1P' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD1P'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD1P'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBBPAD1P to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/ZADMAAT0' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/ZADMAAT0'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/ZADMAAT0'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/ZADMAAT0 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/cobol-batch/IBOE302P' '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBOE302P'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBOE302P'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/cobol-batch/IBOE302P to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/XS_ONLN_MENU_ENTR' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU_ENTR'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU_ENTR'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU_ENTR to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/BP_FAST_PATH' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_FAST_PATH'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_FAST_PATH'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_FAST_PATH to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/BP_SHIPPING_LOCATION' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_SHIPPING_LOCATION'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_SHIPPING_LOCATION'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_SHIPPING_LOCATION to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/BP_BUSINESS_PARTNER' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_BUSINESS_PARTNER'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_BUSINESS_PARTNER'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_BUSINESS_PARTNER to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/NV_CUST_SPCL_ORD' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/NV_CUST_SPCL_ORD'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/NV_CUST_SPCL_ORD'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/NV_CUST_SPCL_ORD to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/OM_ORD_CHG' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OM_ORD_CHG'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OM_ORD_CHG'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OM_ORD_CHG to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/IT_ITEM' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/IT_ITEM'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/IT_ITEM'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/IT_ITEM to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/NV_OPEN_ORD_LINE' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/NV_OPEN_ORD_LINE'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/NV_OPEN_ORD_LINE'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/NV_OPEN_ORD_LINE to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/OE_DC_ITEM_ALOC' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_DC_ITEM_ALOC'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_DC_ITEM_ALOC'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_DC_ITEM_ALOC to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/XS_ONLN_MENU_ENT_XREF' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU_ENT_XREF'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU_ENT_XREF'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU_ENT_XREF to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/NV_DC_ITEM' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/NV_DC_ITEM'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/NV_DC_ITEM'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/NV_DC_ITEM to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/CCSDTA_DARPROF' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/CCSDTA_DARPROF'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/CCSDTA_DARPROF'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/CCSDTA_DARPROF to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/OE_OE_CNTL' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_OE_CNTL'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_OE_CNTL'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_OE_CNTL to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/PB_ASSC_ALRT' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/PB_ASSC_ALRT'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/PB_ASSC_ALRT'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/PB_ASSC_ALRT to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/OE_CUST_ORD' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_CUST_ORD'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_CUST_ORD'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_CUST_ORD to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/XS_ONLN_MENU_II_ASSC' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU_II_ASSC'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU_II_ASSC'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU_II_ASSC to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/OE_OE_MODU' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_OE_MODU'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_OE_MODU'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_OE_MODU to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/OE_VER_PRRQ_REC_TP' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_VER_PRRQ_REC_TP'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_VER_PRRQ_REC_TP'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_VER_PRRQ_REC_TP to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/BP_ASSOCIATE_POSITION' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_ASSOCIATE_POSITION'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_ASSOCIATE_POSITION'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_ASSOCIATE_POSITION to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/BP_APLC_SYS' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_APLC_SYS'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_APLC_SYS'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_APLC_SYS to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/XS_ONLN_MENU' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/XS_ONLN_MENU to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/BP_BP_NOTE_FOLLOWUP' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_BP_NOTE_FOLLOWUP'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_BP_NOTE_FOLLOWUP'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_BP_NOTE_FOLLOWUP to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/OE_ORD_STGE' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_ORD_STGE'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_ORD_STGE'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_ORD_STGE to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/BP_BILL_ACCT' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_BILL_ACCT'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_BILL_ACCT'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_BILL_ACCT to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/OE_RSRV_ITEM_ALOC' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_RSRV_ITEM_ALOC'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_RSRV_ITEM_ALOC'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_RSRV_ITEM_ALOC to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/OE_ORD_TRMN_COND' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_ORD_TRMN_COND'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_ORD_TRMN_COND'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/OE_ORD_TRMN_COND to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/IT_CSTM_STK_ITEM' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/IT_CSTM_STK_ITEM'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/IT_CSTM_STK_ITEM'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/IT_CSTM_STK_ITEM to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/ddl/BP_II_ASSC_PROFILE' '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_II_ASSC_PROFILE'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_II_ASSC_PROFILE'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/ddl/BP_II_ASSC_PROFILE to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-sysin/FBPREVAL' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/FBPREVAL'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/FBPREVAL'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/FBPREVAL to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-sysin/IBOE3552' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/IBOE3552'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/IBOE3552'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/IBOE3552 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-sysin/OM790S01' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/OM790S01'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/OM790S01'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/OM790S01 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-sysin/IBTL60EC' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/IBTL60EC'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/IBTL60EC'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/IBTL60EC to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-sysin/IBOE3551' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/IBOE3551'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/IBOE3551'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/IBOE3551 to UNIX format ...
+cp -u '/home/ICG/pgauthi/workspace/PTVisit/imported/jcl-sysin/REPRO' '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/REPRO'
+          Format source file names
+/usr/bin/dos2unix '/home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/REPRO'
+dos2unix: converting file /home/ICG/pgauthi/workspace/PTVisit/prepared/jcl-sysin/REPRO to UNIX format ...
+====================================================================================================
+|                                       Preparation is done                                        |
+====================================================================================================
+PTVisit Run Task prepare.pl  Process Finished

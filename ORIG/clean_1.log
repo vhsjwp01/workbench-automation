@@ -1,0 +1,106 @@
+Please select a project before clicking menu.
+====================================================================================================
+|                                            Clean up                                              |
+====================================================================================================
+====================================================================================================
+|                                    clean up analyze results                                      |
+====================================================================================================
+====================================================================================================
+|                                   clean up migration targets                                     |
+====================================================================================================
+Execute command:
+  [ find /home/ICG/pgauthi/workspace/PTVisit/target/Master-copy -name "*.cpy"
+  -o -name "*.clean"  2>/dev/null| xargs rm -f ]
+Execute command:
+  [ find /home/ICG/pgauthi/workspace/PTVisit/target/SQL -name "*.lst"
+  2>/dev/null | xargs rm -f ]
+Execute command:
+  [ find /home/ICG/pgauthi/workspace/PTVisit/target -not -name "." -a -not
+  -name "*.lst" -a -not -name "*.lis" -a -not -name "*.int" -a -not -name
+  "*.idy" -a -not -name "*.gnt" -a -not -name "*.mpdef" -a -not -name "*.cpy"
+  -a -not -name "makefile" -a -not -name "*.[ch]" -a -not -type d  2>/dev/null
+  | xargs rm -f ]
+Execute command:
+  [ find /home/ICG/pgauthi/workspace/PTVisit/target/../param/dynamic-config
+  -type f 2>/dev/null | xargs rm -f ]
+====================================================================================================
+|                                     clean up build scripts                                       |
+====================================================================================================
+Execute command:
+  [ gmake -C /home/ICG/pgauthi/workspace/PTVisit/target clean ]
+gmake: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/map'
+rm -rf IZBP000.mpdef IZBP912.mpdef IZOE610.mpdef IZWORDS.mpdef IZXS0ZA.mpdef  *.cpy
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/map'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/cobol-batch'
+rm -rf c *.lst *.lis *.int *.idy IBCABEND.gnt IBCABTBL.gnt IBMI360P.gnt IBOE960P.gnt IBOM790P.gnt ZADMAAT0.gnt ZADMAATR.gnt ZADMAATX.gnt IBBPAD1P.gnt IBBPAD2P.gnt IBBPAD4P.gnt IBBPAD5P.gnt IBBPAD6P.gnt IBIT853P.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/cobol-batch'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/DML'
+rm -rf c *.lst *.lis *.int *.idy close_all_files.gnt close_all_files_STOCKAT.gnt DL_VSTDTABL.gnt dml_locking.gnt init_all_files.gnt init_all_files_STOCKAT.gnt mwgetfileinfo.gnt UL_VSTDTABL.gnt RM_VSTDTABL.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/DML'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/rdbms/CCSDTA/src'
+rm -rf c *.lst *.lis *.int *.idy MOD_DARPROF.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/rdbms/CCSDTA/src'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/rdbms/OE/src'
+rm -rf c *.lst *.lis *.int *.idy MOD_CUST_ORD.gnt MOD_DC_ITEM_ALOC.gnt MOD_OE_CNTL.gnt MOD_OE_MODU.gnt MOD_ORD_STGE.gnt MOD_ORD_TRMN_COND.gnt MOD_RSRV_ITEM_ALOC.gnt MOD_VER_PRRQ_REC_TP.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/rdbms/OE/src'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/rdbms/BP/src'
+rm -rf c *.lst *.lis *.int *.idy MOD_APLC_SYS.gnt MOD_ASSOCIATE_POSITION.gnt MOD_BILL_ACCT.gnt MOD_BP_NOTE_FOLLOWUP.gnt MOD_BUSINESS_PARTNER.gnt MOD_FAST_PATH.gnt MOD_II_ASSC_PROFILE.gnt MOD_SHIPPING_LOCATION.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/rdbms/BP/src'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/rdbms/IT/src'
+rm -rf c *.lst *.lis *.int *.idy MOD_CSTM_STK_ITEM.gnt MOD_ITEM.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/rdbms/IT/src'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/rdbms/NV/src'
+rm -rf c *.lst *.lis *.int *.idy MOD_CUST_SPCL_ORD.gnt MOD_DC_ITEM.gnt MOD_OPEN_ORD_LINE.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/rdbms/NV/src'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/file/STOCKAT'
+rm -rf c *.lst *.lis *.int *.idy RELFILE-GDG00078.gnt RELFILE-NF03587.gnt RELFILE-NF03588.gnt RELTABLE-VSTDTABL.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/reload/file/STOCKAT'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/DSNUTILS/CCSDTA'
+rm -rf c *.lst *.lis *.int *.idy CCSDTA-DARPROF-L.gnt CCSDTA-DARPROF-U.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/DSNUTILS/CCSDTA'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/DSNUTILS/OE'
+rm -rf c *.lst *.lis *.int *.idy OE-CUST_ORD-L.gnt OE-CUST_ORD-U.gnt OE-DC_ITEM_ALOC-L.gnt OE-DC_ITEM_ALOC-U.gnt OE-OE_CNTL-L.gnt OE-OE_CNTL-U.gnt OE-OE_MODU-L.gnt OE-OE_MODU-U.gnt OE-ORD_STGE-L.gnt OE-ORD_STGE-U.gnt OE-ORD_TRMN_COND-L.gnt OE-ORD_TRMN_COND-U.gnt OE-RSRV_ITEM_ALOC-L.gnt OE-RSRV_ITEM_ALOC-U.gnt OE-VER_PRRQ_REC_TP-L.gnt OE-VER_PRRQ_REC_TP-U.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/DSNUTILS/OE'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/DSNUTILS/BP'
+rm -rf c *.lst *.lis *.int *.idy BP-APLC_SYS-L.gnt BP-APLC_SYS-U.gnt BP-ASSOCIATE_POSITION-L.gnt BP-ASSOCIATE_POSITION-U.gnt BP-BILL_ACCT-L.gnt BP-BILL_ACCT-U.gnt BP-BP_NOTE_FOLLOWUP-L.gnt BP-BP_NOTE_FOLLOWUP-U.gnt BP-BUSINESS_PARTNER-L.gnt BP-BUSINESS_PARTNER-U.gnt BP-FAST_PATH-L.gnt BP-FAST_PATH-U.gnt BP-II_ASSC_PROFILE-L.gnt BP-II_ASSC_PROFILE-U.gnt BP-SHIPPING_LOCATION-L.gnt BP-SHIPPING_LOCATION-U.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/DSNUTILS/BP'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/DSNUTILS/IT'
+rm -rf c *.lst *.lis *.int *.idy IT-CSTM_STK_ITEM-L.gnt IT-CSTM_STK_ITEM-U.gnt IT-ITEM-L.gnt IT-ITEM-U.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/DSNUTILS/IT'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/DSNUTILS/NV'
+rm -rf c *.lst *.lis *.int *.idy NV-CUST_SPCL_ORD-L.gnt NV-CUST_SPCL_ORD-U.gnt NV-DC_ITEM-L.gnt NV-DC_ITEM-U.gnt NV-OPEN_ORD_LINE-L.gnt NV-OPEN_ORD_LINE-U.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/DSNUTILS/NV'
+gmake[1]: Entering directory `/home/ICG/pgauthi/workspace/PTVisit/target/cobol-cics'
+rm -rf c *.lst *.lis *.int *.idy IBBPSECO.gnt IBCDATES.gnt IBXS012B.gnt IBXS016B.gnt IBXS079B.gnt ZADLAAT0.gnt ZADLAATI.gnt ZADLAATR.gnt ZADLAATX.gnt ZADRABND.gnt ZDRASTG1.gnt ZIFORMAT.gnt ZIFULLNO.gnt ZIIYNCHK.gnt ZILALPHA.gnt ZINUMERI.gnt ZIUPCASE.gnt ZOCENTER.gnt ZOFORMAT.gnt ZOHEADNG.gnt ZOJULIAN.gnt ZOMXCASE.gnt IBBP000G.gnt IBBP912G.gnt IBFP000N.gnt IBOE501N.gnt IBOE503N.gnt IBOE610G.gnt IBTL0ZON.gnt IBWORDSG.gnt IBXS006B.gnt IBXS009B.gnt IBXS060B.gnt IBXS0ZAG.gnt 
+gmake[1]: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target/cobol-cics'
+gmake: Leaving directory `/home/ICG/pgauthi/workspace/PTVisit/target'
+Execute command:
+  [ . /home/ICG/pgauthi/workspace/PTVisit/configure/BATCH_RT/setenv.build && rm
+  -rf ${TUXCONFIG} 2>/dev/null ]
+Execute command:
+  [ . /home/ICG/pgauthi/workspace/PTVisit/configure/CICS_RT/setenv.build && rm
+  -rf ${TUXCONFIG} 2>/dev/null ]
+====================================================================================================
+|                                  clean up CICS configurations                                    |
+====================================================================================================
+====================================================================================================
+|                                  clean up BATCH configurations                                   |
+====================================================================================================
+====================================================================================================
+|                                   clean up IMS configurations                                    |
+====================================================================================================
+====================================================================================================
+|                                 clean up TUXEDO configurations                                   |
+====================================================================================================
+====================================================================================================
+|                                          clean up all                                            |
+====================================================================================================
+Execute command:
+  [ cd /home/ICG/pgauthi/workspace/PTVisit && find . -maxdepth 1 -not -name "."
+  -a -not -name "param" -a -not -name "scripts" -a -not -name ".project"
+  2>/dev/null |xargs rm -fr && rm -f ./param/dynamic-config/* 2>/dev/null ]
+====================================================================================================
+|                                        Clean up is done                                          |
+====================================================================================================
+PTVisit Run Task reset.pl all Process Finished
