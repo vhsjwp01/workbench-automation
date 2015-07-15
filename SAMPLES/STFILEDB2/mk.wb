@@ -1,0 +1,53 @@
+#!/bin/ksh
+
+echo "Covert ..."
+cd $SOURCE
+MKs=" \
+	catalog \
+	DataConvert \
+	trad \
+	reconcil_copy \
+	trad_jcl \
+"
+for i in $MKs
+do
+	echo "make $i"
+	make $i > $PROJECT/$i.log 2>&1
+	if [ $? -ne 0 ]
+	then
+		echo "failed, please see $PROJECT/$i.log"
+		exit 1
+	fi
+done
+
+echo "replace DBNAME to DBLOGIN ..."
+cd $PROJECT
+KSHs=" \
+	trf/reload/file/STFILEDB2/loadtable-ODCSF0.ksh \
+	trf/SQL/file/STFILEDB2/ifemptytable-ODCSF0.ksh \
+	trf/SQL/file/STFILEDB2/cleantable-ODCSF0.ksh \
+	trf/SQL/file/STFILEDB2/createtable-ODCSF0.ksh \
+	trf/SQL/file/STFILEDB2/ifexisttable-ODCSF0.ksh \
+	trf/SQL/file/STFILEDB2/droptable-ODCSF0.ksh \
+"	
+
+for i in $KSHs
+do
+	sed 's/MT_DB_DBNAME/MT_DB_LOGIN/g' $i > $i.tmp
+	mv $i.tmp $i
+done
+
+echo "Package ..."
+cd $PROJECT
+cp -r ${REFINEDIR}/../fixed-copy trf/
+FILEs=" \
+	data_source \
+	trf \
+	trf-jcl \
+	batch.sh \
+	reload.sh \
+	tailor.sh \
+	setenv.template \
+	readme.txt \
+"
+tar cvf TARGET_`expr $PROJECT : '.*/\(.*\)'`.tar $FILEs > tar.log 2>&1

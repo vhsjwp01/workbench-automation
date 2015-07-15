@@ -1,0 +1,218 @@
+***********************************************************************
+*      MAPSET DE LISTE DES CLIENTS
+***********************************************************************
+*
+*----------------------------------------------------------------------
+* DEFINITION DE LA MAPSET : RSSAM03
+*----------------------------------------------------------------------
+*
+RSSAM03 DFHMSD TYPE=DSECT,                                             X
+               MODE=INOUT,                                             X
+               LANG=COBOL,                                             X
+               TIOAPFX=YES,                                            X
+               CTRL=FREEKB,                                            X
+               STORAGE=AUTO
+*
+*----------------------------------------------------------------------
+* DEFINITION DE LA MAP    : RSSAM03
+*----------------------------------------------------------------------
+*
+RSSAM03 DFHMDI SIZE=(24,80),                                           X
+               COLUMN=1,                                               X
+               LINE=1,                                                 X
+               JUSTIFY=LEFT
+*
+*----------------------------------------------------------------------
+* DEFINITION DES CHAMPS DE LA MAP "LISTE DES CLIENTS"
+*----------------------------------------------------------------------
+*
+VPGMSCR DFHMDF POS=(01,01),                                            X
+               LENGTH=08,                                              X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+        DFHMDF POS=(01,21),                                            X
+               LENGTH=14,                                              X
+               INITIAL='Customers list',                               X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+VDATE   DFHMDF POS=(01,70),                                            X
+               LENGTH=10,                                              X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+VTRANS  DFHMDF POS=(02,01),                                            X
+               LENGTH=04,                                              X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+        DFHMDF POS=(04,01),                                            X
+               LENGTH=79,                                              X
+               INITIAL='-----------------------------------------------X
+               --------------------------------',                      X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(05,01),                                            X
+               LENGTH=78,                                              X
+               INITIAL='Sel ID         Last name                      FX
+               irst name            Birth date',                       X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(06,01),                                            X
+               LENGTH=79,                                              X
+               INITIAL='-----------------------------------------------X
+               --------------------------------',                      X
+               ATTRB=(ASKIP,NORM)
+*
+VSELID0 DFHMDF POS=(08,01),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(UNPROT,NORM,FSET,IC)
+*
+        DFHMDF POS=(08,03),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(ASKIP,DRK)
+*
+VLIBID0 DFHMDF POS=(08,05),                                            X
+               LENGTH=75,                                              X
+               ATTRB=(PROT,NORM,FSET)
+*
+VSELID1 DFHMDF POS=(09,01),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+        DFHMDF POS=(09,03),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(ASKIP,DRK)
+*
+VLIBID1 DFHMDF POS=(09,05),                                            X
+               LENGTH=75,                                              X
+               ATTRB=(PROT,NORM,FSET)
+*
+VSELID2 DFHMDF POS=(10,01),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+        DFHMDF POS=(10,03),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(ASKIP,DRK)
+*
+VLIBID2 DFHMDF POS=(10,05),                                            X
+               LENGTH=75,                                              X
+               ATTRB=(PROT,NORM,FSET)
+*
+VSELID3 DFHMDF POS=(11,01),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+        DFHMDF POS=(11,03),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(ASKIP,DRK)
+*
+VLIBID3 DFHMDF POS=(11,05),                                            X
+               LENGTH=75,                                              X
+               ATTRB=(PROT,NORM,FSET)
+*
+VSELID4 DFHMDF POS=(12,01),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+        DFHMDF POS=(12,03),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(ASKIP,DRK)
+*
+VLIBID4 DFHMDF POS=(12,05),                                            X
+               LENGTH=75,                                              X
+               ATTRB=(PROT,NORM,FSET)
+*
+VSELID5 DFHMDF POS=(13,01),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+        DFHMDF POS=(13,03),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(ASKIP,DRK)
+*
+VLIBID5 DFHMDF POS=(13,05),                                            X
+               LENGTH=75,                                              X
+               ATTRB=(PROT,NORM,FSET)
+*
+VSELID6 DFHMDF POS=(14,01),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+        DFHMDF POS=(14,03),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(ASKIP,DRK)
+*
+VLIBID6 DFHMDF POS=(14,05),                                            X
+               LENGTH=75,                                              X
+               ATTRB=(PROT,NORM,FSET)
+*
+VSELID7 DFHMDF POS=(15,01),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+        DFHMDF POS=(15,03),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(ASKIP,DRK)
+*
+VLIBID7 DFHMDF POS=(15,05),                                            X
+               LENGTH=75,                                              X
+               ATTRB=(PROT,NORM,FSET)
+*
+VSELID8 DFHMDF POS=(16,01),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+        DFHMDF POS=(16,03),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(ASKIP,DRK)
+*
+VLIBID8 DFHMDF POS=(16,05),                                            X
+               LENGTH=75,                                              X
+               ATTRB=(PROT,NORM,FSET)
+*
+VSELID9 DFHMDF POS=(17,01),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+        DFHMDF POS=(17,03),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(ASKIP,DRK)
+*
+VLIBID9 DFHMDF POS=(17,05),                                            X
+               LENGTH=75,                                              X
+               ATTRB=(PROT,NORM,FSET)
+*
+        DFHMDF POS=(20,01),                                            X
+               LENGTH=79,                                              X
+               INITIAL='-----------------------------------------------X
+               --------------------------------',                      X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(21,03),                                            X
+               LENGTH=59,                                              X
+               INITIAL='-PF7: page up -PF8: page down -PF3: return to pX
+               revious menu',                                          X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(22,03),                                            X
+               LENGTH=74,                                              X
+               INITIAL='-Info: Enter a non blank character and press EnX
+               ter to view customer''s data',                          X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(23,01),                                            X
+               LENGTH=79,                                              X
+               INITIAL='-----------------------------------------------X
+               --------------------------------',                      X
+               ATTRB=(ASKIP,NORM)
+*
+VMESS   DFHMDF POS=(24,01),                                            X
+               LENGTH=79,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+*----------------------------------------------------------------------
+* FIN DU MAPSET
+*----------------------------------------------------------------------
+*
+        DFHMSD  TYPE=FINAL
+        END
+*

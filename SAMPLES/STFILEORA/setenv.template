@@ -1,0 +1,94 @@
+#
+# General
+#
+export PS1='$PWD> '
+export LANG=C
+
+export OS_TYPE=$(uname -s)
+
+#
+# Cobol
+#
+# export COB="COBOL-IT"
+case ${COB} in
+	COBOL-IT)
+		cobdir="COBOLITDIR"
+		coblib="COB_LIBRARY_PATH"
+		export $cobdir=##COBDIR##
+		export COB_ENABLE_XA=1
+		;;
+	*)
+		cobdir="COBDIR"
+		coblib="COBPATH"
+		export $cobdir=##COBDIR##
+		;;
+esac
+eval cdval="$"$cobdir
+export OBJECT_MODE=64
+
+#
+# Oracle
+#
+export ORACLE_HOME=##ORACLE_HOME##
+export ORACLE_CLIENT=##ORACLE_HOME##
+export ORACLE_SID=##ORACLE_SID##
+export DBUSER=##DBUSER##
+export DBPASSWORD=##DBPASSWORD##
+export DBCONNECT=${DBUSER}/${DBPASSWORD}@${ORACLE_SID}
+
+# If use Oracle database
+export NLS_LANG=american_america.AL32UTF8
+export NLS_DATE_FORMAT="YYYY/MM/DD"
+
+#
+# Tuxedo
+#
+export TUXDIR=##TUXDIR##
+export APPHOME=${PWD}/trf
+# export ULOGPFX="${APPHOME}/LOGS/log/ULOG"
+
+#
+# KIXEDO RunTime Environment Variables
+#
+export ARTDIR=##ARTDIR##
+export KIXDIR=${ARTDIR}/Cics_RT
+export JESDIR=${ARTDIR}/Batch_RT
+
+export $coblib=${APPHOME}/reload/file/STFILEORA:${APPHOME}/DML:${APPHOME}/BATCH:${APPHOME}/CICS:${KIXDIR}/bin
+export COBCPY=${KIXDIR}/cpylib:${APPHOME}/fixed-copy:${APPHOME}/reload/copy:${APPHOME}/Master-copy/COPY
+export PCCINCLUDE="include=${KIXDIR}/cpylib, include=${APPHOME}/Master-copy/COPY"
+export PERL5LIB=${KIXDIR}/tools
+
+export PDKSH=##PDKSH##
+
+export KIX_CWA_IPCKEY=##KIX_CWA_IPCKEY##	# CWA IPCKEY Number
+export KIX_CWA_SIZE=4096                	# CWA size
+
+export JES_QSPACE_IPCKEY=##JES_QSPACE_IPCKEY##
+
+#
+# Path & Libpath
+#
+export PATH=${PATH}:${TUXDIR}/bin:${ORACLE_HOME}/bin:${ORACLE_CLIENT}/bin:${cdval}/bin:${KIXDIR}/tools:${KIXDIR}/bin:${JESDIR}/bin:${JESDIR}/ejr
+case $OS_TYPE in
+	AIX)
+		export LIBPATH=${TUXDIR}/lib:${ORACLE_HOME}/lib:${cdval}/lib:${KIXDIR}/lib
+		;;
+	HP-UX)
+		export SHLIB_PATH=${TUXDIR}/lib:${ORACLE_HOME}/lib:${cdval}/lib:${KIXDIR}/lib
+		export LD_LIBRARY_PATH=${SHLIB_PATH}
+		;;
+	*)
+		export LD_LIBRARY_PATH=${TUXDIR}/lib:${ORACLE_HOME}/lib:${cdval}/lib:${KIXDIR}/lib
+		;;
+esac
+
+export DATA_SOURCE=${PWD}/data_source
+export DATA=${PWD}/data
+export RDB_DATA=${PWD}/trf/data
+export DDL=${PWD}/trf/SQL/file
+
+mkdir -p ${DATA}
+
+# To enable "catalog" feature, set MT_USE_FILE_CATALOG=yes
+#export MT_USE_FILE_CATALOG=yes

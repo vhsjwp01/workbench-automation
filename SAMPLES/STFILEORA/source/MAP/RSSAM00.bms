@@ -1,0 +1,123 @@
+***********************************************************************
+*      MAPSET DU MENU GENERAL
+***********************************************************************
+*
+*----------------------------------------------------------------------
+* DEFINITION DE LA MAPSET : RSSAM00
+*----------------------------------------------------------------------
+*
+RSSAM00 DFHMSD TYPE=DSECT,                                             X
+               MODE=INOUT,                                             X
+               LANG=COBOL,                                             X
+               TIOAPFX=YES,                                            X
+               CTRL=FREEKB,                                            X
+               STORAGE=AUTO
+*
+*----------------------------------------------------------------------
+* DEFINITION DE LA MAP    : RSSAM00
+*----------------------------------------------------------------------
+*
+RSSAM00 DFHMDI SIZE=(24,80),                                           X
+               COLUMN=1,                                               X
+               LINE=1,                                                 X
+               JUSTIFY=LEFT
+*
+*----------------------------------------------------------------------
+* DEFINITION DES CHAMPS DU MENU GENERAL
+*----------------------------------------------------------------------
+*
+VPGMSCR DFHMDF POS=(01,01),                                            X
+               LENGTH=08,                                              X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+        DFHMDF POS=(01,21),                                            X
+               LENGTH=25,                                              X
+               INITIAL='Simple sample application',                    X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+VDATE   DFHMDF POS=(01,70),                                            X
+               LENGTH=10,                                              X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+VTRANS  DFHMDF POS=(02,01),                                            X
+               LENGTH=04,                                              X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+        DFHMDF POS=(04,01),                                            X
+               LENGTH=79,                                              X
+               INITIAL='-----------------------------------------------X
+               --------------------------------',                      X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(06,05),                                            X
+               LENGTH=22,                                              X
+               INITIAL='Customer''s identifier:',                      X
+               ATTRB=(ASKIP,NORM)
+*
+CIDCUST DFHMDF POS=(06,28),                                            X
+               LENGTH=06,                                              X
+               ATTRB=(UNPROT,NORM,NUM,FSET,IC)
+*
+        DFHMDF POS=(06,35),                                            X
+               LENGTH=01,                                              X
+               ATTRB=(ASKIP,DRK)
+*
+        DFHMDF POS=(08,05),                                            X
+               LENGTH=22,                                              X
+               INITIAL='PF04 - Customer''s list',                      X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(09,05),                                            X
+               LENGTH=25,                                              X
+               INITIAL='PF05 - Add a new customer',                    X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(10,05),                                            X
+               LENGTH=34,                                              X
+               INITIAL='PF06 - Modify an existing customer',           X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(11,05),                                            X
+               LENGTH=34,                                              X
+               INITIAL='PF07 - Delete an existing customer',           X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(12,05),                                            X
+               LENGTH=25,                                              X
+               INITIAL='PF08 - Customer''s inquiry',                   X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(14,05),                                            X
+               LENGTH=23,                                              X
+               INITIAL='PF03 - Quit application',                      X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(21,01),                                            X
+               LENGTH=79,                                              X
+               INITIAL='-----------------------------------------------X
+               --------------------------------',                      X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(22,04),                                            X
+               LENGTH=63,                                              X
+               INITIAL='Info: type a customer number, select an action X
+               and press Enter.',                                      X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(23,01),                                            X
+               LENGTH=79,                                              X
+               INITIAL='-----------------------------------------------X
+               --------------------------------',                      X
+               ATTRB=(ASKIP,NORM)
+*
+VMESS   DFHMDF POS=(24,01),                                            X
+               LENGTH=79,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+*----------------------------------------------------------------------
+* FIN DU MAPSET
+*----------------------------------------------------------------------
+*
+        DFHMSD  TYPE=FINAL
+        END
+*

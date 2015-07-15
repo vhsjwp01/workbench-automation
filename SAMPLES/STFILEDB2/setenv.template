@@ -1,0 +1,97 @@
+#
+# General
+#
+export PS1='$PWD> '
+
+export OS_TYPE=$(uname -s)
+
+#
+# Cobol
+#
+# export COB="COBOL-IT"
+case ${COB} in
+	COBOL-IT)
+		cobdir="COBOLITDIR"
+		coblib="COB_LIBRARY_PATH"
+		export $cobdir=##COBDIR##
+		export COB_ENABLE_XA=1
+		;;
+	*)
+		cobdir="COBDIR"
+		coblib="COBPATH"
+		export $cobdir=##COBDIR##
+		;;
+esac
+eval cdval="$"$cobdir
+export OBJECT_MODE=64
+
+#
+# UDB
+#
+export DB2DIR=##DB2DIR##
+export DB2PATH=$DB2DIR
+export DB2INSTANCE=##DB2INSTANCE##
+export DB2BASE=##DB2BASE##
+export DBUSER=##DBUSER##
+export DBPASSWD=##DBPASSWD##
+export SGBD_DBNAME=${DB2BASE}
+export SGBD_USER=${DBUSER}
+export SGBD_PASSWD=${DBPASSWD}
+export MT_DB_DBNAME=${DB2BASE}
+export MT_DB_USER=${DBUSER}
+export MT_DB_PWD=${DBPASSWD}
+export DBCONNECT="$DB2BASE user $DBUSER using $DBPASSWD"
+
+#
+# Tuxedo
+#
+export TUXDIR=##TUXDIR##
+export APPDIR=${PWD}/trf
+export TUXCONFIG=${APPDIR}/config/tux/tuxconfig
+# export ULOGPFX="${APPHOME}/LOGS/log/ULOG"
+
+#
+# KIXEDO RunTime Environment Variables
+#
+export ARTDIR=##ARTDIR##
+export KIXDIR=${ARTDIR}/Cics_RT
+export APPHOME=${APPDIR}
+
+export $coblib=${APPHOME}/reload/file/STFILEDB2:${APPHOME}/DML:${APPHOME}/BATCH:${APPHOME}/CICS:${KIXDIR}/bin
+export COBCPY=${KIXDIR}/cpylib:${APPHOME}/fixed-copy:${APPHOME}/reload/copy:${APPHOME}/Master-copy/COPY:${DB2DIR}/include/cobol_mf
+export PCCINCLUDE="include=${KIXDIR}/cpylib, include=${APPHOME}/Master-copy/COPY"
+export DB2INCLUDE=${KIXDIR}/cpylib:${APPHOME}/Master-copy/COPY
+export PERL5LIB=${KIXDIR}/tools
+
+export PDKSH=##PDKSH##
+
+export TUXLOG=${APPHOME}/LOGS
+export MASTER_NAME=KIXR
+export KIX_MAP_PATH=${KIXDIR}/sysmap:${APPHOME}/MAP
+export KIX_CWA_IPCKEY=##KIX_CWA_IPCKEY##	# CWA IPCKEY Number
+export KIX_CWA_SIZE=4096                	# CWA size
+
+#
+# Path & Libpath
+#
+export PATH=${PATH}:${TUXDIR}/bin:${DB2DIR}/bin:${cdval}/bin:${KIXDIR}/tools:${KIXDIR}/bin
+case $OS_TYPE in
+	AIX)
+		export LIBPATH=${TUXDIR}/lib:${DB2DIR}/lib64:${cdval}/lib:${KIXDIR}/lib
+		;;
+	HP-UX)
+		export SHLIB_PATH=${TUXDIR}/lib:${DB2DIR}/lib64:${cdval}/lib:${KIXDIR}/lib
+		export LD_LIBRARY_PATH=${SHLIB_PATH}
+		;;
+	*)
+		export LD_LIBRARY_PATH=${TUXDIR}/lib:${DB2DIR}/lib64:${cdval}/lib:${KIXDIR}/lib
+		;;
+esac
+
+export TRACE_PATH=${APPHOME}/LOGS/traces
+export TP_TRACE_PATH=${TRACE_PATH}
+
+# export KCPDEBUG=Y
+
+# To enable "catalog" feature, set MT_USE_FILE_CATALOG=yes
+# export MT_USE_FILE_CATALOG=yes

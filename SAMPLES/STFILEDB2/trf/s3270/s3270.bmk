@@ -1,0 +1,456 @@
+
+
+
+
+
+
+
+
+
+
+
+                  Oracle Tuxedo Application Runtime for CICS
+                  Copyright 2010,2010 Oracle.
+
+
+
+
+
+
+
+
+
+
+
+ RSSAT000            Simple sample application                        DD-MM-YY
+ SA00
+
+ -------------------------------------------------------------------------------
+
+     Customer's identifier:
+
+     PF04 - Customer's list
+     PF05 - Add a new customer
+     PF06 - Modify an existing customer
+     PF07 - Delete an existing customer
+     PF08 - Customer's inquiry
+
+     PF03 - Quit application
+
+
+
+
+
+
+ -------------------------------------------------------------------------------
+    Info: type a customer number, select an action and press Enter.
+ -------------------------------------------------------------------------------
+
+ RSSAT003            Customers list                                   DD-MM-YY
+ SA00
+
+ -------------------------------------------------------------------------------
+ Sel ID         Last name                      First name            Birth date
+ -------------------------------------------------------------------------------
+
+     000001     Richardson                     Bobby                09/07/1961
+     000002     Roberts                        Sammy Jr             01/24/1973
+     000003     Douglas                        Burt                 10/12/1981
+     000004     Ewing                          Samantha             07/27/1962
+     000005     Prince                         Anne                 12/25/1991
+     000006     Colombus                       Christopher          07/27/1950
+     000008     Doors                          Bill                 01/01/1958
+     000009     Awing                          Charles              06/29/1929
+     000010     Simms                          Arthur               01/17/1969
+     000011     LaFayette                      Eric                 02/12/1995
+
+
+ -------------------------------------------------------------------------------
+   -PF7: page up -PF8: page down -PF3: return to previous menu
+   -Info: Enter a non blank character and press Enter to view customer's data
+ -------------------------------------------------------------------------------
+
+ RSSAT000            Simple sample application                        DD-MM-YY
+ SA03
+
+ -------------------------------------------------------------------------------
+
+     Customer's identifier: 000000
+
+     PF04 - Customer's list
+     PF05 - Add a new customer
+     PF06 - Modify an existing customer
+     PF07 - Delete an existing customer
+     PF08 - Customer's inquiry
+
+     PF03 - Quit application
+
+
+
+
+
+
+ -------------------------------------------------------------------------------
+    Info: type a customer number, select an action and press Enter.
+ -------------------------------------------------------------------------------
+
+ RSSAT002            Customers detailed information                   DD-MM-YY
+ SA00
+
+ -------------------------------------------------------------------------------
+     Customer's identifier: 000000   Action: CREATE
+ -------------------------------------------------------------------------------
+
+   -Last name.....:
+   -First name....:
+   -Address.......:
+   -City..........:
+   -State.........:
+   -Birth date....:            (mm/dd/yyyy)
+   -Email.........:
+   -Phone number..:
+
+
+
+
+
+ -------------------------------------------------------------------------------
+ -PF03: return to previous screen. -PF11: reset datas.
+ -------------------------------------------------------------------------------
+
+ RSSAT002            Customers detailed information                   DD-MM-YY
+ SA00
+
+ -------------------------------------------------------------------------------
+     Customer's identifier: 111111   Action: CREATE
+ -------------------------------------------------------------------------------
+
+   -Last name.....: zhang
+   -First name....: san
+   -Address.......: ZPark
+   -City..........: BJ
+   -State.........: CN
+   -Birth date....: 01/01/2011 (mm/dd/yyyy)
+   -Email.........: abc@def
+   -Phone number..: 8685001234
+
+
+
+
+
+ -------------------------------------------------------------------------------
+ -PF03: return to previous screen. -PF11: reset datas.
+ -------------------------------------------------------------------------------
+
+ RSSAT002            Customers detailed information                   DD-MM-YY
+ SA02
+
+ -------------------------------------------------------------------------------
+     Customer's identifier: 111111   Action: CREATE
+ -------------------------------------------------------------------------------
+
+   -Last name.....: zhang
+   -First name....: san
+   -Address.......: ZPark
+   -City..........: BJ
+   -State.........: CN
+   -Birth date....: 01/01/2011 (mm/dd/yyyy)
+   -Email.........: abc@def
+   -Phone number..: 8685001234
+
+
+
+
+
+ -------------------------------------------------------------------------------
+ -PF03: return to previous screen. -PF11: reset datas.
+ -------------------------------------------------------------------------------
+ New customer added
+ RSSAT000            Simple sample application                        DD-MM-YY
+ SA02
+
+ -------------------------------------------------------------------------------
+
+     Customer's identifier: 111111
+
+     PF04 - Customer's list
+     PF05 - Add a new customer
+     PF06 - Modify an existing customer
+     PF07 - Delete an existing customer
+     PF08 - Customer's inquiry
+
+     PF03 - Quit application
+
+
+
+
+
+
+ -------------------------------------------------------------------------------
+    Info: type a customer number, select an action and press Enter.
+ -------------------------------------------------------------------------------
+
+ RSSAT002            Customers detailed information                   DD-MM-YY
+ SA00
+
+ -------------------------------------------------------------------------------
+     Customer's identifier: 111111   Action: UPDATE
+ -------------------------------------------------------------------------------
+
+   -Last name.....: zhang
+   -First name....: san
+   -Address.......: ZPark
+   -City..........: BJ
+   -State.........: CN
+   -Birth date....: 01/01/2011 (mm/dd/yyyy)
+   -Email.........: abc@def
+   -Phone number..: 8685001234
+
+
+
+
+
+ -------------------------------------------------------------------------------
+ -PF03: return to previous screen. -PF11: reset datas.
+ -------------------------------------------------------------------------------
+
+ RSSAT002            Customers detailed information                   DD-MM-YY
+ SA00
+
+ -------------------------------------------------------------------------------
+     Customer's identifier: 111111   Action: UPDATE
+ -------------------------------------------------------------------------------
+
+   -Last name.....: li
+   -First name....: si
+   -Address.......: ZPark
+   -City..........: BJ
+   -State.........: CN
+   -Birth date....: 01/01/2011 (mm/dd/yyyy)
+   -Email.........: abc@def
+   -Phone number..: 8685001234
+
+
+
+
+
+ -------------------------------------------------------------------------------
+ -PF03: return to previous screen. -PF11: reset datas.
+ -------------------------------------------------------------------------------
+
+ RSSAT002            Customers detailed information                   DD-MM-YY
+ SA02
+
+ -------------------------------------------------------------------------------
+     Customer's identifier: 111111   Action: UPDATE
+ -------------------------------------------------------------------------------
+
+   -Last name.....: li
+   -First name....: si
+   -Address.......: ZPark
+   -City..........: BJ
+   -State.........: CN
+   -Birth date....: 01/01/2011 (mm/dd/yyyy)
+   -Email.........: abc@def
+   -Phone number..: 8685001234
+
+
+
+
+
+ -------------------------------------------------------------------------------
+ -PF03: return to previous screen. -PF11: reset datas.
+ -------------------------------------------------------------------------------
+ Maintenance OK
+ RSSAT000            Simple sample application                        DD-MM-YY
+ SA02
+
+ -------------------------------------------------------------------------------
+
+     Customer's identifier: 111111
+
+     PF04 - Customer's list
+     PF05 - Add a new customer
+     PF06 - Modify an existing customer
+     PF07 - Delete an existing customer
+     PF08 - Customer's inquiry
+
+     PF03 - Quit application
+
+
+
+
+
+
+ -------------------------------------------------------------------------------
+    Info: type a customer number, select an action and press Enter.
+ -------------------------------------------------------------------------------
+
+ RSSAT002            Customers detailed information                   DD-MM-YY
+ SA00
+
+ -------------------------------------------------------------------------------
+     Customer's identifier: 111111   Action: DELETE
+ -------------------------------------------------------------------------------
+
+   -Last name.....: li
+   -First name....: si
+   -Address.......: ZPark
+   -City..........: BJ
+   -State.........: CN
+   -Birth date....: 01/01/2011 (mm/dd/yyyy)
+   -Email.........: abc@def
+   -Phone number..: 8685001234
+
+
+
+
+
+ -------------------------------------------------------------------------------
+ -PF03: return to previous screen. -PF11: reset datas.
+ -------------------------------------------------------------------------------
+
+ RSSAT000            Simple sample application                        DD-MM-YY
+ SA02
+
+ -------------------------------------------------------------------------------
+
+     Customer's identifier: 111111
+
+     PF04 - Customer's list
+     PF05 - Add a new customer
+     PF06 - Modify an existing customer
+     PF07 - Delete an existing customer
+     PF08 - Customer's inquiry
+
+     PF03 - Quit application
+
+
+
+
+
+
+ -------------------------------------------------------------------------------
+    Info: type a customer number, select an action and press Enter.
+ -------------------------------------------------------------------------------
+ Deletion confirmed
+ RSSAT001            Customers detailed information                   DD-MM-YY
+ SA00
+
+ -------------------------------------------------------------------------------
+     Customer's identifier: 000001
+ -------------------------------------------------------------------------------
+
+   -Last name.....: Richardson
+   -First name....: Bobby
+   -Address.......: 1275, BOURBON street
+   -City..........: New Orleans
+   -State.........: LO
+   -Birth date....: 09/07/1961
+   -Email.........: bob.richardson@coldmail.com
+   -Phone number..: 5553557901
+
+
+
+
+
+ -------------------------------------------------------------------------------
+    -PF03: return to previous screen
+ -------------------------------------------------------------------------------
+
+ RSSAT000            Simple sample application                        DD-MM-YY
+ SA01
+
+ -------------------------------------------------------------------------------
+
+     Customer's identifier: 000001
+
+     PF04 - Customer's list
+     PF05 - Add a new customer
+     PF06 - Modify an existing customer
+     PF07 - Delete an existing customer
+     PF08 - Customer's inquiry
+
+     PF03 - Quit application
+
+
+
+
+
+
+ -------------------------------------------------------------------------------
+    Info: type a customer number, select an action and press Enter.
+ -------------------------------------------------------------------------------
+
+ RSSAT003            Customers list                                   DD-MM-YY
+ SA00
+
+ -------------------------------------------------------------------------------
+ Sel ID         Last name                      First name            Birth date
+ -------------------------------------------------------------------------------
+
+     000001     Richardson                     Bobby                09/07/1961
+     000002     Roberts                        Sammy Jr             01/24/1973
+     000003     Douglas                        Burt                 10/12/1981
+     000004     Ewing                          Samantha             07/27/1962
+     000005     Prince                         Anne                 12/25/1991
+     000006     Colombus                       Christopher          07/27/1950
+     000008     Doors                          Bill                 01/01/1958
+     000009     Awing                          Charles              06/29/1929
+     000010     Simms                          Arthur               01/17/1969
+     000011     LaFayette                      Eric                 02/12/1995
+
+
+ -------------------------------------------------------------------------------
+   -PF7: page up -PF8: page down -PF3: return to previous menu
+   -Info: Enter a non blank character and press Enter to view customer's data
+ -------------------------------------------------------------------------------
+
+ RSSAT000            Simple sample application                        DD-MM-YY
+ SA03
+
+ -------------------------------------------------------------------------------
+
+     Customer's identifier: 000000
+
+     PF04 - Customer's list
+     PF05 - Add a new customer
+     PF06 - Modify an existing customer
+     PF07 - Delete an existing customer
+     PF08 - Customer's inquiry
+
+     PF03 - Quit application
+
+
+
+
+
+
+ -------------------------------------------------------------------------------
+    Info: type a customer number, select an action and press Enter.
+ -------------------------------------------------------------------------------
+
+ RSSAT000            Simple sample application                        DD-MM-YY
+ SA03
+
+ -------------------------------------------------------------------------------
+
+     Customer's identifier: 000000
+
+     PF04 - Customer's list
+     PF05 - Add a new customer
+     PF06 - Modify an existing customer
+     PF07 - Delete an existing customer
+     PF08 - Customer's inquiry
+
+     PF03 - Quit application
+
+
+
+
+
+
+ -------------------------------------------------------------------------------
+    Info: type a customer number, select an action and press Enter.
+ -------------------------------------------------------------------------------
+ Transaction END(SA00). Enter -CESF LOGOFF- to quit.

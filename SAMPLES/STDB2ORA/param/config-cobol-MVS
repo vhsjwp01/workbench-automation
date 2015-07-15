@@ -1,0 +1,18 @@
+Config:
+    "Config version 1.0"
+
+/* GENERAL */
+
+  target-dir: 	"../trf/".
+  keywords-file: "../param/keywords-file".
+  rename-call-map-file: "../param/rename-call-map-file".
+# post-translation-file: "../param/renov.desc".
+
+  hexa-map-file: "../param/tr-hexa.map".
+  rdbms-conversion-file : "dynamic-config/rdbms-conv.txt".
+  on-size-error-call : "ABORT".
+
+  dcrp.				/* Without reconcilation of copies files */
+  remove-sql-qualifier.		/* Only for in test platform mode */
+
+end

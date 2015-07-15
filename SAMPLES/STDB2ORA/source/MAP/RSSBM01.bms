@@ -1,0 +1,166 @@
+***********************************************************************
+*      MAPSET DE DETAIL D'UN CLIENT POUR INTERRO
+***********************************************************************
+*
+*----------------------------------------------------------------------
+* DEFINITION DE LA MAPSET : RSSBM01
+*----------------------------------------------------------------------
+*
+RSSBM01 DFHMSD TYPE=DSECT,                                             X
+               MODE=INOUT,                                             X
+               LANG=COBOL,                                             X
+               TIOAPFX=YES,                                            X
+               CTRL=FREEKB,                                            X
+               STORAGE=AUTO
+*
+*----------------------------------------------------------------------
+* DEFINITION DE LA MAP    : RSSBM01
+*----------------------------------------------------------------------
+*
+RSSBM01 DFHMDI SIZE=(24,80),                                           X
+               COLUMN=1,                                               X
+               LINE=1,                                                 X
+               JUSTIFY=LEFT
+*
+*----------------------------------------------------------------------
+* DEFINITION DES CHAMPS DE LA MAP "DETAIL D'UN CLIENT" EN MODE VISU
+*----------------------------------------------------------------------
+*
+VPGMSCR DFHMDF POS=(01,01),                                            X
+               LENGTH=08,                                              X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+        DFHMDF POS=(01,21),                                            X
+               LENGTH=30,                                              X
+               INITIAL='Customers detailed information',               X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+VDATE   DFHMDF POS=(01,70),                                            X
+               LENGTH=10,                                              X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+VTRANS  DFHMDF POS=(02,01),                                            X
+               LENGTH=04,                                              X
+               ATTRB=(ASKIP,FSET,BRT)
+*
+        DFHMDF POS=(04,01),                                            X
+               LENGTH=79,                                              X
+               INITIAL='-----------------------------------------------X
+               --------------------------------',                      X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(05,05),                                            X
+               LENGTH=22,                                              X
+               INITIAL='Customer''s identifier:',                      X
+               ATTRB=(ASKIP,NORM)
+*
+VIDCUST DFHMDF POS=(05,28),                                            X
+               LENGTH=06,                                              X
+               ATTRB=(ASKIP,NORM,NUM,FSET,IC)
+*
+        DFHMDF POS=(06,01),                                            X
+               LENGTH=79,                                              X
+               INITIAL='-----------------------------------------------X
+               --------------------------------',                      X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(08,03),                                            X
+               LENGTH=16,                                              X
+               INITIAL='-Last name.....:',                             X
+               ATTRB=(ASKIP,NORM)
+*
+VLNAME  DFHMDF POS=(08,20),                                            X
+               LENGTH=30,                                              X
+               ATTRB=(ASKIP,NORM,FSET)
+*
+        DFHMDF POS=(09,03),                                            X
+               LENGTH=16,                                              X
+               INITIAL='-First name....:',                             X
+               ATTRB=(ASKIP,NORM)
+*
+VFNAME  DFHMDF POS=(09,20),                                            X
+               LENGTH=20,                                              X
+               ATTRB=(ASKIP,NORM,FSET)
+*
+        DFHMDF POS=(10,03),                                            X
+               LENGTH=16,                                              X
+               INITIAL='-Address.......:',                             X
+               ATTRB=(ASKIP,NORM)
+*
+VADDRS  DFHMDF POS=(10,20),                                            X
+               LENGTH=30,                                              X
+               ATTRB=(ASKIP,NORM,FSET)
+*
+        DFHMDF POS=(11,03),                                            X
+               LENGTH=16,                                              X
+               INITIAL='-City..........:',                             X
+               ATTRB=(ASKIP,NORM)
+*
+VCITY   DFHMDF POS=(11,20),                                            X
+               LENGTH=30,                                              X
+               ATTRB=(ASKIP,NORM,FSET)
+*
+        DFHMDF POS=(12,03),                                            X
+               LENGTH=16,                                              X
+               INITIAL='-State.........:',                             X
+               ATTRB=(ASKIP,NORM)
+*
+VSTATE  DFHMDF POS=(12,20),                                            X
+               LENGTH=02,                                              X
+               ATTRB=(ASKIP,NORM,FSET)
+*
+        DFHMDF POS=(13,03),                                            X
+               LENGTH=16,                                              X
+               INITIAL='-Birth date....:',                             X
+               ATTRB=(ASKIP,NORM)
+*
+VBDATE  DFHMDF POS=(13,20),                                            X
+               LENGTH=10,                                              X
+               ATTRB=(ASKIP,NORM,FSET)
+*
+        DFHMDF POS=(14,03),                                            X
+               LENGTH=16,                                              X
+               INITIAL='-Email.........:',                             X
+               ATTRB=(ASKIP,NORM)
+*
+VEMAIL  DFHMDF POS=(14,20),                                            X
+               LENGTH=50,                                              X
+               ATTRB=(ASKIP,NORM,FSET)
+*
+        DFHMDF POS=(15,03),                                            X
+               LENGTH=16,                                              X
+               INITIAL='-Phone number..:',                             X
+               ATTRB=(ASKIP,NORM)
+*
+VPHONE  DFHMDF POS=(15,20),                                            X
+               LENGTH=10,                                              X
+               ATTRB=(ASKIP,NORM,FSET)
+*
+        DFHMDF POS=(21,01),                                            X
+               LENGTH=79,                                              X
+               INITIAL='-----------------------------------------------X
+               --------------------------------',                      X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(22,04),                                            X
+               LENGTH=32,                                              X
+               INITIAL='-PF03: return to previous screen',             X
+               ATTRB=(ASKIP,NORM)
+*
+        DFHMDF POS=(23,01),                                            X
+               LENGTH=79,                                              X
+               INITIAL='-----------------------------------------------X
+               --------------------------------',                      X
+               ATTRB=(ASKIP,NORM)
+*
+VMESS   DFHMDF POS=(24,01),                                            X
+               LENGTH=79,                                              X
+               ATTRB=(UNPROT,NORM,FSET)
+*
+*----------------------------------------------------------------------
+* FIN DU MAPSET
+*----------------------------------------------------------------------
+*
+        DFHMSD  TYPE=FINAL
+        END
+*

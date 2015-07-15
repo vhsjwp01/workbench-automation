@@ -1,0 +1,40 @@
+#!/bin/ksh
+
+echo "Covert ..."
+cd $SOURCE
+MKs=" \
+	catalog \
+	DataConvert \
+	trad \
+	reconcil_copy \
+	trad_jcl \
+"
+for i in $MKs
+do
+	echo "make $i"
+	make $i > $PROJECT/$i.log 2>&1
+	if [ $? -ne 0 ]
+	then
+		echo "failed, please see $PROJECT/$i.log"
+		exit 1
+	fi
+done
+
+echo "Package ..."
+cd $PROJECT
+cp -r ${REFINEDIR}/../fixed-copy trf/
+FILEs=" \
+	data_source \
+	trf \
+	trf-jcl \
+	batch.sh \
+	reload.sh \
+	tailor.sh \
+	setenv.template \
+	readme.txt \
+        MWDB2ORA.plb \
+        MWDB2ORA_CONST.sql \
+"
+cp $REFINEDIR/convert-data/fixed-components/MWDB2ORA.plb .
+cp $REFINEDIR/convert-data/fixed-components/MWDB2ORA_CONST.sql .
+tar cvf TARGET_`expr $PROJECT : '.*/\(.*\)'`.tar $FILEs > tar.log 2>&1

@@ -1,0 +1,19 @@
+#!/bin/ksh
+
+if [ "${KIXDIR}x" = "x" ]
+then
+	echo "No \$KIXDIR, exit"
+	return
+fi
+
+MASTER_NAME=KIXR; export MASTER_NAME
+TUXCONFIG=${APPHOME}/config/tux/tuxconfig; export TUXCONFIG
+
+KIX_MAP_PATH=${KIXDIR}/sysmap:${APPHOME}/MAP; export KIX_MAP_PATH
+
+TRACE_PATH=${APPHOME}/LOGS/traces; export TRACE_PATH
+TP_TRACE_PATH=${TRACE_PATH}; export TP_TRACE_PATH
+
+# export KCPDEBUG=Y
+export COB_ENABLE_XA=1
+

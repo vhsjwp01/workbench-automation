@@ -1,0 +1,13 @@
+% Unloading all TABLE *******************
+#VAR:TEMPLATES#/unloading/jcl-unload-DB2-table-SQL.pgm
+%
+% Loading TABLE *************************
+%
+#VAR:TEMPLATES#/loading/convert-ebcdic-for-oracle.pgm
+#VAR:TEMPLATES#/loading/reload-tables-ksh.pgm
+#VAR:TEMPLATES#/loading/rdbms-reload-tables-txt.pgm
+%
+% ***************************************
+% MANDATORY: used when using -i arguments
+#VAR:TEMPLATES#/rdbms-move-assignation.pgm
+%

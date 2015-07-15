@@ -1,0 +1,169 @@
+Workbench Usage 
+
+
+
+1. Requirements
+
+1.1	SHELL
+
+To check that the "KSH" executable is available, use the following commands:
+-	which ksh
+Awaited result:
+/bin/ksh
+
+1.2	PERL
+
+To check the PERL installation - "v5.8.5 built for x86_64-linux-thread-multi" is the minimal required version - , run the following command:
+
+-	perl -v
+Awaited result:
+This is perl, v5.8.5 built for x86_64-linux-thread-multi.
+
+Warning: Verify if you have perl installed under "/usr/bin".
+
+-	which perl
+Awaited result:
+/usr/bin/perl
+
+
+2 Configuration
+
+2.1	Set environment variable
+
+Set the working environment with the following commands:
+-	. ./setenv.wb
+
+Following environment variables are set:
+PROJECT:	Project root within the workspace.
+	Value:
+		The same directory path that setenv.wb locates
+		
+TRAVAIL:	Structure where the ART WB logs are stored
+	Value: ${PROJECT}/Logs	
+
+PARAM:		Structure where the parameter files are stored
+	Value: ${PROJECT}/param	
+
+SOURCE:		Structure where the source files to translate are stored
+	Value: ${PROJECT}/source
+
+REFINEDIR: 	Root of the ART WB binaries and utilities
+	Value: /soft/refine
+
+PHOENIX:	Variable used by WB
+	Value: ${REFINEDIR}	
+
+REFINEDISTRIB:	Platform Variable used by WB
+	Value: Linux64 or Linux32
+
+TMPPROJECT	Temporary structure for WB
+	Value: ${PROJECT}/tmp	
+
+
+2.2	Set GLOBAL_VERSION
+
+${PARAM}/version.mk:
+GLOBAL_VERSION
+
+There is a link between two variables, GLOBAL_VERSION and REFINEDIR. 
+GLOBAL_VERSION value, in ${PARAM}/version.mk, depends on ART WB tools localization and REFINEDIR unix environement value.
+
+-	Example 1:
+ART WB is installed under /soft/refine/V0 directory
+export REFINEDIR=/soft/refine
+In this case, GLOBAL_VERSION=V0
+
+-	Example 2:
+ART WB is installed under /soft/refine/V0 directory
+export REFINEDIR=/soft/refine/V0
+In this case, GLOBAL_VERSION=CURRENT
+
+-	Example 3:
+ART WB is installed under /soft/refine directory
+export REFINEDIR=/soft/refine
+In this case, GLOBAL_VERSION=CURRENT
+
+In Test Cases delivery, GLOBAL_VERSION values "CURRENT"
+
+
+3. Usage
+
+A makefile is provided for each sample applications.
+To understand how to use the workbench makefile "${SOURCE}/makefile" you can type :
+make or make help or make usage
+You will get the makefile usage for all targets
+
+The script mk.wb covers all of the tasks you need to do, however you can perform the migration step by step
+in the following sequence.
+
+3.1	Convert source files into free format with the following command:
+-	ksh f2f.wb
+
+3.2	Using the parser / cataloguer tool
+
+Note: each COBOL code given as fixed format, however, a free format copy is needed when conversion.
+A script called f2f.wb is introduced for this. And, it is also in another demo script mk.wb,
+which shows entire processes from source preparing to target packaging.
+ 
+a)	Go to the directory hosting the Simple Sample Application source files:
+cd ${SOURCE}
+
+b)	Start the parser / cataloguer tool:
+make pob
+make fast-final
+
+
+3.3	Using the convert-data tool
+
+Files resulting from the convert-date process are placed in the "${PROJECT}/trf" subdirectory.
+To generate all components for File migration (unloading, reloading steps and modules):
+
+c)	Go to the directory hosting the Simple Sample Application source files:
+cd ${SOURCE}
+
+d)	Start the convert-data tool:
+make DataConvert
+
+
+3.4	Translating COBOL source files
+
+Files resulting from the translation process are placed in the "${PROJECT}/trf" subdirectory.
+To translate the COBOL source files:
+
+a)	Go to the directory hosting the Simple Sample Application source files:
+ cd ${SOURCE}
+
+b)	Start the COBOL translation:
+make trad
+
+c)	Start the copybook reconciliation:
+make reconcil_copy
+
+
+3.5	Translating JCL files
+
+Files resulting from the translation process are placed in the "${PROJECT}/trf-jcl" subdirectory.
+To translate the JCL source files:
+
+a)	Go to the directory containing the Simple Sample Application source files:
+cd ${SOURCE}
+
+b)	Start the JCL translation:
+make trad_jcl
+
+3.6     Copy fixed components into "${PROJECT}" subdirectory
+
+cp -r ${REFINEDIR}/../fixed-copy ${PROJECT}/trf
+
+3.7     Create deployment package with following files and directories included
+
+        ${PROJECT}/data_source
+        ${PROJECT}/trf
+        ${PROJECT}/trf-jcl
+        ${PROJECT}/batch.sh
+        ${PROJECT}/reload.sh
+        ${PROJECT}/tailor.sh
+        ${PROJECT}/build.sh
+        ${PROJECT}/setenv.template
+        ${PROJECT}/readme.txt
+
