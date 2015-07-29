@@ -1,0 +1,100 @@
+#!/usr/bin/ksh
+
+###############################################################
+# This script should be run after Prepare to correct various anomalies 
+# in the code.
+###############################################################
+
+###############################################################
+# PLEASE set the following info for every anomaly this script fixes
+###############################################################
+# 1.   Short name/description
+# 2.   Impacted files/programs/JCLs (by type or specific names if appropriate)
+# 3.   Category (product issue, custom requirement we can review and categorize these at a later date if needed)
+# 4.   Functional reason for workaround
+# 5.   Owner/who added it
+# 6.   Project stage it applies to (Cataloger, Convert, Configure, Build, Deploy..)
+# 7.   Detailed comments/description as needed
+###############################################################
+
+#########################
+# Set your current project here
+#########################
+#
+export PROJECT=/home/opt/workspace/MYPOC
+
+###############################################################
+# 1.   This section comments out all "PROCESS CODEPAGE(37)"
+#      which is handled differently with COBOL-IT.
+# 2.   *.cbl
+# 3.   Compiler Issue
+# 4.   Compiler error
+# 5.   Jeff Dolberg
+# 6.   Post Prepare
+# 7.
+###############################################################
+## echo "Comment out all PROCESS CODEPAGE(037) statements"
+## #
+cd $PROJECT/prepared/COBOL
+for i in ABC1ZZ10.cbl ABC20Z2Z.cbl ABC30ZZ1.cbl ABC30X7X.cbl ABC56YY2.cbl ABC5YY44.cbl 
+do
+cp --preserve=timestamps $i $i.bak
+mv  $i $i.sed01
+sed -e"s/.*PROCESS CODEPAGE(037).*$/      \* PROCESS CODEPAGE(037)/" <$i.sed01 > $i.sed99
+## 
+if diff $i.sed99 $i.bak > /dev/null ; then
+  cp --preserve=timestamps $i.bak $i
+  echo "INFO: Processing " $i " NO CHANGES"
+else
+  echo "INFO: Processing " $i " UPDATED **************"
+  cp $i.sed99 $i
+fi
+done
+##
+###############################################################
+# 1.   This section changes adds a "." to all COPY statements not 
+# followed by a "."
+# 2.   XYZ001
+# 3.   Poor Coding practice
+# 4.   Poor Coding practice
+# 5.   Jeff Dolberg
+# 6.   Post Prepare
+# 7.
+###############################################################
+echo "Add . after COPY in XYZ001.cbl"
+#
+cd $PROJECT/prepared/COBOL
+for i in XYZ001.cbl
+do
+cp --preserve=timestamps $i $i.bak
+mv  $i $i.sed07
+sed -e s/"COPY *\([[:alnum:]]*\).*$"/"     COPY \1\."/ <$i.sed07 >$i.sed99
+
+if diff $i.sed99 $i.bak > /dev/null ; then
+  cp --preserve=timestamps $i.bak $i
+  echo "INFO: Processing " $i " NO CHANGES"
+else
+  echo "INFO: Processing " $i " UPDATED **************"
+  cp $i.sed99 $i
+fi
+done
+###############################################################
+# 1.   This is a tempoary section to execute a pre_process before Convert.
+# 2.   All JCL & PROCs
+# 3.   Custom Requirement
+# 4.   Replace customer custom routine to execute programs and utilities
+# 5.   Jeff Dolberg
+# 6.   Post Prepare
+# 7.
+################################################################ 
+echo "pre_convert JCL"
+cd $PROJECT/prepared/JCL
+# cmd line
+# perl pre_process.pl  <source dir> <log file>
+perl $PROJECT/scripts/custom_scripts/pre_convert.pl $PROJECT/prepared/JCL pre_convert_jcl.log
+#
+echo "pre_convert PROC"
+cd $PROJECT/prepared/PROC
+# cmd line
+perl $PROJECT/scripts/custom_scripts/pre_convert.pl $PROJECT/prepared/PROC pre_convert_proc.log
+# perl pre_process.pl  <source dir> <log file>
