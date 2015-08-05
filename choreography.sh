@@ -246,6 +246,7 @@ fi
 # WHY:  Asked to
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "IMPORT"
     processing_verb="import"
     umask 007
     script_dir="${WB_AUTOMATE}/scripts"
@@ -320,6 +321,7 @@ fi
 # WHY:  Asked to
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "PREPARE"
     processing_verb="prepare"
     prepare_dir="${WB_AUTOMATE}/prepared"
     export prepare_dir
@@ -395,97 +397,124 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
 fi
 
-## WHAT: Perform pre-conversion character munging
-## WHY:  Needed for proper compilation
-##
-#if [ ${exit_code} -eq ${SUCCESS} ]; then
+# WHAT: Perform pre-conversion character munging
+# WHY:  Needed for proper compilation
 #
-#    # Look for any regex files located in <folder>
-#    # where filename indicates the prepared folder in which to operate
-#    preconvert_dir="${WB_AUTOMATE}/param/regex/pre_conversion"
-#    export preconvert_dir
-#
-#    for target in ${TARGETS} ; do
-#        eval "file_ext=\$${target}_ext"
-#        uc_target=`echo "${target}" | tr '[a-z]' '[A-Z]'`
-#
-#        # awk '{print $0}' BATCH | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g'
-#        # Read in regex lines from "${preconvert_dir}/${uc_target}"
-#        regex_lines=`strings "${preconvert_dir}/${uc_target}" | awk '{print $0}' | egrep -v "^#" | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g' -e 's/\ /:ZZqC:/g'`
-#
-#        # Use the regexes to replace file contents in ${prepare_dir} targets
-#        for regex_line in ${regex_lines} ; do
-#            real_regex_line=`echo "${regex_line}" | sed -e 's/:ZZqC:/\ /g'`
-#            left_side=`echo "${real_regex_line}" | awk -F'::' '{print $1}'`
-#            right_side=`echo "${real_regex_line}" | awk -F'::' '{print $NF}'`
-#
-#            # Here we slurp in each file in the target directory and plow through each
-#            # line skipping comment lines
-#            target_files=`cd "${prepare_dir}/${uc_target}" && ls *.${file_ext}`
-#
-#            tmp_dir="/tmp/${USER}/$$"
-#
-#            if [ ! -d "${tmp_dir}" ]; then
-#                mkdir -p "${tmp_dir}"
-#            fi
-#
-#            for target_file in ${target_files} ; do
-#                echo -ne "    INFO:  Processing \"${prepare_dir}/${uc_target}/${target_file}\" for regular expression translation ... "
-#                tmp_file="${tmp_dir}/translate-prepare-${uc_target}-${target_file}.$$"
-#                rm -f "${tmp_file}"
-#
-#                stdbuf -oL awk '{print $0}' "${prepare_dir}/${uc_target}/${target_file}" | while IFS='' read -r input_line ; do
-#                    let is_comment=0
-#                    #echo "input line is: ${input_line}"
-#
-#                    # Comments look like:
-#                    # - BATCH, COPY, and CICS: byte 7 == "*"
-#                    # - JCL PROCS: ^//*
-#
-#                    case ${target} in
-#
-#                        batch|copy|cics)
-#                            is_comment=`echo "${input_line}" | cut -b7 | egrep -c "\*"`
-#                        ;;
-#
-#                        jcl|procs)
-#                            is_comment=`echo "${input_line}" | egrep -c "^//\*"`
-#                        ;;
-#
-#                        *)
-#                            is_comment=`echo "${input_line}" | egrep -c "^#"`
-#                        ;;
-#
-#                    esac
-#
-#                    #echo "IS COMMENT: ${is_comment}"
-#
-#                    if [ ${is_comment} -gt 0 ]; then
-#                        #echo "* * * * FOUND COMMENT LINE * * * *"
-#                        echo -ne "${input_line}\n" >> ${tmp_file}
-#                    else
-#                        #echo "* * * * FOUND REGULAR LINE * * * *"
-#                        new_input_line=`echo "${input_line}" | sed -e "s/${left_side}/${right_side}/g"`
-#                        echo -ne "${new_input_line}\n" >> ${tmp_file}
-#                    fi
-#
-#                done
-#                
-#                # Move ${tmp_file} to ${prepare_dir}/${uc_target}/${target_file}
-#                rsync "${tmp_file}" "${prepare_dir}/${uc_target}/${target_file}" > /dev/null 2>&1
-#                echo "DONE"
-#            done
-#
-#        done
-#
-#    done
-#    
-#fi
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "PRE-PROCESSING"
+
+    # Look for any regex files located in <folder>
+    # where filename indicates the prepared folder in which to operate
+    preconvert_dir="${WB_AUTOMATE}/param/regex/pre_conversion"
+    export preconvert_dir
+
+    for target in ${TARGETS} ; do
+        eval "file_ext=\$${target}_ext"
+        uc_target=`echo "${target}" | tr '[a-z]' '[A-Z]'`
+
+        # awk '{print $0}' BATCH | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g'
+        # Read in regex lines from "${preconvert_dir}/${uc_target}"
+        if [ -e "${preconvert_dir}/${uc_target}" -a -s "${preconvert_dir}/${uc_target}" ]; then
+            regex_lines=`strings "${preconvert_dir}/${uc_target}" | awk '{print $0}' | egrep -v "^#" | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g' -e 's/\ /:ZZqC:/g'`
+
+            # Use the regexes to replace file contents in ${prepare_dir} targets
+            for regex_line in ${regex_lines} ; do
+
+                if [ "${regex_line}" != "" ]; then
+                    real_regex_line=`echo "${regex_line}" | sed -e 's/:ZZqC:/\ /g'`
+                    left_side=`echo "${real_regex_line}" | awk -F'::' '{print $1}'`
+                    right_side=`echo "${real_regex_line}" | awk -F'::' '{print $NF}'`
+
+                    # Here we slurp in each file in the target directory and plow through each
+                    # line skipping comment lines
+                    target_files=`cd "${prepare_dir}/${uc_target}" 2> /dev/null && ls *.${file_ext} 2> /dev/null`
+
+                    tmp_dir="/tmp/${USER}/$$"
+
+                    if [ ! -d "${tmp_dir}" ]; then
+                        mkdir -p "${tmp_dir}"
+                    fi
+
+                    for target_file in ${target_files} ; do
+                        echo -ne "    INFO:  Pre-Processing \"${prepare_dir}/${uc_target}/${target_file}\" for regular expression translation ... "
+                        tmp_file="${tmp_dir}/translate-pre-processing-${uc_target}-${target_file}.$$"
+                        rm -f "${tmp_file}"
+    
+                        stdbuf -oL awk '{print $0}' "${prepare_dir}/${uc_target}/${target_file}" | while IFS='' read -r input_line ; do
+                            let is_comment=0
+                            #echo "input line is: ${input_line}"
+    
+                            # Comments look like:
+                            # - BATCH, COPY, and CICS: byte 7 == "*"
+                            # - JCL PROCS: ^//*
+    
+                            case ${target} in
+    
+                                batch|copy|cics)
+                                    is_comment=`echo "${input_line}" | cut -b7 | egrep -c "\*"`
+                                ;;
+    
+                                jcl|procs)
+                                    is_comment=`echo "${input_line}" | egrep -c "^//\*"`
+                                ;;
+    
+                                *)
+                                    is_comment=`echo "${input_line}" | egrep -c "^#"`
+                                ;;
+    
+                            esac
+    
+                            #echo "IS COMMENT: ${is_comment}"
+                            if [ "${input_line}" = "" ]; then
+                                echo -ne "${input_line}\n" >> ${tmp_file}
+                            else
+    
+                                if [ ${is_comment} -gt 0 ]; then
+                                    #echo "* * * * FOUND COMMENT LINE * * * *"
+                                    echo -ne "${input_line}\n" >> ${tmp_file}
+                                else
+                                    #echo "* * * * FOUND REGULAR LINE * * * *"
+    
+                                    if [ "${left_side}" = "" ]; then
+                                        echo -ne "${input_line}\n" >> ${tmp_file}
+                                    else
+                                        right_now=`date`
+                                        original_line=`echo "${input_line}"`
+                                        echo -ne "${comment_prefix} The following line was commented out\n"     >> ${tmp_file}
+                                        echo -ne "${comment_prefix} ${right_now}\n"                             >> ${tmp_file}
+                                        echo -ne "${comment_prefix} by automation script ${0} PRE-PROCESSING\n" >> ${tmp_file}
+                                        echo -ne "${comment_prefix} Original line was:\n"                       >> ${tmp_file}
+                                        echo -ne "${comment_prefix} ${original_line}\n"                         >> ${tmp_file}
+                                        new_input_line=`echo "${input_line}" | sed -e "s?${left_side}?${right_side}?g"`
+                                        echo -ne "${new_input_line}\n"                                          >> ${tmp_file}
+                                    fi
+    
+                                fi
+    
+                            fi
+    
+                        done
+                        
+                        # Move ${tmp_file} to ${prepare_dir}/${uc_target}/${target_file}
+                        rsync "${tmp_file}" "${prepare_dir}/${uc_target}/${target_file}" > /dev/null 2>&1
+                        echo "DONE"
+                    done
+
+                fi
+
+            done
+
+        fi
+
+    done
+    
+fi
 
 # WHAT: Perform analysis operations
 # WHY:  Needed for proper compilation
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "ANALYZE"
     processing_verb="analyze"
     source_dir="${WB_AUTOMATE}/source"
     export source_dir
@@ -565,6 +594,7 @@ fi
 # WHY:  Needed for proper compilation
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "CATALOG"
     processing_verb="catalog"
     source_dir="${WB_AUTOMATE}/source"
     param_dir="${PARAM}"
@@ -602,7 +632,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             if [ -e "${param_dir}/system.desc.template" ]; then
                 cp -p "${param_dir}/system.desc.template" "${param_dir}/system.desc"
                 sed -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
-                echo "    INFO:  Running \"make -f ${this_makefile} cleanpob\" ... "
+                echo -ne "    INFO:  Running \"make -f ${this_makefile} cleanpob\" ... "
                 cd "${source_dir}" && make -f "${this_makefile}" cleanpob 
                 echo -ne "    INFO:  Running \"make -f ${this_makefile} ${processing_verb}\" ... "
                 cd "${source_dir}" && make -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
@@ -636,21 +666,22 @@ fi
 # WHY:  Cannot proceed without some analysis of previous operation
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "ANOMALIES"
     report_dir="${source_dir}/Reports-${ucProjectName}"
 
     if [ -d "${report_dir}" ]; then
-        anomalie_report="${report_dir}/report-${ucProjectName}-Anomalies"
+        anomaly_report="${report_dir}/report-${ucProjectName}-Anomalies"
 
-        if [ -e "${anomalie_report}" -a -s "${anomalie_report}" ]; then
-            echo -ne "    INFO:  Checking Anomalie report for issues of concern ... "
+        if [ -e "${anomaly_report}" -a -s "${anomaly_report}" ]; then
+            echo -ne "    INFO:  Checking Anomaly report for issues of concern ... "
 
             let max_warnings=20
             let max_missing=1
 
-            let fatal_count=`egrep -c ";FATAL;" "${anomalie_report}"`
-            let error_count=`egrep -c ";ERROR;" "${anomalie_report}"`
-            let warning_count=`egrep -c ";WARNING;" "${anomalie_report}"`
-            let missing_count=`egrep -c ";MISSING;" "${anomalie_report}"`
+            let fatal_count=`egrep -c ";FATAL;" "${anomaly_report}"`
+            let error_count=`egrep -c ";ERROR;" "${anomaly_report}"`
+            let warning_count=`egrep -c ";WARNING;" "${anomaly_report}"`
+            let missing_count=`egrep -c ";MISSING;" "${anomaly_report}"`
 
             if [ ${fatal_count} -gt 0 -o ${error_count} -gt 0 -o ${warning_count} -ge ${max_warnings} -o ${missing_count} -ge ${max_missing} ]; then
                 echo "issues found [FAILED]"
@@ -659,31 +690,31 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             fi
 
             if [ ${fatal_count} -gt 0 ]; then
-                echo "    ERROR:  ${fatal_count} FATAL message(s) found in Anomalie report \"${anomalie_report}\""
+                echo "    ERROR:  ${fatal_count} FATAL message(s) found in Anomaly report \"${anomaly_report}\""
                 let exit_code=${exit_code}+1
             fi
 
             if [ ${error_count} -gt 0 ]; then
-                echo "    ERROR:  ${error_count} ERROR message(s) found in Anomalie report \"${anomalie_report}\""
+                echo "    ERROR:  ${error_count} ERROR message(s) found in Anomaly report \"${anomaly_report}\""
                 let exit_code=${exit_code}+1
             fi
 
             if [ ${warning_count} -ge ${max_warnings} ]; then
-                echo "    ERROR:  ${warning_count} WARNING message(s) found in Anomalie report \"${anomalie_report}\""
+                echo "    ERROR:  ${warning_count} WARNING message(s) found in Anomaly report \"${anomaly_report}\""
                 let exit_code=${exit_code}+1
             fi
 
             if [ ${missing_count} -ge ${max_missing} ]; then
-                echo "    ERROR:  ${missing_count} MISSING messages found in Anomalie report \"${anomalie_report}\""
+                echo "    ERROR:  ${missing_count} MISSING messages found in Anomaly report \"${anomaly_report}\""
                 let exit_code=${exit_code}+1
             fi
 
             if [ ${exit_code} -ne ${SUCCESS} ]; then
-                err_msg="Problems detected in Anomalie report \"${anomalie_report}\""
+                err_msg="Problems detected in Anomaly report \"${anomaly_report}\""
             fi
         
         else
-            err_msg="Anomalie report file \"${anomalie_report}\" is either missing or contains no data"
+            err_msg="Anomalie report file \"${anomaly_report}\" is either missing or contains no data"
             exit_code=${ERROR}
         fi
 
@@ -698,6 +729,7 @@ fi
 # WHY:  Cannot proceed otherwise
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "MISSING"
     cobol_copy_report="${report_dir}/report-${ucProjectName}-Cobol-Copy"
 
     if [ -e "${cobol_copy_report}" -a -s "${cobol_copy_report}" ]; then
@@ -727,6 +759,7 @@ fi
 # WHY:  Needed for proper compilation
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "FILECONVERT"
     processing_verb="FileConvert"
     this_makefile="${source_dir}/makefile.${processing_verb}"
 
@@ -753,6 +786,7 @@ fi
 # WHY:  Needed for proper compilation
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "RDBMSCONVERT"
     processing_verb="RdbmsConvert"
     this_makefile="${source_dir}/makefile.${processing_verb}"
 
@@ -780,6 +814,7 @@ fi
 # WHY:  Needed for proper compilation
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "COBOLCONVERT"
     processing_verb="cobolConvert"
     this_makefile="${source_dir}/makefile.${processing_verb}"
 
@@ -807,6 +842,7 @@ fi
 # WHY:  Needed for proper compilation
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "TRAD_JCL"
     processing_verb="trad_jcl"
     this_makefile="${source_dir}/makefile.${processing_verb}"
 
@@ -833,6 +869,148 @@ fi
 #====
 # Post Conversion
 #====
+# WHAT: Perform post-conversion character munging
+# WHY:  Needed for proper compilation
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "POST-PROCESSING"
+
+    # Look for any regex files located in <folder>
+    # where filename indicates the prepared folder in which to operate
+    pcTarget_dir="${WB_AUTOMATE}/target"
+    postconvert_dir="${WB_AUTOMATE}/param/regex/post_conversion"
+    export postconvert_dir
+
+    for target in ${TARGETS} ; do
+        eval "file_ext=\$${target}_ext"
+        uc_target=`echo "${target}" | tr '[a-z]' '[A-Z]'`
+
+        # awk '{print $0}' BATCH | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g'
+        # Read in regex lines from "${postconvert_dir}/${uc_target}"
+        if [ -e "${postconvert_dir}/${uc_target}" -a -s "${postconvert_dir}/${uc_target}" ]; then
+            regex_lines=`strings "${postconvert_dir}/${uc_target}" | awk '{print $0}' | egrep -v "^#" | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g' -e 's/\ /:ZZqC:/g'`
+
+            # Use the regexes to replace file contents in ${pcTarget_dir} targets
+            for regex_line in ${regex_lines} ; do
+
+                if [ "${regex_line}" != "" ]; then
+                    real_regex_line=`echo "${regex_line}" | sed -e 's/:ZZqC:/\ /g'`
+                    left_side=`echo "${real_regex_line}" | awk -F'::' '{print $1}'`
+                    right_side=`echo "${real_regex_line}" | awk -F'::' '{print $NF}'`
+
+                    # Here we slurp in each file in the target directory and plow through each
+                    # line skipping comment lines
+                    source_code_dir="${pcTarget_dir}/${uc_target}"
+
+                    case ${target} in 
+
+                        sysin)
+                            source_code_dir="${pcTarget_dir}/Master-${uc_target}/${uc_target}"
+                        ;;
+
+                        copy)
+                            source_code_dir="${pcTarget_dir}/Master-${target}/${uc_target}"
+                        ;;
+
+                    esac
+
+                    case ${target} in
+
+                        batch|cics)
+                            target_files=`cd "${source_code_dir}" 2> /dev/null && ls *.${file_ext} 2> /dev/null ; ls *.pco 2> /dev/null`
+                        ;;
+
+                        jcl)
+                            file_ext="ksh"
+                            target_files=`cd "${source_code_dir}" 2> /dev/null && ls *.{file_ext} 2> /dev/null`
+                        ;;
+
+                        *)
+                            target_files=`cd "${source_code_dir}" 2> /dev/null && ls *.${file_ext} 2> /dev/null`
+                        ;;
+
+                    esac
+
+                    tmp_dir="/tmp/${USER}/$$"
+
+                    if [ ! -d "${tmp_dir}" ]; then
+                        mkdir -p "${tmp_dir}"
+                    fi
+
+                    for target_file in ${target_files} ; do
+                        echo -ne "    INFO:  Post-Processing \"${source_code_dir}/${target_file}\" for regular expression translation ... "
+                        tmp_file="${tmp_dir}/translate-post-processing-${uc_target}-${target_file}.$$"
+                        rm -f "${tmp_file}"
+
+                        stdbuf -oL awk '{print $0}' "${source_code_dir}/${target_file}" | while IFS='' read -r input_line ; do
+                            let is_comment=0
+                            #echo "input line is: ${input_line}"
+
+                            # Comments look like:
+                            # - BATCH, COPY, and CICS: byte 7 == "*"
+                            # - JCL PROCS: ^//*
+
+                            case ${target} in
+
+                                batch|copy|cics)
+                                    is_comment=`echo "${input_line}" | cut -b7 | egrep -c "\*"`
+                                    comment_prefix="      *"
+                                ;;
+
+                                *)
+                                    is_comment=`echo "${input_line}" | egrep -c "^#"`
+                                    comment_prefix="#"
+                                ;;
+
+                            esac
+
+                            #echo "IS COMMENT: ${is_comment}"
+
+                            if [ "${input_line}" = "" ]; then
+                                echo -ne "${input_line}\n" >> ${tmp_file}
+                            else
+
+                                if [ ${is_comment} -gt 0 ]; then
+                                    #echo "* * * * FOUND COMMENT LINE * * * *"
+                                    echo -ne "${input_line}\n" >> ${tmp_file}
+                                else
+                                    #echo "* * * * FOUND REGULAR LINE * * * *"
+
+                                    if [ "${left_side}" = "" ]; then
+                                        echo -ne "${input_line}\n" >> ${tmp_file}
+                                    else
+                                        right_now=`date`
+                                        original_line=`echo "${input_line}"`
+                                        echo -ne "${comment_prefix} The following line was commented out\n"      >> ${tmp_file}
+                                        echo -ne "${comment_prefix} ${right_now}\n"                              >> ${tmp_file}
+                                        echo -ne "${comment_prefix} by automation script ${0} POST-PROCESSING\n" >> ${tmp_file}
+                                        echo -ne "${comment_prefix} Original line was:\n"                        >> ${tmp_file}
+                                        echo -ne "${comment_prefix} ${original_line}\n"                          >> ${tmp_file}
+                                        new_input_line=`echo "${input_line}" | sed -e "s?${left_side}?${right_side}?g"`
+                                        echo -ne "${new_input_line}\n"                                           >> ${tmp_file}
+                                    fi
+
+                                fi
+
+                            fi
+
+                        done
+
+                        # Move ${tmp_file} to ${source_code_dir}/${target_file}
+                        rsync "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
+                        echo "DONE"
+                        
+                    done
+
+                fi
+
+            done
+
+        fi
+
+    done
+    
+fi
 
 # WHAT: Complain if necessary and exit
 # WHY:  Success or failure, either way we are through
