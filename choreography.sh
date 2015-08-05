@@ -39,6 +39,14 @@ ERROR=1
 
 # This directory houses eclipse/ART WB harvested script assets
 WB_AUTOMATE="/shared/wb_automate"
+TARGETS="sysin cics proc jcl copy map ddl batch"
+
+PROJECT="${WB_AUTOMATE}"
+TRAVAIL="${PROJECT}/Logs"
+LOGS="${TRAVAIL}"
+TMPPROJECT="${PROJECT}/tmp"
+
+export PROJECT TRAVAIL LOGS TMPPROJECT
 
 STDOUT_OFFSET="    "
 
@@ -56,6 +64,7 @@ USAGE="${USAGE}[ --<option 1> <something> ]${USAGE_ENDLINE}"
 err_msg=""
 exit_code=${SUCCESS}
 
+# File extensions (lower case)
 sysin_ext="sysin"
 cics_ext="cbl"
 proc_ext="proc"
@@ -65,12 +74,24 @@ map_ext="bms"
 ddl_ext="sql"
 batch_ext="cbl"
 
+# File extensions (upper case)
+uc_sysin_ext=`echo "${sysin_ext}" | tr '[a-z]' '[A-Z]'`
+uc_cics_ext=`echo "${cics_ext}" | tr '[a-z]' '[A-Z]'`
+uc_proc_ext=`echo "${proc_ext}" | tr '[a-z]' '[A-Z]'`
+uc_jcl_ext=`echo "${jcl_ext}" | tr '[a-z]' '[A-Z]'`
+uc_copy_ext=`echo "${copy_ext}" | tr '[a-z]' '[A-Z]'`
+uc_map_ext=`echo "${map_ext}" | tr '[a-z]' '[A-Z]'`
+uc_ddl_ext=`echo "${ddl_ext}" | tr '[a-z]' '[A-Z]'`
+uc_batch_ext=`echo "${batch_ext}" | tr '[a-z]' '[A-Z]'`
+
 # The following comes from: /<eclipse workspace>/scripts/project.txt
 ProjectName="Brad"                            # needs to be an input arg?
+ucProjectName=`echo "${ProjectName}" | tr '[a-z]' '[A-Z]'`
 ParallelNum=1
-WorkbenchPath="/opt/tuxedo/art_wb12.1.3.0.0"  # needs to be an input arg?
+export WorkbenchPath="/opt/tuxedo/art_wb12.1.3.0.0"  # needs to be an input arg?
 #export LocationOfAssets="/shared/WallyWB"            # needs to be an input arg?
 export LocationOfAssets="${WB_AUTOMATE}/input"            # needs to be an input arg?
+export PARAM="${WB_AUTOMATE}/param"            # needs to be an input arg?
 WBLOGLEVEL="INFO"
 WBEXITONERROR="YES"
 OnlyParsingPhase=""
@@ -113,9 +134,9 @@ f__check_command() {
 
 #-------------------------------------------------------------------------------
 
-# Append item to array
+# Add element to array
 #
-append_item() {
+add_to_array() {
     return_code=${SUCCESS}
 
     if [ "${1}" != "" -a "${2}" != "" ]; then
@@ -130,7 +151,9 @@ append_item() {
 
 #-------------------------------------------------------------------------------
 
-append_list() {
+# Add element to list
+#
+add_to_list() {
     return_code=${SUCCESS}
 
     if [ "${1}" != "" -a "${2}" != "" ]; then
@@ -161,7 +184,7 @@ append_list() {
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-    for command in awk basename chmod curl date dirname egrep false file find host mkdir rm sed sort tail tee wc ; do
+    for command in awk basename chmod curl date dirname egrep false file find host mkdir rm sed sort tail tee uname wc ; do
         unalias ${command} > /dev/null 2>&1
         f__check_command "${command}"
 
@@ -174,6 +197,50 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 fi
 
 #====
+
+# WHAT: Set some distro specific vars
+# WHY:  Cannot proceed otherwise
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    os_type=`uname -s | tr '[A-Z]' '[a-z]'`
+    cpu_arch=`uname -m | tr '[A-Z]' '[a-z]' | sed -e 's/i[345]86/i686/g'`
+
+    case ${os_type} in
+
+        linux)
+
+            case ${cpu_arch} in
+
+                x86_64)
+                    REFINEDISTRIB="Linux64"
+                ;;
+
+                i686)
+                    REFINEDISTRIB="Linux32"
+                ;;
+
+                *)
+                    err_msg="Unsupported Linux CPU Architecture: \"${cpu_arch}\""
+                    exit_code=${ERROR}
+                ;;
+
+            esac
+
+            ;;
+
+        *)
+            err_msg="Unsupported OS Type: \"${os_type}\""
+            exit_code=${ERROR}
+        ;;
+
+    esac
+
+    if [ ${exit_code} -eq ${SUCCESS} ]; then
+        export REFINEDISTRIB
+    fi
+
+fi
+
 
 # WHAT: Import data
 # WHY:  Asked to
@@ -190,45 +257,51 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     if [ -d "${script_dir}" -a -d "${input_dir}" -a -d "${import_dir}" ]; then
 
         # Setup item lists for import
-        raw_sysin_list=`cd "${input_dir}/SYSIN" && ls *.${sysin_ext}`
-        raw_cics_list=`cd "${input_dir}/CICS" && ls *.${cics_ext}`
-        raw_proc_list=`cd "${input_dir}/PROC" && ls *.${proc_ext}`
-        raw_jcl_list=`cd "${input_dir}/JCL" && ls *.${jcl_ext}`
-        raw_copy_list=`cd "${input_dir}/COPY" && ls *.${copy_ext}`
-        raw_map_list=`cd "${input_dir}/MAP" && ls *.${map_ext}`
-        raw_ddl_list=`cd "${input_dir}/DDL" && ls *.${ddl_ext}`
-        raw_batch_list=`cd "${input_dir}/BATCH" && ls *.${batch_ext}`
+        for target_dir in ${TARGETS} ; do
+            uc_target_dir=`echo "${target_dir}" | tr '[a-z]' '[A-Z]'`
+            eval "file_ext=\$${target_dir}_ext"
+
+            if [ -d "${input_dir}/${uc_target_dir}" ]; then
+                eval "raw_${target_dir}_list=\"`cd ${input_dir}/${uc_target_dir} && ls *.${file_ext}`\""
+            else
+                echo "    WARNING:  Directory \"${input_dir}/${uc_target_dir}\" does not exist"
+            fi
+
+        done
 
         #echo "Raw ddl list for import: ${raw_ddl_list}"
 
-        for list_name in sysin cics proc jcl copy map ddl batch ; do
+        for list_name in ${TARGETS} ; do
             clean_list="${list_name}_list"
         
             for list_item in `eval "echo -ne \\"\\$raw_${list_name}_list\\""` ; do
                 #echo "List item var: ${list_item}"
-                eval "append_list ${clean_list} \"${list_item}\""
+                eval "add_to_list ${clean_list} \"${list_item}\""
             done
 
             eval "export ${clean_list}"
         done
 
-        for target_dir in SYSIN CICS PROC JCL COPY MAP DDL BATCH ; do
-
-            if [ ! -d "${import_dir}/${target_dir}" ]; then
-                mkdir -p "${import_dir}/${target_dir}"
-            fi
-
+        for target_dir in ${TARGETS} ; do
+            uc_target_dir=`echo "${target_dir}" | tr '[a-z]' '[A-Z]'`
+            echo "    INFO:  Refreshing ${processing_verb} directory \"${import_dir}/${uc_target_dir}\""
+            rm -rf "${import_dir}/${uc_target_dir}"
+            mkdir -p "${import_dir}/${uc_target_dir}"
         done
 
-        this_makefile="${script_dir}/makefile.import"
+        this_makefile="${script_dir}/makefile.${processing_verb}"
 
         # Try importing
         if [ -e "${this_makefile}" ]; then
-            cd "${script_dir}" && make -d -f "${this_makefile}" all
+            echo -ne "    INFO:  Running \"make -f ${this_makefile} all\" ... "
+            cd "${script_dir}" && make -f "${this_makefile}" all > /dev/null 2>&1
             exit_code=${?}
 
             if [ ${exit_code} -ne ${SUCCESS} ]; then
-                err_msg="Failed to import targets"
+                echo "FAILED"
+                err_msg="${processing_verb} processing of targets failed"
+            else
+                echo "SUCCESS"
             fi
 
         else
@@ -251,52 +324,43 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     prepare_dir="${WB_AUTOMATE}/prepared"
     export prepare_dir
 
-    uc_sysin_ext=`echo "${sysin_ext}" | tr '[a-z]' '[A-Z]'`
-    uc_cics_ext=`echo "${cics_ext}" | tr '[a-z]' '[A-Z]'`
-    uc_proc_ext=`echo "${proc_ext}" | tr '[a-z]' '[A-Z]'`
-    uc_jcl_ext=`echo "${jcl_ext}" | tr '[a-z]' '[A-Z]'`
-    uc_copy_ext=`echo "${copy_ext}" | tr '[a-z]' '[A-Z]'`
-    uc_map_ext=`echo "${map_ext}" | tr '[a-z]' '[A-Z]'`
-    uc_ddl_ext=`echo "${ddl_ext}" | tr '[a-z]' '[A-Z]'`
-    uc_batch_ext=`echo "${batch_ext}" | tr '[a-z]' '[A-Z]'`
 
     if [ -d "${script_dir}" -a -d "${import_dir}" -a -d "${prepare_dir}" ]; then
 
         # Setup item lists for prepare
-        raw_sysin_list=`cd "${import_dir}/SYSIN" && ls *.${sysin_ext}`
-        raw_cics_list=`cd "${import_dir}/CICS" && ls *.${cics_ext}`
-        raw_proc_list=`cd "${import_dir}/PROC" && ls *.${proc_ext}`
-        raw_jcl_list=`cd "${import_dir}/JCL" && ls *.${jcl_ext}`
-        raw_copy_list=`cd "${import_dir}/COPY" && ls *.${copy_ext}`
-        raw_map_list=`cd "${import_dir}/MAP" && ls *.${map_ext}`
-        raw_ddl_list=`cd "${import_dir}/DDL" && ls *.${ddl_ext}`
-        raw_batch_list=`cd "${import_dir}/BATCH" && ls *.${batch_ext}`
+        for target_dir in ${TARGETS} ; do
+            uc_target_dir=`echo "${target_dir}" | tr '[a-z]' '[A-Z]'`
+            eval "file_ext=\$${target_dir}_ext"
 
-        # Try preparing
-        for list_name in sysin cics proc jcl copy map ddl batch ; do
-            eval "${list_name}_list=\"\""
+            if [ -d "${import_dir}/${uc_target_dir}" ]; then
+                eval "raw_${target_dir}_list=\"`cd ${import_dir}/${uc_target_dir} && ls *.${file_ext}`\""
+            else
+                echo "    WARNING:  Directory \"${import_dir}/${uc_target_dir}\" does not exist"
+            fi
+    
         done
 
-        for list_name in sysin cics proc jcl copy map ddl batch ; do
+        # Try preparing
+        for list_name in ${TARGETS} ; do
             clean_list="${list_name}_list"
+            eval "${clean_list}=\"\""
         
             for list_item in `eval "echo -ne \\"\\$raw_${list_name}_list\\""` ; do
                 #echo "List item var: ${list_item}"
-                eval "append_list ${clean_list} \"${list_item}\""
+                eval "add_to_list ${clean_list} \"${list_item}\""
             done
 
             eval "export ${clean_list}"
         done
 
-        for target_dir in SYSIN CICS PROC JCL COPY MAP DDL BATCH ; do
-
-            if [ ! -d "${prepare_dir}/${target_dir}" ]; then
-                mkdir -p "${prepare_dir}/${target_dir}"
-            fi
-
+        for target_dir in ${TARGETS} ; do
+            uc_target_dir=`echo "${target_dir}" | tr '[a-z]' '[A-Z]'`
+            echo "    INFO:  Refreshing ${processing_verb} directory \"${prepare_dir}/${uc_target_dir}\""
+            rm -rf "${prepare_dir}/${uc_target_dir}"
+            mkdir -p "${prepare_dir}/${uc_target_dir}"
         done
 
-        this_makefile="${script_dir}/makefile.prepare"
+        this_makefile="${script_dir}/makefile.${processing_verb}"
 
         export uc_copy_list=`echo "${copy_list}" | tr '[a-z]' '[A-Z]' | sed -e "s/\.${uc_copy_ext}/\.${copy_ext}/g"`
         export uc_sysin_list=`echo "${sysin_list}" | tr '[a-z]' '[A-Z]' | sed -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
@@ -308,11 +372,15 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         export uc_proc_list=`echo "${proc_list}" | tr '[a-z]' '[A-Z]' | sed -e "s/\.${uc_proc_ext}/\.${proc_ext}/g"`
 
         if [ -e "${this_makefile}" ]; then
-            cd "${script_dir}" && make -d -f "${this_makefile}" all
+            echo -ne "    INFO:  Running \"make -f ${this_makefile} all\" ... "
+            cd "${script_dir}" && make -f "${this_makefile}" all > /dev/null 2>&1
             exit_code=${?}
 
             if [ ${exit_code} -ne ${SUCCESS} ]; then
-                err_msg="Failed to prepare targets"
+                echo "FAILED"
+                err_msg="${processing_verb} processing of targets failed"
+            else
+                echo "SUCCESS"
             fi
 
         else
@@ -327,19 +395,443 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
 fi
 
-# WHAT: Perform character munging on the batch, cics, and copy Cobol targets
+## WHAT: Perform pre-conversion character munging
+## WHY:  Needed for proper compilation
+##
+#if [ ${exit_code} -eq ${SUCCESS} ]; then
+#
+#    # Look for any regex files located in <folder>
+#    # where filename indicates the prepared folder in which to operate
+#    preconvert_dir="${WB_AUTOMATE}/param/regex/pre_conversion"
+#    export preconvert_dir
+#
+#    for target in ${TARGETS} ; do
+#        eval "file_ext=\$${target}_ext"
+#        uc_target=`echo "${target}" | tr '[a-z]' '[A-Z]'`
+#
+#        # awk '{print $0}' BATCH | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g'
+#        # Read in regex lines from "${preconvert_dir}/${uc_target}"
+#        regex_lines=`strings "${preconvert_dir}/${uc_target}" | awk '{print $0}' | egrep -v "^#" | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g' -e 's/\ /:ZZqC:/g'`
+#
+#        # Use the regexes to replace file contents in ${prepare_dir} targets
+#        for regex_line in ${regex_lines} ; do
+#            real_regex_line=`echo "${regex_line}" | sed -e 's/:ZZqC:/\ /g'`
+#            left_side=`echo "${real_regex_line}" | awk -F'::' '{print $1}'`
+#            right_side=`echo "${real_regex_line}" | awk -F'::' '{print $NF}'`
+#
+#            # Here we slurp in each file in the target directory and plow through each
+#            # line skipping comment lines
+#            target_files=`cd "${prepare_dir}/${uc_target}" && ls *.${file_ext}`
+#
+#            tmp_dir="/tmp/${USER}/$$"
+#
+#            if [ ! -d "${tmp_dir}" ]; then
+#                mkdir -p "${tmp_dir}"
+#            fi
+#
+#            for target_file in ${target_files} ; do
+#                echo -ne "    INFO:  Processing \"${prepare_dir}/${uc_target}/${target_file}\" for regular expression translation ... "
+#                tmp_file="${tmp_dir}/translate-prepare-${uc_target}-${target_file}.$$"
+#                rm -f "${tmp_file}"
+#
+#                stdbuf -oL awk '{print $0}' "${prepare_dir}/${uc_target}/${target_file}" | while IFS='' read -r input_line ; do
+#                    let is_comment=0
+#                    #echo "input line is: ${input_line}"
+#
+#                    # Comments look like:
+#                    # - BATCH, COPY, and CICS: byte 7 == "*"
+#                    # - JCL PROCS: ^//*
+#
+#                    case ${target} in
+#
+#                        batch|copy|cics)
+#                            is_comment=`echo "${input_line}" | cut -b7 | egrep -c "\*"`
+#                        ;;
+#
+#                        jcl|procs)
+#                            is_comment=`echo "${input_line}" | egrep -c "^//\*"`
+#                        ;;
+#
+#                        *)
+#                            is_comment=`echo "${input_line}" | egrep -c "^#"`
+#                        ;;
+#
+#                    esac
+#
+#                    #echo "IS COMMENT: ${is_comment}"
+#
+#                    if [ ${is_comment} -gt 0 ]; then
+#                        #echo "* * * * FOUND COMMENT LINE * * * *"
+#                        echo -ne "${input_line}\n" >> ${tmp_file}
+#                    else
+#                        #echo "* * * * FOUND REGULAR LINE * * * *"
+#                        new_input_line=`echo "${input_line}" | sed -e "s/${left_side}/${right_side}/g"`
+#                        echo -ne "${new_input_line}\n" >> ${tmp_file}
+#                    fi
+#
+#                done
+#                
+#                # Move ${tmp_file} to ${prepare_dir}/${uc_target}/${target_file}
+#                rsync "${tmp_file}" "${prepare_dir}/${uc_target}/${target_file}" > /dev/null 2>&1
+#                echo "DONE"
+#            done
+#
+#        done
+#
+#    done
+#    
+#fi
+
+# WHAT: Perform analysis operations
 # WHY:  Needed for proper compilation
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
-    echo "atta boy"
+    processing_verb="analyze"
+    source_dir="${WB_AUTOMATE}/source"
+    export source_dir
 
-    # Look for any regex files located in <folder>
-    # where filename indicates the prepared folder in which to operate
 
+    if [ -d "${script_dir}" -a -d "${prepare_dir}" -a -d "${source_dir}" ]; then
+
+        # Setup item lists for source
+        for target_dir in ${TARGETS} ; do
+            uc_target_dir=`echo "${target_dir}" | tr '[a-z]' '[A-Z]'`
+            eval "file_ext=\$${target_dir}_ext"
+
+            if [ -d "${prepare_dir}/${uc_target_dir}" ]; then
+                eval "raw_${target_dir}_list=\"`cd ${prepare_dir}/${uc_target_dir} && ls *.${file_ext}`\""
+            else
+                echo "    WARNING:  Directory \"${prepare_dir}/${uc_target_dir}\" does not exist"
+            fi
     
+        done
+
+        # Try analyzing
+        for list_name in ${TARGETS} ; do
+            clean_list="${list_name}_list"
+            eval "${clean_list}=\"\""
+        
+            for list_item in `eval "echo -ne \\"\\$raw_${list_name}_list\\""` ; do
+                #echo "List item var: ${list_item}"
+                eval "add_to_list ${clean_list} \"${list_item}\""
+            done
+
+            eval "export ${clean_list}"
+        done
+
+        for target_dir in ${TARGETS} ; do
+            uc_target_dir=`echo "${target_dir}" | tr '[a-z]' '[A-Z]'`
+            echo "    INFO:  Refreshing ${processing_verb} directory \"${source_dir}/${uc_target_dir}\""
+            rm -rf "${source_dir}/${uc_target_dir}"
+            mkdir -p "${source_dir}/${uc_target_dir}"
+        done
+
+        this_makefile="${script_dir}/makefile.${processing_verb}"
+
+        export uc_copy_list=`echo "${copy_list}" | tr '[a-z]' '[A-Z]' | sed -e "s/\.${uc_copy_ext}/\.${copy_ext}/g"`
+        export uc_sysin_list=`echo "${sysin_list}" | tr '[a-z]' '[A-Z]' | sed -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
+        export uc_batch_list=`echo "${batch_list}" | tr '[a-z]' '[A-Z]' | sed -e "s/\.${uc_batch_ext}/\.${batch_ext}/g"`
+        export uc_cics_list=`echo "${cics_list}" | tr '[a-z]' '[A-Z]' | sed -e "s/\.${uc_cics_ext}/\.${cics_ext}/g"`
+        export uc_ddl_list=`echo "${ddl_list}" | tr '[a-z]' '[A-Z]' | sed -e "s/\.${uc_ddl_ext}/\.${ddl_ext}/g"`
+        export uc_map_list=`echo "${map_list}" | tr '[a-z]' '[A-Z]' | sed -e "s/\.${uc_map_ext}/\.${map_ext}/g"`
+        export uc_jcl_list=`echo "${jcl_list}" | tr '[a-z]' '[A-Z]' | sed -e "s/\.${uc_jcl_ext}/\.${jcl_ext}/g"`
+        export uc_proc_list=`echo "${proc_list}" | tr '[a-z]' '[A-Z]' | sed -e "s/\.${uc_proc_ext}/\.${proc_ext}/g"`
+
+        if [ -e "${this_makefile}" ]; then
+            echo -ne "    INFO:  Running \"make -f ${this_makefile} all\" ... "
+            cd "${script_dir}" && make -f "${this_makefile}" all > /dev/null 2>&1
+            exit_code=${?}
+
+            if [ ${exit_code} -ne ${SUCCESS} ]; then
+                echo "FAILED"
+                err_msg="${processing_verb} processing of targets failed"
+            else
+                echo "SUCCESS"
+            fi
+
+        else
+            err_msg="Could not locate makefile \"${this_makefile}\""
+            exit_code=${ERROR}
+        fi
+
+    else
+        err_msg="Could not find all needed directories for ${processing_verb} processing"
+        exit_code=${ERROR}
+    fi
+
 fi
 
+# WHAT: Perform catalog operations
+# WHY:  Needed for proper compilation
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    processing_verb="catalog"
+    source_dir="${WB_AUTOMATE}/source"
+    param_dir="${PARAM}"
+    report_dir="${source_dir}/Reports-${ucProjectName}"
+    export source_dir
 
+    if [ -d "${script_dir}" -a -d "${source_dir}" -a -d "${param_dir}" ]; then
+
+        # Refresh reporting dir
+        if [ -d "${report_dir}" ]; then
+            echo "    INFO:  Removing reporting directory \"${report_dir}\""
+            rm -rf "${report_dir}"
+        fi
+
+        this_makefile="${source_dir}/makefile.${processing_verb}"
+
+        if [ -e "${this_makefile}" ]; then
+
+            # Reconstruct "${param_dir}/system.desc"
+            if [ -e "${param_dir}/system.desc" ]; then
+                rm -f "${param_dir}/system.desc"
+            fi
+
+            # Clean out pob subfolders
+            for target_dir in ${TARGETS} ; do
+                uc_target_dir=`echo "${target_dir}" | tr '[a-z]' '[A-Z]'`
+
+                if [ -d "${source_dir}/${uc_target_dir}/pob" ]; then
+                    rm -rf "${source_dir}/${uc_target_dir}/pob"
+                fi
+
+            done
+
+            # Create ${param_dir}/system.desc from template, then run make
+            if [ -e "${param_dir}/system.desc.template" ]; then
+                cp -p "${param_dir}/system.desc.template" "${param_dir}/system.desc"
+                sed -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
+                echo "    INFO:  Running \"make -f ${this_makefile} cleanpob\" ... "
+                cd "${source_dir}" && make -f "${this_makefile}" cleanpob 
+                echo -ne "    INFO:  Running \"make -f ${this_makefile} ${processing_verb}\" ... "
+                cd "${source_dir}" && make -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+                exit_code=${?}
+
+                if [ ${exit_code} -ne ${SUCCESS} ]; then
+                    echo "FAILED"
+                    err_msg="${processing_verb} processing of targets failed"
+                else
+                    echo "SUCCESS"
+                fi
+
+            else
+                err_msg="Could not locate template file \"${param_dir}/system.desc.template\" which is used to generate \"${param_dir}/system.desc\" file"
+                exit_code=${ERROR}
+            fi
+
+        else
+            err_msg="Could not locate makefile \"${this_makefile}\""
+            exit_code=${ERROR}
+        fi
+
+    else
+        err_msg="Could not find all needed directories for ${processing_verb} processing"
+        exit_code=${ERROR}
+    fi
+
+fi
+
+# WHAT: Look for items of concern in the Anomalies report
+# WHY:  Cannot proceed without some analysis of previous operation
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    report_dir="${source_dir}/Reports-${ucProjectName}"
+
+    if [ -d "${report_dir}" ]; then
+        anomalie_report="${report_dir}/report-${ucProjectName}-Anomalies"
+
+        if [ -e "${anomalie_report}" -a -s "${anomalie_report}" ]; then
+            echo -ne "    INFO:  Checking Anomalie report for issues of concern ... "
+
+            let max_warnings=20
+            let max_missing=1
+
+            let fatal_count=`egrep -c ";FATAL;" "${anomalie_report}"`
+            let error_count=`egrep -c ";ERROR;" "${anomalie_report}"`
+            let warning_count=`egrep -c ";WARNING;" "${anomalie_report}"`
+            let missing_count=`egrep -c ";MISSING;" "${anomalie_report}"`
+
+            if [ ${fatal_count} -gt 0 -o ${error_count} -gt 0 -o ${warning_count} -ge ${max_warnings} -o ${missing_count} -ge ${max_missing} ]; then
+                echo "issues found [FAILED]"
+            else
+                echo "none found [SUCCESS]"
+            fi
+
+            if [ ${fatal_count} -gt 0 ]; then
+                echo "    ERROR:  ${fatal_count} FATAL message(s) found in Anomalie report \"${anomalie_report}\""
+                let exit_code=${exit_code}+1
+            fi
+
+            if [ ${error_count} -gt 0 ]; then
+                echo "    ERROR:  ${error_count} ERROR message(s) found in Anomalie report \"${anomalie_report}\""
+                let exit_code=${exit_code}+1
+            fi
+
+            if [ ${warning_count} -ge ${max_warnings} ]; then
+                echo "    ERROR:  ${warning_count} WARNING message(s) found in Anomalie report \"${anomalie_report}\""
+                let exit_code=${exit_code}+1
+            fi
+
+            if [ ${missing_count} -ge ${max_missing} ]; then
+                echo "    ERROR:  ${missing_count} MISSING messages found in Anomalie report \"${anomalie_report}\""
+                let exit_code=${exit_code}+1
+            fi
+
+            if [ ${exit_code} -ne ${SUCCESS} ]; then
+                err_msg="Problems detected in Anomalie report \"${anomalie_report}\""
+            fi
+        
+        else
+            err_msg="Anomalie report file \"${anomalie_report}\" is either missing or contains no data"
+            exit_code=${ERROR}
+        fi
+
+    else
+        err_msg="Could not locate reporting directory \"${report_dir}\""
+        exit_code=${ERROR}
+    fi
+
+fi
+
+# WHAT: Look for items labeled as MISSING in the Cobol-Copy report
+# WHY:  Cannot proceed otherwise
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    cobol_copy_report="${report_dir}/report-${ucProjectName}-Cobol-Copy"
+
+    if [ -e "${cobol_copy_report}" -a -s "${cobol_copy_report}" ]; then
+        echo -ne "    INFO:  Checking Cobol-Copy report for issues of concern ... "
+        let cobol_copy_missing_count=`egrep -c ";MISSING;" "${cobol_copy_report}"`
+
+        if [ ${cobol_copy_missing_count} -ge ${max_missing} ]; then
+            echo "issues found [FAILED]"
+            echo "    ERROR:  ${missing_count} MISSING messages found in Cobol-Copy report \"${cobol_copy_report}\""
+            let exit_code=${exit_code}+1
+        else
+            echo "none found [SUCCESS]"
+        fi
+
+        if [ ${exit_code} -ne ${SUCCESS} ]; then
+            err_msg="Problems detected in Cobol-Copy report \"${cobol_copy_report}\""
+        fi
+
+    else
+        err_msg="Cobol-Copy report file \"${cobol_copy_report}\" is either missing or contains no data"
+        exit_code=${ERROR}
+    fi
+
+fi
+
+# WHAT: Perform FileConvert operations
+# WHY:  Needed for proper compilation
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    processing_verb="FileConvert"
+    this_makefile="${source_dir}/makefile.${processing_verb}"
+
+    if [ -e "${this_makefile}" ]; then
+        echo -ne "    INFO:  Running \"make -f ${this_makefile} ${processing_verb}\" ... "
+        cd "${source_dir}" && make -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        exit_code=${?}
+
+        if [ ${exit_code} -ne ${SUCCESS} ]; then
+            echo "FAILED"
+            err_msg="${processing_verb} processing of targets failed"
+        else
+            echo "SUCCESS"
+        fi
+
+    else
+        err_msg="Could not locate makefile \"${this_makefile}\""
+        exit_code=${ERROR}
+    fi
+
+fi
+
+# WHAT: Perform RdbmsConvert operations
+# WHY:  Needed for proper compilation
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    processing_verb="RdbmsConvert"
+    this_makefile="${source_dir}/makefile.${processing_verb}"
+
+    if [ -e "${this_makefile}" ]; then
+        echo -ne "    INFO:  Running \"make -f ${this_makefile} ${processing_verb}\" ... "
+        cd "${source_dir}" && make -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        #cd "${source_dir}" && make -f "${this_makefile}" ${processing_verb} 
+        exit_code=${?}
+
+        if [ ${exit_code} -ne ${SUCCESS} ]; then
+            echo "FAILED"
+            err_msg="${processing_verb} processing of targets failed"
+        else
+            echo "SUCCESS"
+        fi
+
+    else
+        err_msg="Could not locate makefile \"${this_makefile}\""
+        exit_code=${ERROR}
+    fi
+
+fi
+
+# WHAT: Perform cobolConvert operations
+# WHY:  Needed for proper compilation
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    processing_verb="cobolConvert"
+    this_makefile="${source_dir}/makefile.${processing_verb}"
+
+    if [ -e "${this_makefile}" ]; then
+        echo -ne "    INFO:  Running \"make -f ${this_makefile} ${processing_verb}\" ... "
+        cd "${source_dir}" && make -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        #cd "${source_dir}" && make -f "${this_makefile}" ${processing_verb} 
+        exit_code=${?}
+
+        if [ ${exit_code} -ne ${SUCCESS} ]; then
+            echo "FAILED"
+            err_msg="${processing_verb} processing of targets failed"
+        else
+            echo "SUCCESS"
+        fi
+
+    else
+        err_msg="Could not locate makefile \"${this_makefile}\""
+        exit_code=${ERROR}
+    fi
+
+fi
+
+# WHAT: Perform trad_jcl operations
+# WHY:  Needed for proper compilation
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    processing_verb="trad_jcl"
+    this_makefile="${source_dir}/makefile.${processing_verb}"
+
+    if [ -e "${this_makefile}" ]; then
+        echo -ne "    INFO:  Running \"make -f ${this_makefile} ${processing_verb}\" ... "
+        cd "${source_dir}" && make -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        #cd "${source_dir}" && make -f "${this_makefile}" ${processing_verb} 
+        exit_code=${?}
+
+        if [ ${exit_code} -ne ${SUCCESS} ]; then
+            echo "FAILED"
+            err_msg="${processing_verb} processing of targets failed"
+        else
+            echo "SUCCESS"
+        fi
+
+    else
+        err_msg="Could not locate makefile \"${this_makefile}\""
+        exit_code=${ERROR}
+    fi
+
+fi
+
+#====
+# Post Conversion
 #====
 
 # WHAT: Complain if necessary and exit
