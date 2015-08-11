@@ -38,7 +38,7 @@ SUCCESS=0
 ERROR=1
 
 # This directory houses eclipse/ART WB harvested script assets
-WB_AUTOMATE="/shared/wb_automate"
+WB_AUTOMATE="/Users/jplumme/projects/wb_automate"
 TARGETS="sysin cics proc jcl copy map ddl batch"
 
 PROJECT="${WB_AUTOMATE}"
@@ -202,6 +202,7 @@ fi
 # WHY:  Cannot proceed otherwise
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    SCRIPT_BASE=`dirname "${0}"`
     os_type=`uname -s | tr '[A-Z]' '[a-z]'`
     cpu_arch=`uname -m | tr '[A-Z]' '[a-z]' | sed -e 's/i[345]86/i686/g'`
 
@@ -440,64 +441,70 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         tmp_file="${tmp_dir}/translate-pre-processing-${uc_target}-${target_file}.$$"
                         rm -f "${tmp_file}"
     
-                        stdbuf -oL awk '{print $0}' "${prepare_dir}/${uc_target}/${target_file}" | while IFS='' read -r input_line ; do
-                            let is_comment=0
-                            #echo "input line is: ${input_line}"
+                        ${SCRIPT_BASE}/processing.pl --input_file "${prepare_dir}/${uc_target}" --output_file "${tmp_file}" --type "${target}" --src_regex "${left_side}" --dst_regex "${right_side}"
+                        #stdbuf -oL awk '{print $0}' "${prepare_dir}/${uc_target}/${target_file}" | while IFS='' read -r input_line ; do
+                        #    let is_comment=0
+                        #    #echo "input line is: ${input_line}"
     
-                            # Comments look like:
-                            # - BATCH, COPY, and CICS: byte 7 == "*"
-                            # - JCL PROCS: ^//*
+                        #    # Comments look like:
+                        #    # - BATCH, COPY, and CICS: byte 7 == "*"
+                        #    # - JCL PROCS: ^//*
     
-                            case ${target} in
+                        #    case ${target} in
     
-                                batch|copy|cics)
-                                    is_comment=`echo "${input_line}" | cut -b7 | egrep -c "\*"`
-                                ;;
+                        #        batch|copy|cics)
+                        #            is_comment=`echo "${input_line}" | cut -b7 | egrep -c "\*"`
+                        #        ;;
     
-                                jcl|procs)
-                                    is_comment=`echo "${input_line}" | egrep -c "^//\*"`
-                                ;;
+                        #        jcl|procs)
+                        #            is_comment=`echo "${input_line}" | egrep -c "^//\*"`
+                        #        ;;
     
-                                *)
-                                    is_comment=`echo "${input_line}" | egrep -c "^#"`
-                                ;;
+                        #        *)
+                        #            is_comment=`echo "${input_line}" | egrep -c "^#"`
+                        #        ;;
     
-                            esac
+                        #    esac
     
-                            #echo "IS COMMENT: ${is_comment}"
-                            if [ "${input_line}" = "" ]; then
-                                echo -ne "${input_line}\n" >> ${tmp_file}
-                            else
+                        #    #echo "IS COMMENT: ${is_comment}"
+                        #    if [ "${input_line}" = "" ]; then
+                        #        echo -ne "${input_line}\n" >> ${tmp_file}
+                        #    else
     
-                                if [ ${is_comment} -gt 0 ]; then
-                                    #echo "* * * * FOUND COMMENT LINE * * * *"
-                                    echo -ne "${input_line}\n" >> ${tmp_file}
-                                else
-                                    #echo "* * * * FOUND REGULAR LINE * * * *"
+                        #        if [ ${is_comment} -gt 0 ]; then
+                        #            #echo "* * * * FOUND COMMENT LINE * * * *"
+                        #            echo -ne "${input_line}\n" >> ${tmp_file}
+                        #        else
+                        #            #echo "* * * * FOUND REGULAR LINE * * * *"
     
-                                    if [ "${left_side}" = "" ]; then
-                                        echo -ne "${input_line}\n" >> ${tmp_file}
-                                    else
-                                        right_now=`date`
-                                        original_line=`echo "${input_line}"`
-                                        echo -ne "${comment_prefix} The following line was commented out\n"     >> ${tmp_file}
-                                        echo -ne "${comment_prefix} ${right_now}\n"                             >> ${tmp_file}
-                                        echo -ne "${comment_prefix} by automation script ${0} PRE-PROCESSING\n" >> ${tmp_file}
-                                        echo -ne "${comment_prefix} Original line was:\n"                       >> ${tmp_file}
-                                        echo -ne "${comment_prefix} ${original_line}\n"                         >> ${tmp_file}
-                                        new_input_line=`echo "${input_line}" | sed -e "s?${left_side}?${right_side}?g"`
-                                        echo -ne "${new_input_line}\n"                                          >> ${tmp_file}
-                                    fi
+                        #            if [ "${left_side}" = "" ]; then
+                        #                echo -ne "${input_line}\n" >> ${tmp_file}
+                        #            else
+                        #                right_now=`date`
+                        #                original_line=`echo "${input_line}"`
+                        #                echo -ne "${comment_prefix} The following line was commented out\n"     >> ${tmp_file}
+                        #                echo -ne "${comment_prefix} ${right_now}\n"                             >> ${tmp_file}
+                        #                echo -ne "${comment_prefix} by automation script ${0} PRE-PROCESSING\n" >> ${tmp_file}
+                        #                echo -ne "${comment_prefix} Original line was:\n"                       >> ${tmp_file}
+                        #                echo -ne "${comment_prefix} ${original_line}\n"                         >> ${tmp_file}
+                        #                new_input_line=`echo "${input_line}" | sed -e "s?${left_side}?${right_side}?g"`
+                        #                echo -ne "${new_input_line}\n"                                          >> ${tmp_file}
+                        #            fi
     
-                                fi
+                        #        fi
     
-                            fi
+                        #    fi
     
-                        done
+                        #done
                         
                         # Move ${tmp_file} to ${prepare_dir}/${uc_target}/${target_file}
-                        rsync "${tmp_file}" "${prepare_dir}/${uc_target}/${target_file}" > /dev/null 2>&1
-                        echo "DONE"
+                        if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
+                            rsync "${tmp_file}" "${prepare_dir}/${uc_target}/${target_file}" > /dev/null 2>&1
+                            echo "DONE"
+                        else
+                            echo "FAILED"
+                        fi
+
                     done
 
                 fi
@@ -942,63 +949,68 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         tmp_file="${tmp_dir}/translate-post-processing-${uc_target}-${target_file}.$$"
                         rm -f "${tmp_file}"
 
-                        stdbuf -oL awk '{print $0}' "${source_code_dir}/${target_file}" | while IFS='' read -r input_line ; do
-                            let is_comment=0
-                            #echo "input line is: ${input_line}"
+                        ${SCRIPT_BASE}/processing.pl --input_file "${source_code_dir}/${target_file}" --output_file "${tmp_file}" --type "${target}" --src_regex "${left_side}" --dst_regex "${right_side}"
+                        #stdbuf -oL awk '{print $0}' "${source_code_dir}/${target_file}" | while IFS='' read -r input_line ; do
+                        #    let is_comment=0
+                        #    #echo "input line is: ${input_line}"
 
-                            # Comments look like:
-                            # - BATCH, COPY, and CICS: byte 7 == "*"
-                            # - JCL PROCS: ^//*
+                        #    # Comments look like:
+                        #    # - BATCH, COPY, and CICS: byte 7 == "*"
+                        #    # - JCL PROCS: ^//*
 
-                            case ${target} in
+                        #    case ${target} in
 
-                                batch|copy|cics)
-                                    is_comment=`echo "${input_line}" | cut -b7 | egrep -c "\*"`
-                                    comment_prefix="      *"
-                                ;;
+                        #        batch|copy|cics)
+                        #            is_comment=`echo "${input_line}" | cut -b7 | egrep -c "\*"`
+                        #            comment_prefix="      *"
+                        #        ;;
 
-                                *)
-                                    is_comment=`echo "${input_line}" | egrep -c "^#"`
-                                    comment_prefix="#"
-                                ;;
+                        #        *)
+                        #            is_comment=`echo "${input_line}" | egrep -c "^#"`
+                        #            comment_prefix="#"
+                        #        ;;
 
-                            esac
+                        #    esac
 
-                            #echo "IS COMMENT: ${is_comment}"
+                        #    #echo "IS COMMENT: ${is_comment}"
 
-                            if [ "${input_line}" = "" ]; then
-                                echo -ne "${input_line}\n" >> ${tmp_file}
-                            else
+                        #    if [ "${input_line}" = "" ]; then
+                        #        echo -ne "${input_line}\n" >> ${tmp_file}
+                        #    else
 
-                                if [ ${is_comment} -gt 0 ]; then
-                                    #echo "* * * * FOUND COMMENT LINE * * * *"
-                                    echo -ne "${input_line}\n" >> ${tmp_file}
-                                else
-                                    #echo "* * * * FOUND REGULAR LINE * * * *"
+                        #        if [ ${is_comment} -gt 0 ]; then
+                        #            #echo "* * * * FOUND COMMENT LINE * * * *"
+                        #            echo -ne "${input_line}\n" >> ${tmp_file}
+                        #        else
+                        #            #echo "* * * * FOUND REGULAR LINE * * * *"
 
-                                    if [ "${left_side}" = "" ]; then
-                                        echo -ne "${input_line}\n" >> ${tmp_file}
-                                    else
-                                        right_now=`date`
-                                        original_line=`echo "${input_line}"`
-                                        echo -ne "${comment_prefix} The following line was commented out\n"      >> ${tmp_file}
-                                        echo -ne "${comment_prefix} ${right_now}\n"                              >> ${tmp_file}
-                                        echo -ne "${comment_prefix} by automation script ${0} POST-PROCESSING\n" >> ${tmp_file}
-                                        echo -ne "${comment_prefix} Original line was:\n"                        >> ${tmp_file}
-                                        echo -ne "${comment_prefix} ${original_line}\n"                          >> ${tmp_file}
-                                        new_input_line=`echo "${input_line}" | sed -e "s?${left_side}?${right_side}?g"`
-                                        echo -ne "${new_input_line}\n"                                           >> ${tmp_file}
-                                    fi
+                        #            if [ "${left_side}" = "" ]; then
+                        #                echo -ne "${input_line}\n" >> ${tmp_file}
+                        #            else
+                        #                right_now=`date`
+                        #                original_line=`echo "${input_line}"`
+                        #                echo -ne "${comment_prefix} The following line was commented out\n"      >> ${tmp_file}
+                        #                echo -ne "${comment_prefix} ${right_now}\n"                              >> ${tmp_file}
+                        #                echo -ne "${comment_prefix} by automation script ${0} POST-PROCESSING\n" >> ${tmp_file}
+                        #                echo -ne "${comment_prefix} Original line was:\n"                        >> ${tmp_file}
+                        #                echo -ne "${comment_prefix} ${original_line}\n"                          >> ${tmp_file}
+                        #                new_input_line=`echo "${input_line}" | sed -e "s?${left_side}?${right_side}?g"`
+                        #                echo -ne "${new_input_line}\n"                                           >> ${tmp_file}
+                        #            fi
 
-                                fi
+                        #        fi
 
-                            fi
+                        #    fi
 
-                        done
+                        #done
 
                         # Move ${tmp_file} to ${source_code_dir}/${target_file}
-                        rsync "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
-                        echo "DONE"
+                        if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
+                            rsync "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
+                            echo "DONE"
+                        else
+                            echo "FAILED"
+                        fi
                         
                     done
 
