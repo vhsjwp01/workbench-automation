@@ -433,30 +433,16 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             # awk '{print $0}' BATCH | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g'
             # Read in regex lines from "${preconvert_dir}/${uc_target}"
             if [ -e "${preconvert_dir}/${uc_target}" -a -s "${preconvert_dir}/${uc_target}" ]; then
-                regex_lines=`strings "${preconvert_dir}/${uc_target}" | awk '{print $0}' | egrep -v "^#" | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g' -e 's/\ /:ZZqC:/g'`
-
-                # Use the regexes to replace file contents in ${prepare_dir} targets
-                for regex_line in ${regex_lines} ; do
-
-                    if [ "${regex_line}" != "" ]; then
-                        real_regex_line=`echo "${regex_line}" | sed -e 's/:ZZqC:/\ /g'`
-                        left_side=`echo "${real_regex_line}" | awk -F'::' '{print $1}'`
-                        right_side=`echo "${real_regex_line}" | awk -F'::' '{print $NF}'`
-
-                        echo "Running: ${SCRIPT_BASE}/processor.pl --input_file \"${prepare_dir}/${uc_target}/${target_file}\" --output_file \"${tmp_file}\" --data_type \"${target}\" --src_regex \"${left_side}\" --dst_regex \"${right_side}\""
-                        ${SCRIPT_BASE}/processor.pl --input_file "${prepare_dir}/${uc_target}/${target_file}" --output_file "${tmp_file}" --data_type "${target}" --src_regex "${left_side}" --dst_regex "${right_side}"
+                #echo "Running: ${SCRIPT_BASE}/processor.pl --input_file \"${prepare_dir}/${uc_target}/${target_file}\" --output_file \"${tmp_file}\" --data_type \"${target}\" --regex_file \"${preconvert_dir}/${uc_target}\" --mode \"pre\""
+                ${SCRIPT_BASE}/processor.pl --input_file "${prepare_dir}/${uc_target}/${target_file}" --output_file "${tmp_file}" --data_type "${target}" --regex_file "${preconvert_dir}/${uc_target}" --mode "pre"
                         
-                        # Move ${tmp_file} to ${prepare_dir}/${uc_target}/${target_file}
-                        if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
-                            rsync "${tmp_file}" "${prepare_dir}/${uc_target}/${target_file}" > /dev/null 2>&1
-                            let exit_code=${exit_code}+${?}
-                        else
-                            let exit_code=${exit_code}+1
-                        fi
-
-                    fi
-
-                done
+                # Move ${tmp_file} to ${prepare_dir}/${uc_target}/${target_file}
+                if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
+                    rsync "${tmp_file}" "${prepare_dir}/${uc_target}/${target_file}" > /dev/null 2>&1
+                    let exit_code=${exit_code}+${?}
+                else
+                    let exit_code=${exit_code}+1
+                fi
 
                 if [ ${exit_code} -eq ${SUCCESS} ]; then
                     echo "SUCCESS"
@@ -473,6 +459,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     done
     
 fi
+
+###
+exit
+###
 
 # WHAT: Perform analysis operations
 # WHY:  Needed for proper compilation
@@ -852,127 +842,61 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # awk '{print $0}' BATCH | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g'
         # Read in regex lines from "${postconvert_dir}/${uc_target}"
         if [ -e "${postconvert_dir}/${uc_target}" -a -s "${postconvert_dir}/${uc_target}" ]; then
-            regex_lines=`strings "${postconvert_dir}/${uc_target}" | awk '{print $0}' | egrep -v "^#" | egrep "^\(\"" | sed -e 's/[()]//g' -e 's/\"//g' -e 's/\ \.\ /::/g' -e 's/\ /:ZZqC:/g'`
 
-            # Use the regexes to replace file contents in ${pcTarget_dir} targets
-            for regex_line in ${regex_lines} ; do
+            # Here we slurp in each file in the target directory and plow through each
+            # line skipping comment lines
+            source_code_dir="${pcTarget_dir}/${uc_target}"
 
-                if [ "${regex_line}" != "" ]; then
-                    real_regex_line=`echo "${regex_line}" | sed -e 's/:ZZqC:/\ /g'`
-                    left_side=`echo "${real_regex_line}" | awk -F'::' '{print $1}'`
-                    right_side=`echo "${real_regex_line}" | awk -F'::' '{print $NF}'`
+            case ${target} in 
 
-                    # Here we slurp in each file in the target directory and plow through each
-                    # line skipping comment lines
-                    source_code_dir="${pcTarget_dir}/${uc_target}"
+                sysin)
+                    source_code_dir="${pcTarget_dir}/Master-${uc_target}/${uc_target}"
+                ;;
 
-                    case ${target} in 
+                copy)
+                    source_code_dir="${pcTarget_dir}/Master-${target}/${uc_target}"
+                ;;
 
-                        sysin)
-                            source_code_dir="${pcTarget_dir}/Master-${uc_target}/${uc_target}"
-                        ;;
+            esac
 
-                        copy)
-                            source_code_dir="${pcTarget_dir}/Master-${target}/${uc_target}"
-                        ;;
+            case ${target} in
 
-                    esac
+                batch|cics)
+                    target_files=`cd "${source_code_dir}" 2> /dev/null && ls *.${file_ext} 2> /dev/null ; ls *.pco 2> /dev/null`
+                ;;
 
-                    case ${target} in
+                jcl)
+                    file_ext="ksh"
+                    target_files=`cd "${source_code_dir}" 2> /dev/null && ls *.{file_ext} 2> /dev/null`
+                ;;
 
-                        batch|cics)
-                            target_files=`cd "${source_code_dir}" 2> /dev/null && ls *.${file_ext} 2> /dev/null ; ls *.pco 2> /dev/null`
-                        ;;
+                *)
+                    target_files=`cd "${source_code_dir}" 2> /dev/null && ls *.${file_ext} 2> /dev/null`
+                ;;
 
-                        jcl)
-                            file_ext="ksh"
-                            target_files=`cd "${source_code_dir}" 2> /dev/null && ls *.{file_ext} 2> /dev/null`
-                        ;;
+            esac
 
-                        *)
-                            target_files=`cd "${source_code_dir}" 2> /dev/null && ls *.${file_ext} 2> /dev/null`
-                        ;;
+            tmp_dir="/tmp/${USER}/$$"
 
-                    esac
+            if [ ! -d "${tmp_dir}" ]; then
+                mkdir -p "${tmp_dir}"
+            fi
 
-                    tmp_dir="/tmp/${USER}/$$"
+            for target_file in ${target_files} ; do
+                echo -ne "    INFO:  Post-Processing \"${source_code_dir}/${target_file}\" for regular expression translation ... "
+                tmp_file="${tmp_dir}/translate-post-processing-${uc_target}-${target_file}.$$"
+                rm -f "${tmp_file}"
 
-                    if [ ! -d "${tmp_dir}" ]; then
-                        mkdir -p "${tmp_dir}"
-                    fi
+                ${SCRIPT_BASE}/processor.pl --input_file "${source_code_dir}/${target_file}" --output_file "${tmp_file}" --data_type "${target}" --regex_file "${postconvert_dir}/${uc_target}" --mode "post"
 
-                    for target_file in ${target_files} ; do
-                        echo -ne "    INFO:  Post-Processing \"${source_code_dir}/${target_file}\" for regular expression translation ... "
-                        tmp_file="${tmp_dir}/translate-post-processing-${uc_target}-${target_file}.$$"
-                        rm -f "${tmp_file}"
-
-                        ${SCRIPT_BASE}/processor.pl --input_file "${source_code_dir}/${target_file}" --output_file "${tmp_file}" --type "${target}" --src_regex "${left_side}" --dst_regex "${right_side}"
-                        #stdbuf -oL awk '{print $0}' "${source_code_dir}/${target_file}" | while IFS='' read -r input_line ; do
-                        #    let is_comment=0
-                        #    #echo "input line is: ${input_line}"
-
-                        #    # Comments look like:
-                        #    # - BATCH, COPY, and CICS: byte 7 == "*"
-                        #    # - JCL PROCS: ^//*
-
-                        #    case ${target} in
-
-                        #        batch|copy|cics)
-                        #            is_comment=`echo "${input_line}" | cut -b7 | egrep -c "\*"`
-                        #            comment_prefix="      *"
-                        #        ;;
-
-                        #        *)
-                        #            is_comment=`echo "${input_line}" | egrep -c "^#"`
-                        #            comment_prefix="#"
-                        #        ;;
-
-                        #    esac
-
-                        #    #echo "IS COMMENT: ${is_comment}"
-
-                        #    if [ "${input_line}" = "" ]; then
-                        #        echo -ne "${input_line}\n" >> ${tmp_file}
-                        #    else
-
-                        #        if [ ${is_comment} -gt 0 ]; then
-                        #            #echo "* * * * FOUND COMMENT LINE * * * *"
-                        #            echo -ne "${input_line}\n" >> ${tmp_file}
-                        #        else
-                        #            #echo "* * * * FOUND REGULAR LINE * * * *"
-
-                        #            if [ "${left_side}" = "" ]; then
-                        #                echo -ne "${input_line}\n" >> ${tmp_file}
-                        #            else
-                        #                right_now=`date`
-                        #                original_line=`echo "${input_line}"`
-                        #                echo -ne "${comment_prefix} The following line was commented out\n"      >> ${tmp_file}
-                        #                echo -ne "${comment_prefix} ${right_now}\n"                              >> ${tmp_file}
-                        #                echo -ne "${comment_prefix} by automation script ${0} POST-PROCESSING\n" >> ${tmp_file}
-                        #                echo -ne "${comment_prefix} Original line was:\n"                        >> ${tmp_file}
-                        #                echo -ne "${comment_prefix} ${original_line}\n"                          >> ${tmp_file}
-                        #                new_input_line=`echo "${input_line}" | sed -e "s?${left_side}?${right_side}?g"`
-                        #                echo -ne "${new_input_line}\n"                                           >> ${tmp_file}
-                        #            fi
-
-                        #        fi
-
-                        #    fi
-
-                        #done
-
-                        # Move ${tmp_file} to ${source_code_dir}/${target_file}
-                        if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
-                            rsync "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
-                            echo "DONE"
-                        else
-                            echo "FAILED"
-                        fi
-                        
-                    done
-
+                # Move ${tmp_file} to ${source_code_dir}/${target_file}
+                if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
+                    rsync "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
+                    echo "DONE"
+                else
+                    echo "FAILED"
                 fi
-
+                
             done
 
         fi
