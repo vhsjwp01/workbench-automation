@@ -17,13 +17,13 @@
 ################################################################################
 #
 
-# NAME: <name>
+# NAME: choreography.sh
 # 
 # This script performs a <something> with <things>
 #
 # OPTIONS:
 #
-# --<option 1>        - <something>
+# --wb_dir        - Work Bench base directory
 
 ################################################################################
 # CONSTANTS
@@ -55,7 +55,7 @@ SCRIPT_NAME="${0}"
 
 USAGE_ENDLINE="\n${STDOUT_OFFSET}${STDOUT_OFFSET}${STDOUT_OFFSET}${STDOUT_OFFSET}"
 USAGE="${SCRIPT_NAME}${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --<option 1> <something> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --wb_dir <Path to Work Bench base directory> ]${USAGE_ENDLINE}"
 
 ################################################################################
 # VARIABLES
@@ -244,7 +244,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     fi
 
 fi
-
 
 # WHAT: Import data
 # WHY:  Asked to
@@ -461,7 +460,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 fi
 
 ###
-exit
+#exit
 ###
 
 # WHAT: Perform analysis operations
