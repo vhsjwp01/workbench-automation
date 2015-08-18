@@ -83,7 +83,7 @@ if ( $exit_code == $SUCCESS ) {
 
             }
         
-        } elsif (( $data_type eq "jcl" ) || ( $data_type eq "procs" )) {
+        } elsif (( $data_type eq "jcl" ) || ( $data_type eq "proc" )) {
 
             if ( $mode eq "pre" ) {
                 $comment_prefix = "//*";
@@ -119,22 +119,40 @@ if ( $exit_code == $SUCCESS ) {
 
             # Check the input_line for each regex
             foreach $regex ( @regex ) {
+                $regex =~ s/[\n\r\t]//g;
+
+                #if ( $data_type eq "proc" ) {
+                #    print "\nRaw regex: $regex, \n";
+                #}
 
                 # Valid regex lines start with '("'
                 if ( $regex =~ /^\(\"/ ) {
                     ( $src_regex , $dst_regex ) = split( / . /, $regex );
+                    chomp( $src_regex );
+                    chomp( $dst_regex );
 
                     # Flush parentheses and quotes
-                    $src_regex =~ s/\(//g;
+                    $src_regex =~ s/^\(//g;
                     $src_regex =~ s/\"//g;
-                    $src_regex =~ s/\)//g;
-                    $dst_regex =~ s/\(//g;
+                    $src_regex =~ s/\(/\\\(/g;
+                    $src_regex =~ s/\)/\\\)/g;
+                    #$src_regex =~ s/\)//g;
+                    #$dst_regex =~ s/\(//g;
                     $dst_regex =~ s/\"//g;
-                    $dst_regex =~ s/\)//g;
+                    $dst_regex =~ s/\)$//g;
+                    $dst_regex =~ s/\(/\\\(/g;
+                    $dst_regex =~ s/\)/\\\)/g;
+
+                    #if ( $data_type eq "proc" ) {
+                    #    print "\nSource regex: $src_regex, \n";
+                    #    print "\nDest regex: $dst_regex, \n";
+                    #}
+
                 } else {
                     $src_regex = "";
                     $dst_regex = "";
                 }
+
 
                 # Don't do anything if src_regex is blank
                 if ( $src_regex ne "" ) {
@@ -150,18 +168,23 @@ if ( $exit_code == $SUCCESS ) {
                             # strip any leading spaces
                             $input_line =~ s/^\s+//g;
                             $new_line = $comment_prefix . " " . $input_line;
-                            $counter = 0;
                             $line_length = length( $new_line );
 
                             # Build an array of lines if the total line length exceeds 72 characters
-                            if ( $line_length > 72 ) {
+                            if ( $line_length > 71 ) {
+                                $counter = 0;
+                                @new_line_array = "";
 
-                                while ( $line_length > 0 ) {
+                                while ( $line_length > 71 ) {
                                     $new_line_array[ $counter ] = substr( $new_line, 0, 71 );
-                                    $line_remainder = substr( $new_line, 72 );
+                                    $line_remainder = substr( $new_line, 71 );
                                     $new_line = $comment_prefix . " " . $line_remainder;
                                     $line_length = length( $new_line );
                                     $counter++
+                                }
+
+                                if ( $new_line ne "" ) {
+                                    $new_line_array[ $counter ] = $new_line;
                                 }
 
                                 foreach $new_line_array_element ( @new_line_array ) {
@@ -177,8 +200,13 @@ if ( $exit_code == $SUCCESS ) {
                             # strip any leading spaces
                             $original_line =~ s/^\s+//g;
                             $input_line =~ s/$src_regex/$dst_regex/g;
+                            # Fix parentheses
+                            $input_line =~ s/\\\(/\(/g;
+                            $input_line =~ s/\\\)/\)/g;
+                            
                             $output_line = "$comment_prefix $right_now - The following line was commented out";
-                            $output_line = $output_line . "\n$comment_prefix by automation script $0";
+                            $output_line = $output_line . "\n$comment_prefix by automation script:";
+                            $output_line = $output_line . "\n$comment_prefix $0";
                             $output_line = $output_line . "\n$comment_prefix Original line was:";
                             $output_line = $output_line . "\n$comment_prefix $original_line";
                             $output_line = $output_line . "\n$input_line";
