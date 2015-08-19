@@ -458,52 +458,135 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # Extra pre-processing by type
         case ${target} in 
 
-            cics)
-                echo -ne "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target} files for regular expression translation ... "
-                sed -i 's/                 15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ptfix *          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i '/ptfix \*          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ a\ptfix            15 CURSOR-ATTR-1     PIC X(4) VALUE X'\''00FFFF20'\''.' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i 's/                 15 FILLER            PIC S9(9) COMP VALUE +16777160./ptfix *          15 FILLER            PIC S9(9) COMP VALUE +16777160./' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i '/ptfix \*          15 FILLER            PIC S9(9) COMP VALUE +16777160./ a\ptfix            15 FILLER            PIC X(4) VALUE X'\''00FFFF48'\''.' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i 's/                 15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /ptfix *          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i '/ptfix \*          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. / a\ptfix            15 OK-ATTR-1         PIC X(4) VALUE X'\''00000020'\''.' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i 's/                 15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /ptfix *          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i '/ptfix \*          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. / a\ptfix            15 PROT-ATTR-1       PIC X(4) VALUE X'\''00000030'\''.' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i 's/                 15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /ptfix *          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i '/ptfix \*          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. / a\ptfix            15 BLANK-ATTR-1      PIC X(4) VALUE X'\''00000025'\''.' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i 's/                 15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ptfix *          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i '/ptfix \*          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ a\ptfix            15 CBLANK-ATTR-1     PIC X(4) VALUE X'\''00FFFF3C'\''.' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i 's/                 15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /ptfix *          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i '/ptfix \*          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. / a\ptfix            15 IBLANK-ATTR-1     PIC X(4) VALUE X'\''0000003C'\''.' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i 's/                 15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /ptfix *          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i '/ptfix \*          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. / a\ptfix            15 OHIGH-ATTR-1      PIC X(4) VALUE X'\''00000038'\''.' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i 's/                 15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /ptfix *          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /' "${prepare_dir}/${uc_target}"/*.cbl &&
-                sed -i '/ptfix \*          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. / a\ptfix            15 IHIGH-ATTR-1      PIC X(4) VALUE X'\''00000048'\''.' "${prepare_dir}/${uc_target}"/*.cbl
+            copy|batch|cics)
+                comment_prefix='      *'
+                echo "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target} files for ASIS translation:"
+                target_files=`cd "${prepare_dir}/${uc_target}" 2> /dev/null && ls *.${file_ext} 2> /dev/null`
+                
+                for target_file in ${target_files} ; do
+                    echo -ne "        Processing file ${prepare_dir}/${uc_target}/${target_file} for ASIS keyword munging ... "
+                    # This egrep sequence should yield the proper triplet of info
+                    valid_lines=($(egrep -n "EXEC CICS RECEIVE|ASIS|END-EXEC" "${prepare_dir}/${uc_target}/${target_file}" | egrep -A2 "EXEC CICS RECEIVE" | egrep "^[0-9]*:" | sed -e 's/\ /:ZZqC:/g'))
+                    let line_counter=0
+                
+                    # Valid inputs occur in threes: a line with "EXEC CICS RECEIVE", followed by a line with "ASIS", followed by "END-EXEC"
+                    while [ ${line_counter} -lt ${#valid_lines[@]} ]; do
+                        exec_line_number=`echo "${valid_lines[$line_counter]}" | awk -F':' '{print $1}'`
+                        real_exec_line=`echo "${valid_lines[$line_counter]}" | sed -e 's/:ZZqC:/\ /g' -e "s/^${exec_line_number}://g"`
+                        let is_exec_line=`echo "${real_exec_line}" | egrep -c "EXEC CICS RECEIVE"`
+                
+                        let line_counter=${line_counter}+1
+                
+                        asis_line_number=`echo "${valid_lines[$line_counter]}" | awk -F':' '{print $1}'`
+                        real_asis_line=`echo "${valid_lines[$line_counter]}" | sed -e 's/:ZZqC:/\ /g' -e "s/^${asis_line_number}://g"`
+                        let is_asis_line=`echo "${real_asis_line}" | egrep -c "ASIS"`
+                
+                        let line_counter=${line_counter}+1
+                
+                        end_line_number=`echo "${valid_lines[$line_counter]}" | awk -F':' '{print $1}'`
+                        real_end_line=`echo "${valid_lines[$line_counter]}" | sed -e 's/:ZZqC:/\ /g' -e "s/^${end_line_number}://g"`
+                        let is_end_line=`echo "${real_end_line}" | egrep -c "END-EXEC"`
+                
+                        # If all three tests are equal to 1, then we found the properly ordered triplet
+                        # And we need to comment out the line number containing ASIS
+                        if [ ${is_exec_line} -eq 1 -a ${is_asis_line} -eq 1 -a ${is_end_line} -eq 1 ]; then
+                            line_prefix=`echo "${real_asis_line}" | cut -b 1-7`
+                            line_remainder=`echo "${real_asis_line}" | sed -e "s/^${line_prefix}//g"`
+                            sed -i -e "${asis_line_number}s/^${real_asis_line}/${comment_prefix}${line_remainder}/g" "${prepare_dir}/${uc_target}/${target_file}"
+                            #echo "sed -e \"${asis_line_number}s/^${real_asis_line}/${comment_prefix}${line_remainder}/g\" \"${prepare_dir}/${uc_target}/${target_file}\""
+                        fi
 
-                if [ ${?} -eq ${SUCCESS} ]; then
-                    echo "SUCCESS"
-                else
-                    echo "FAILED"
-                    err_msg="Extra PracTrans sed munging failed on ${prepare_dir}/${uc_target} Cobol files"
-                    exit_code=${ERROR}
+                        let line_counter=${line_counter}+1
+                    done
+
+                    echo "DONE"
+                done
+
+                if [ "${target}" = "cics" ]; then
+                    echo -ne "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target} files for regular expression translation ... "
+                    sed -i 's/                 15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ptfix *          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i '/ptfix \*          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ a\ptfix            15 CURSOR-ATTR-1     PIC X(4) VALUE X'\''00FFFF20'\''.' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i 's/                 15 FILLER            PIC S9(9) COMP VALUE +16777160./ptfix *          15 FILLER            PIC S9(9) COMP VALUE +16777160./' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i '/ptfix \*          15 FILLER            PIC S9(9) COMP VALUE +16777160./ a\ptfix            15 FILLER            PIC X(4) VALUE X'\''00FFFF48'\''.' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i 's/                 15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /ptfix *          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i '/ptfix \*          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. / a\ptfix            15 OK-ATTR-1         PIC X(4) VALUE X'\''00000020'\''.' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i 's/                 15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /ptfix *          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i '/ptfix \*          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. / a\ptfix            15 PROT-ATTR-1       PIC X(4) VALUE X'\''00000030'\''.' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i 's/                 15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /ptfix *          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i '/ptfix \*          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. / a\ptfix            15 BLANK-ATTR-1      PIC X(4) VALUE X'\''00000025'\''.' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i 's/                 15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ptfix *          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i '/ptfix \*          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ a\ptfix            15 CBLANK-ATTR-1     PIC X(4) VALUE X'\''00FFFF3C'\''.' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i 's/                 15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /ptfix *          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i '/ptfix \*          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. / a\ptfix            15 IBLANK-ATTR-1     PIC X(4) VALUE X'\''0000003C'\''.' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i 's/                 15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /ptfix *          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i '/ptfix \*          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. / a\ptfix            15 OHIGH-ATTR-1      PIC X(4) VALUE X'\''00000038'\''.' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i 's/                 15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /ptfix *          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /' "${prepare_dir}/${uc_target}"/*.${file_ext} &&
+                    sed -i '/ptfix \*          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. / a\ptfix            15 IHIGH-ATTR-1      PIC X(4) VALUE X'\''00000048'\''.' "${prepare_dir}/${uc_target}"/*.${file_ext}
+
+                    if [ ${?} -eq ${SUCCESS} ]; then
+                        echo "SUCCESS"
+                    else
+                        echo "FAILED"
+                        err_msg="Extra PracTrans sed munging failed on ${prepare_dir}/${uc_target} Cobol files"
+                        exit_code=${ERROR}
+                    fi
+
                 fi
+
             ;;
 
             jcl|proc)
                 comment_prefix='//*'
-                echo "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target} files for INCLUDE translation"
+                echo "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target} files for SUBSYS and INCLUDE translation:"
                 target_files=`cd "${prepare_dir}/${uc_target}" 2> /dev/null && ls *.${file_ext} 2> /dev/null`
 
                 for target_file in ${target_files} ; do
-                    echo "        Processing file ${prepare_dir}/${uc_target}/${target_file} ... "
+                    #set +x
+
+                    #=====
+                    echo -ne "        Processing file ${prepare_dir}/${uc_target}/${target_file} for SUBSYS keyword munging ... "
+                    this_line_count=`wc -l "${prepare_dir}/${uc_target}/${target_file}" | awk '{print $1}'`
+                    subsys_lines=($(egrep -n "SUBSYS=" "${prepare_dir}/${uc_target}/${target_file}" | awk -F':' '{print $1}'))
+
+                    for subsys_line in ${subsys_lines[*]} ; do
+                        alt_label=""
+                    
+                        # Get the original label
+                        let orig_label_line=${subsys_line}
+                        orig_label=`egrep -n "SUBSYS=" "${prepare_dir}/${uc_target}/${target_file}" | egrep "^${subsys_line}:" | awk '{print $1}' | awk -F'/' '{print $NF}'`
+                        alt_label=`egrep -A${this_line_count} "//${orig_label}.*SUBSYS=" "${prepare_dir}/${uc_target}/${target_file}" | egrep "DDNAME=" | head -1 | awk -F',' '{print $1}' | awk -F'=' '{print $NF}'`
+                        let alt_label_line=`egrep -n "^//${alt_label}" "${prepare_dir}/${uc_target}/${target_file}" | awk -F':' '{print $1}'`
+                    
+                        # Munge the labels if we have enough pieces
+                        if [ "${orig_label}" != "" -a "${alt_label}" != ""  ]; then
+                            let label_line_counter=${orig_label_line}
+                    
+                            # Comment out all the lines between SUBSYS start and the line above "^//${alt_label}"
+                            while [ ${label_line_counter} -lt ${alt_label_line}  ]; do
+                                this_line=`egrep -n "^.*$" "${prepare_dir}/${uc_target}/${target_file}" | egrep "^${label_line_counter}:" | sed -e "s/^${label_line_counter}://g"`
+                                first3_chars=`echo "${this_line}" | cut -b 1-3 | sed -e 's/\*/\\\*/g'`
+                                line_remainder=`echo "${this_line}" | sed -e "s?^${first3_chars}??g" -e 's/\*/\\\*/g'`
+                                sed -i -e "${label_line_counter}s?^${this_line}\$?${comment_prefix}${line_remainder}?g" "${prepare_dir}/${uc_target}/${target_file}"
+                                let label_line_counter=${label_line_counter}+1
+                            done
+                    
+                            # Fix the alt label line
+                            sed -i -e "s?^//${alt_label}?//${orig_label}?g" "${prepare_dir}/${uc_target}/${target_file}"
+                        else
+                            echo -ne " Missing label(s): ORIG LABEL=${orig_label}, ALT_LABEL=${alt_label} ... "
+                        fi
+                    
+                    done
+
+                    echo "DONE"
+
+                    #=====
+                    #set -x
+
+                    echo -ne "        Processing file ${prepare_dir}/${uc_target}/${target_file} for INCLUDE keyword munging ... "
                     target_lines=($(egrep -n "INCLUDE.*MEMBER=|//[^\*|\ ]" "${prepare_dir}/${uc_target}/${target_file}" | egrep -A1 "INCLUDE" | egrep "^[0-9]*:" | sed -e 's/\ /:ZZqC:/g'))
                     element_count=${#target_lines[@]}
 
-                    #if [ "${target_file}" = "BFOE960.jcl" ]; then
-                    #    set -x
-                    #else
-                    #    set +x
-                    #fi
-                
                     # There should always be pairs of lines found, a start line and an end line
                     let line_counter=0
                 
@@ -553,6 +636,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         let line_counter=${line_counter}+1
                     done
                 
+                    echo "DONE"
                 done
 
             ;;
@@ -729,7 +813,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     if [ -d "${report_dir}" ]; then
         anomaly_report="${report_dir}/report-${ucProjectName}-Anomalies"
 
-        if [ -e "${anomaly_report}" -a -s "${anomaly_report}" ]; then
+        #if [ -e "${anomaly_report}" -a -s "${anomaly_report}" ]; then
+        if [ -e "${anomaly_report}" ]; then
             echo -ne "    INFO:  Checking Anomaly report for issues of concern ... "
 
             let max_warnings=20
@@ -789,7 +874,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "MISSING"
     cobol_copy_report="${report_dir}/report-${ucProjectName}-Cobol-Copy"
 
-    if [ -e "${cobol_copy_report}" -a -s "${cobol_copy_report}" ]; then
+    #if [ -e "${cobol_copy_report}" -a -s "${cobol_copy_report}" ]; then
+    if [ -e "${cobol_copy_report}" ]; then
         echo -ne "    INFO:  Checking Cobol-Copy report for issues of concern ... "
         let cobol_copy_missing_count=`egrep -c ";MISSING;" "${cobol_copy_report}"`
 
@@ -1025,74 +1111,3 @@ if [ ${exit_code} -ne ${SUCCESS} ]; then
 fi
 
 exit ${exit_code}
-
-
-
-
-#!/bin/bash
-set -x
-
-target="jcl"
-uc_target="JCL"
-prepare_dir="/home/jplumme/wb_automate/prepared"
-file_ext="jcl"
-
-
-echo -ne "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target} files for INCLUDE translation ... "
-target_files=`cd "${prepare_dir}/${uc_target}" 2> /dev/null && ls *.${file_ext} 2> /dev/null`
-comment_prefix='//*'
-
-for target_file in ${target_files} ; do
-    target_lines=($(egrep -n "INCLUDE MEMBER=|//[^\*|\ ]" "${prepare_dir}/${uc_target}/${target_file}" | egrep -A1 "INCLUDE" | egrep "^[0-9]*:" | sed -e 's/\ /:ZZqC:/g'))
-
-    #echo "Target line 0: ${target_lines[0]}"
-
-    element_count=${#target_lines[@]}
-
-    # There should always be pairs of lines found, a start line and an end line
-    let line_counter=0
-
-    while [ ${line_counter} -lt ${element_count} ]; do
-
-        # Get the start line number
-        let start_line=`echo "${target_lines[$line_counter]}" | sed -e 's/:ZZqC:/\ /g' | awk -F':' '{print $1}'`
-
-        # Get the real line
-        real_start_line=`echo "${target_lines[$line_counter]}" | sed -e 's/:ZZqC:/\ /g' -e "s/^${start_line}://g"`
-
-        # Increment the counter to find the end_line
-        let line_counter=${line_counter}+1
-
-        # Get the end line number
-        let end_line=`echo "${target_lines[$line_counter]}" | sed -e 's/:ZZqC:/\ /g' | awk -F':' '{print $1}'`
-
-        # Subtract 1 from ${end_line} to avoid inclusivity
-        let end_line=${end_line}-1
-
-        # Figure out the integer for -A argument in egrep
-        let lines_after=${end_line}-${start_line}
-
-        # Get the actual lines to be munged
-        real_target_lines=($(egrep -A${lines_after} "^${real_start_line}$" "${prepare_dir}/${uc_target}/${target_file}" | sed -e 's/\ /:ZZqC:/g'))
-
-        # Munge the lines in question
-        for real_target_line in ${real_target_lines[*]} ; do
-            real_target_line=`echo "${real_target_line}" | sed -e 's/:ZZqC:/\ /g'`
-            first3_chars=`echo "${real_target_line}" | cut -b 1-3 | sed -e 's/\*/\\\*/g'`
-            line_remainder=`echo "${real_target_line}" | sed -e "s?^${first3_chars}??g"`
-            #echo "First 3 chars: ${first3_chars}"
-            #echo "Line Remainder: ${line_remainder}"
-            eval "sed -i -e \"s:^${real_target_line}\$:${comment_prefix}${line_remainder}:g\" \"${prepare_dir}/${uc_target}/${target_file}\""
-        done
-
-        # Munge the start line
-        first3_chars=`echo "${real_start_line}" | cut -b 1-3 | sed -e 's/\*/\\\*/g'`
-        line_remainder=`echo "${real_start_line}" | sed -e "s?^${first3_chars}??g"`
-        eval "sed -i -e \"s:^${real_start_line}\$:${comment_prefix}${line_remainder}:g\" \"${prepare_dir}/${uc_target}/${target_file}\""
-
-        # Increment line_counter to start next pair
-        let line_counter=${line_counter}+1
-    done
-
-done
-
