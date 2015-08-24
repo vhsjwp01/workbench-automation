@@ -201,8 +201,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
 fi
 
-#====
-
 # WHAT: Set some distro specific vars
 # WHY:  Cannot proceed otherwise
 #
@@ -584,9 +582,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     echo "DONE"
 
-                    #=====
-                    #set -x
-
                     echo -ne "        Processing file ${prepare_dir}/${uc_target}/${target_file} for INCLUDE keyword munging ... "
                     target_lines=($(egrep -n "INCLUDE.*MEMBER=|//[^\*|\ ]" "${prepare_dir}/${uc_target}/${target_file}" | egrep -A1 "INCLUDE" | egrep "^[0-9]*:" | sed -e 's/\ /:ZZqC:/g'))
                     element_count=${#target_lines[@]}
@@ -651,10 +646,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     
 fi
 
-###
-#exit
-###
-
 # WHAT: Perform analysis operations
 # WHY:  Needed for proper compilation
 #
@@ -663,7 +654,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     processing_verb="analyze"
     source_dir="${WB_AUTOMATE}/source"
     export source_dir
-
 
     if [ -d "${script_dir}" -a -d "${prepare_dir}" -a -d "${source_dir}" ]; then
 
@@ -1013,9 +1003,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
 fi
 
-#====
-# Post Conversion
-#====
 # WHAT: Perform post-conversion character munging
 # WHY:  Needed for proper compilation
 #
