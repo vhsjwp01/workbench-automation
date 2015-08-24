@@ -197,14 +197,14 @@ if ( $exit_code == $SUCCESS ) {
                             if ( $comment_prefix eq "      *" ) {
 
                                 # Flush character positions 72-79 from $input_line
-                                $input_line =~ s/(?<=.{72})(.)/\ /s;
-                                $input_line =~ s/(?<=.{73})(.)/\ /s;
-                                $input_line =~ s/(?<=.{74})(.)/\ /s;
-                                $input_line =~ s/(?<=.{75})(.)/\ /s;
-                                $input_line =~ s/(?<=.{76})(.)/\ /s;
-                                $input_line =~ s/(?<=.{77})(.)/\ /s;
-                                $input_line =~ s/(?<=.{78})(.)/\ /s;
-                                $input_line =~ s/(?<=.{79})(.)/\ /s;
+                                $input_line =~ s/(?<=.{72})(.)/\ $1/s;
+                                $input_line =~ s/(?<=.{73})(.)/\ $1/s;
+                                $input_line =~ s/(?<=.{74})(.)/\ $1/s;
+                                $input_line =~ s/(?<=.{75})(.)/\ $1/s;
+                                $input_line =~ s/(?<=.{76})(.)/\ $1/s;
+                                $input_line =~ s/(?<=.{77})(.)/\ $1/s;
+                                $input_line =~ s/(?<=.{78})(.)/\ $1/s;
+                                $input_line =~ s/(?<=.{79})(.)/\ $1/s;
                                 
                                 # Flush character positions 0-5 from $original_line
                                 # and set position 6 as the comment character
