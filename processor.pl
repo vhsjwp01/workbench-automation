@@ -195,6 +195,19 @@ if ( $exit_code == $SUCCESS ) {
 
                             # Cobol - make it a comment
                             if ( $comment_prefix eq "      *" ) {
+
+                                # Flush character positions 72-79 from $input_line
+                                $input_line =~ s/(?<=.{72})(.)/\ /s;
+                                $input_line =~ s/(?<=.{73})(.)/\ /s;
+                                $input_line =~ s/(?<=.{74})(.)/\ /s;
+                                $input_line =~ s/(?<=.{75})(.)/\ /s;
+                                $input_line =~ s/(?<=.{76})(.)/\ /s;
+                                $input_line =~ s/(?<=.{77})(.)/\ /s;
+                                $input_line =~ s/(?<=.{78})(.)/\ /s;
+                                $input_line =~ s/(?<=.{79})(.)/\ /s;
+                                
+                                # Flush character positions 0-5 from $original_line
+                                # and set position 6 as the comment character
                                 $original_line =~ s/(?<=.{0})(.)/\ /s;
                                 $original_line =~ s/(?<=.{1})(.)/\ /s;
                                 $original_line =~ s/(?<=.{2})(.)/\ /s;
@@ -216,7 +229,7 @@ if ( $exit_code == $SUCCESS ) {
                             $input_line =~ s/\\\(/\(/g;
                             $input_line =~ s/\\\)/\)/g;
                             
-                            $output_line = "$comment_prefix $right_now - The following line was commented out";
+                            $output_line = "$comment_prefix $right_now - The following line was modified";
                             $output_line = $output_line . "\n$comment_prefix by automation script:";
                             $output_line = $output_line . "\n$comment_prefix $0";
                             $output_line = $output_line . "\n$comment_prefix Original line was:";
