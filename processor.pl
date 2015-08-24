@@ -61,7 +61,6 @@ if ( $exit_code == $SUCCESS ) {
 }
 
 if ( $exit_code == $SUCCESS ) {
-    # Call perl script here with --input_file "${source_code_dir}/${target_file}", --output_file "${tmp_file}" --type "${target}" --src_regex "${left_side}" --dst_regex "${right_side}"
     open( OUTPUT, ">$output_file" );
     open( INPUT, "<$input_file" );
 
@@ -121,10 +120,6 @@ if ( $exit_code == $SUCCESS ) {
             foreach $regex ( @regex ) {
                 $regex =~ s/[\n\r\t]//g;
 
-                #if ( $data_type eq "proc" ) {
-                #    print "\nRaw regex: $regex, \n";
-                #}
-
                 # Valid regex lines start with '("'
                 if ( $regex =~ /^\(\"/ ) {
                     ( $src_regex , $dst_regex ) = split( / . /, $regex );
@@ -143,16 +138,10 @@ if ( $exit_code == $SUCCESS ) {
                     $dst_regex =~ s/\(/\\\(/g;
                     $dst_regex =~ s/\)/\\\)/g;
 
-                    #if ( $data_type eq "proc" ) {
-                    #    print "\nSource regex: $src_regex, \n";
-                    #    print "\nDest regex: $dst_regex, \n";
-                    #}
-
                 } else {
                     $src_regex = "";
                     $dst_regex = "";
                 }
-
 
                 # Don't do anything if src_regex is blank
                 if ( $src_regex ne "" ) {
@@ -165,6 +154,7 @@ if ( $exit_code == $SUCCESS ) {
                             # Max line length is 72 characters
                             $output_line = "$comment_prefix $right_now - Line commented out by script:";
                             $output_line = $output_line . "\n$comment_prefix $0";
+
                             # strip any leading spaces
                             $input_line =~ s/^\s+//g;
                             $new_line = $comment_prefix . " " . $input_line;
@@ -197,8 +187,24 @@ if ( $exit_code == $SUCCESS ) {
 
                         } else {
                             $original_line = $input_line;
-                            # strip any leading spaces
-                            $original_line =~ s/^\s+//g;
+
+                            # KSH - make it a comment
+                            if ( $comment_prefix = "#" ) {
+                                $original_line = "#" . $input_line;
+                            }
+
+                            # Cobol - make it a comment
+                            if ( $comment_prefix = "      *" ) {
+                                $original_line =~ s/(?<=.{7})(.)/\*/s;
+                            }
+
+                            # JCL - make it a comment
+                            if ( $comment_prefix = "//*" ) {
+                                $original_line =~ s/(?<=.{0})(.)/\//s;
+                                $original_line =~ s/(?<=.{1})(.)/\//s;
+                                $original_line =~ s/(?<=.{2})(.)/\*\1/s;
+                            }
+
                             $input_line =~ s/$src_regex/$dst_regex/g;
                             # Fix parentheses
                             $input_line =~ s/\\\(/\(/g;
@@ -208,7 +214,7 @@ if ( $exit_code == $SUCCESS ) {
                             $output_line = $output_line . "\n$comment_prefix by automation script:";
                             $output_line = $output_line . "\n$comment_prefix $0";
                             $output_line = $output_line . "\n$comment_prefix Original line was:";
-                            $output_line = $output_line . "\n$comment_prefix $original_line";
+                            $output_line = $output_line . "\n$original_line";
                             $output_line = $output_line . "\n$input_line";
                         }
 
