@@ -202,7 +202,7 @@ if ( $exit_code == $SUCCESS ) {
                             if ( $comment_prefix eq "//*" ) {
                                 $original_line =~ s/(?<=.{0})(.)/\//s;
                                 $original_line =~ s/(?<=.{1})(.)/\//s;
-                                $original_line =~ s/(?<=.{2})(.)/\*\1/s;
+                                $original_line =~ s/(?<=.{2})(.)/\*$1/s;
                             }
 
                             $input_line =~ s/$src_regex/$dst_regex/g;
