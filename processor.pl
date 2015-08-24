@@ -195,7 +195,7 @@ if ( $exit_code == $SUCCESS ) {
 
                             # Cobol - make it a comment
                             if ( $comment_prefix eq "      *" ) {
-                                $original_line =~ s/(?<=.{7})(.)/\*/s;
+                                $original_line =~ s/(?<=.{6})(.)/\*/s;
                             }
 
                             # JCL - make it a comment
