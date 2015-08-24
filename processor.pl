@@ -189,17 +189,17 @@ if ( $exit_code == $SUCCESS ) {
                             $original_line = $input_line;
 
                             # KSH - make it a comment
-                            if ( $comment_prefix = "#" ) {
+                            if ( $comment_prefix eq "#" ) {
                                 $original_line = "#" . $input_line;
                             }
 
                             # Cobol - make it a comment
-                            if ( $comment_prefix = "      *" ) {
+                            if ( $comment_prefix eq "      *" ) {
                                 $original_line =~ s/(?<=.{7})(.)/\*/s;
                             }
 
                             # JCL - make it a comment
-                            if ( $comment_prefix = "//*" ) {
+                            if ( $comment_prefix eq "//*" ) {
                                 $original_line =~ s/(?<=.{0})(.)/\//s;
                                 $original_line =~ s/(?<=.{1})(.)/\//s;
                                 $original_line =~ s/(?<=.{2})(.)/\*\1/s;
