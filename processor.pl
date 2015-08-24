@@ -195,6 +195,12 @@ if ( $exit_code == $SUCCESS ) {
 
                             # Cobol - make it a comment
                             if ( $comment_prefix eq "      *" ) {
+                                $original_line =~ s/(?<=.{0})(.)/\ /s;
+                                $original_line =~ s/(?<=.{1})(.)/\ /s;
+                                $original_line =~ s/(?<=.{2})(.)/\ /s;
+                                $original_line =~ s/(?<=.{3})(.)/\ /s;
+                                $original_line =~ s/(?<=.{4})(.)/\ /s;
+                                $original_line =~ s/(?<=.{5})(.)/\ /s;
                                 $original_line =~ s/(?<=.{6})(.)/\*/s;
                             }
 
