@@ -318,6 +318,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         sibc_cardliba_ext="sysin"
 
         # Known file extensions (upper case)
+        uc_sibc_cardliba_ext=`echo "${sibc_cardliba_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
         uc_sysin_ext=`echo "${sysin_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
         uc_cics_ext=`echo "${cics_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
         uc_proc_ext=`echo "${proc_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
@@ -519,7 +520,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # Explcitly declare the uppercase filenames (with lowercase extensions) file lists
         export uc_copy_list=`echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g"`
         export uc_sysin_list=`echo "${sysin_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
-        export uc_sibc_cardliba_list=`echo "${sibc_cardliba}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
+        export uc_sibc_cardliba_list=`echo "${sibc_cardliba_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sibc_cardliba_ext}/\.${sibc_cardliba_ext}/g"`
         export uc_batch_list=`echo "${batch_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_batch_ext}/\.${batch_ext}/g"`
         export uc_cics_list=`echo "${cics_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_cics_ext}/\.${cics_ext}/g"`
         export uc_ddl_list=`echo "${ddl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_ddl_ext}/\.${ddl_ext}/g"`
