@@ -183,7 +183,7 @@ add_to_list() {
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-    for command in awk cp cut diff dirname egrep ls make mkdir pwd rm rsync sed sort tr uname wc ; do
+    for command in awk cp cut diff dirname egrep find ls make mkdir pwd rm rsync sed sort tr uname wc ; do
         unalias ${command} > /dev/null 2>&1
         f__check_command "${command}"
 
@@ -955,7 +955,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 ${my_cp} -p "${param_dir}/system.desc.template" "${param_dir}/system.desc"
                 ${my_sed} -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
                 echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
-                cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
+                #cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
+                cd "${source_dir}" && ${my_find} . -name "*.pob" -o -name "*.depends" -o -name "*.cdm" -o -name "*.shrec" -exec ${my_rm} -f {} \;
                 echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
                 cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
                 exit_code=${?}
