@@ -41,7 +41,9 @@
 #                                        for Cobol programs.  Fixed Cobol 
 #                                        comment funtionality.
 # 20150825     Jason W. Plummer          Added command line argument support.
-#                                        Added feedback during check_command
+#                                        Added feedback during check_command.
+#                                        Added code to replace '.' with '_' for
+#                                        mapping folder name => variable name
 
 ################################################################################
 # DESCRIPTION
@@ -409,7 +411,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             eval "file_ext=\$${target_dir}_ext"
 
             if [ -d "${input_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir}_list=\"`cd ${input_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\""
+                target_dir_var=`echo "${target_dir}" | ${my_sed} 's/\./_/g'`
+                eval "raw_${target_dir_var}_list=\"`cd ${input_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\" 2> /dev/null"
             else
                 echo "    WARNING:  Directory \"${input_dir}/${uc_target_dir}\" does not exist"
             fi
