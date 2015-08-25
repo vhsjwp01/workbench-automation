@@ -40,7 +40,8 @@
 #                                        Fixed wrong comment position character 
 #                                        for Cobol programs.  Fixed Cobol 
 #                                        comment funtionality.
-# 20150825     Jason W. Plummer          Added command line argument support
+# 20150825     Jason W. Plummer          Added command line argument support.
+#                                        Added feedback during check_command
 
 ################################################################################
 # DESCRIPTION
@@ -180,7 +181,7 @@ add_to_list() {
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-    for command in awk cd cp cut diff dirname egrep ls make mkdir pwd rm rsync sed sort tr uname wc ; do
+    for command in awk cp cut diff dirname egrep ls make mkdir pwd rm rsync sed sort tr uname wc ; do
         unalias ${command} > /dev/null 2>&1
         f__check_command "${command}"
 
@@ -261,7 +262,7 @@ fi
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     script_dirname=`${my_dirname} "${SCRIPT_NAME}"`
-    SCRIPT_BASE=`${my_cd} "${script_dirname}" && ${my_pwd}`
+    SCRIPT_BASE=`cd "${script_dirname}" && ${my_pwd}`
     
     os_type=`${my_uname} -s | ${my_tr} '[A-Z]' '[a-z]'`
     cpu_arch=`${my_uname} -m | ${my_tr} '[A-Z]' '[a-z]' | ${my_sed} -e 's/i[345]86/i686/g'`
@@ -375,7 +376,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         ksh_offset="       "
 
         # Default targets
-        TARGETS=`${my_cd} "${LocationOfAssets}" && ${my_ls} -d * | ${my_tr} '[A-Z]' '[a-z]'`
+        TARGETS=`cd "${LocationOfAssets}" && ${my_ls} -d * | ${my_tr} '[A-Z]' '[a-z]'`
 
         # Override TARGETS if ${input_targets} has been set
         if [ "${input_targets}" != "" ]; then
@@ -408,7 +409,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             eval "file_ext=\$${target_dir}_ext"
 
             if [ -d "${input_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir}_list=\"`${my_cd} ${input_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\""
+                eval "raw_${target_dir}_list=\"`cd ${input_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\""
             else
                 echo "    WARNING:  Directory \"${input_dir}/${uc_target_dir}\" does not exist"
             fi
@@ -437,7 +438,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # Try importing
         if [ -e "${this_makefile}" ]; then
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} all\" ... "
-            ${my_cd} "${script_dir}" && ${my_make} -f "${this_makefile}" all > /dev/null 2>&1
+            cd "${script_dir}" && ${my_make} -f "${this_makefile}" all > /dev/null 2>&1
             exit_code=${?}
 
             if [ ${exit_code} -ne ${SUCCESS} ]; then
@@ -476,7 +477,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             eval "file_ext=\$${target_dir}_ext"
 
             if [ -d "${import_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir}_list=\"`${my_cd} ${import_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\""
+                eval "raw_${target_dir}_list=\"`cd ${import_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\""
             else
                 echo "    WARNING:  Directory \"${import_dir}/${uc_target_dir}\" does not exist"
             fi
@@ -515,7 +516,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         if [ -e "${this_makefile}" ]; then
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} all\" ... "
-            ${my_cd} "${script_dir}" && ${my_make} -f "${this_makefile}" all > /dev/null 2>&1
+            cd "${script_dir}" && ${my_make} -f "${this_makefile}" all > /dev/null 2>&1
             exit_code=${?}
 
             if [ ${exit_code} -ne ${SUCCESS} ]; then
@@ -554,7 +555,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Here we slurp in each file in the target directory and plow through each
         # line skipping comment lines
-        target_files=`${my_cd} "${prepare_dir}/${uc_target}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
+        target_files=`cd "${prepare_dir}/${uc_target}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
         tmp_dir="/tmp/${USER}/$$"
 
         if [ ! -d "${tmp_dir}" ]; then
@@ -601,7 +602,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             copy|batch|cics)
                 comment_prefix='      *'
                 echo "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target} files for ASIS translation:"
-                target_files=`${my_cd} "${prepare_dir}/${uc_target}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
+                target_files=`cd "${prepare_dir}/${uc_target}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
                 
                 for target_file in ${target_files} ; do
                     echo -ne "        Processing file ${prepare_dir}/${uc_target}/${target_file} for ASIS keyword munging ... "
@@ -722,7 +723,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             jcl|proc)
                 comment_prefix='//*'
                 echo "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target} files for SUBSYS and INCLUDE translation:"
-                target_files=`${my_cd} "${prepare_dir}/${uc_target}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
+                target_files=`cd "${prepare_dir}/${uc_target}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
 
                 for target_file in ${target_files} ; do
                     echo -ne "        Processing file ${prepare_dir}/${uc_target}/${target_file} for SUBSYS keyword munging ... "
@@ -840,7 +841,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             eval "file_ext=\$${target_dir}_ext"
 
             if [ -d "${prepare_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir}_list=\"`${my_cd} ${prepare_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\""
+                eval "raw_${target_dir}_list=\"`cd ${prepare_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\""
             else
                 echo "    WARNING:  Directory \"${prepare_dir}/${uc_target_dir}\" does not exist"
             fi
@@ -879,7 +880,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         if [ -e "${this_makefile}" ]; then
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} all\" ... "
-            ${my_cd} "${script_dir}" && ${my_make} -f "${this_makefile}" all > /dev/null 2>&1
+            cd "${script_dir}" && ${my_make} -f "${this_makefile}" all > /dev/null 2>&1
             exit_code=${?}
 
             if [ ${exit_code} -ne ${SUCCESS} ]; then
@@ -944,9 +945,9 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 ${my_cp} -p "${param_dir}/system.desc.template" "${param_dir}/system.desc"
                 ${my_sed} -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
                 echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
-                ${my_cd} "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
+                cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
                 echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-                ${my_cd} "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+                cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
                 exit_code=${?}
 
                 if [ ${exit_code} -ne ${SUCCESS} ]; then
@@ -1076,7 +1077,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     if [ -e "${this_makefile}" ]; then
         echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-        ${my_cd} "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
         exit_code=${?}
 
         if [ ${exit_code} -ne ${SUCCESS} ]; then
@@ -1103,7 +1104,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     if [ -e "${this_makefile}" ]; then
         echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-        ${my_cd} "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
         exit_code=${?}
 
         if [ ${exit_code} -ne ${SUCCESS} ]; then
@@ -1130,7 +1131,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     if [ -e "${this_makefile}" ]; then
         echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-        ${my_cd} "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
         exit_code=${?}
 
         if [ ${exit_code} -ne ${SUCCESS} ]; then
@@ -1157,7 +1158,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     if [ -e "${this_makefile}" ]; then
         echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-        ${my_cd} "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
         exit_code=${?}
 
         if [ ${exit_code} -ne ${SUCCESS} ]; then
@@ -1213,17 +1214,17 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             case ${target} in
 
                 batch|cics)
-                    target_files=`${my_cd} "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null ; ${my_ls} *.pco 2> /dev/null`
+                    target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null ; ${my_ls} *.pco 2> /dev/null`
                 ;;
 
                 jcl)
                     file_ext="ksh"
-                    target_files=`${my_cd} "${source_code_dir}" 2> /dev/null && ${my_ls} *.{file_ext} 2> /dev/null`
+                    target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.{file_ext} 2> /dev/null`
                     comment_prefix="#"
                 ;;
 
                 *)
-                    target_files=`${my_cd} "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
+                    target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
                 ;;
 
             esac
