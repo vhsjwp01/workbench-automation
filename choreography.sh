@@ -379,7 +379,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         ksh_offset="       "
 
         # Default targets
-        TARGETS=`cd "${LocationOfAssets}" && ${my_ls} -d * | ${my_tr} '[A-Z]' '[a-z]'`
+        TARGETS=`cd "${LocationOfAssets}" 2> /dev/null && ${my_ls} -d * 2> /dev/null | ${my_tr} '[A-Z]' '[a-z]'`
 
         # Override TARGETS if ${input_targets} has been set
         if [ "${input_targets}" != "" ]; then
@@ -413,7 +413,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             eval "file_ext=\$${target_dir_var}_ext"
 
             if [ -d "${input_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir_var}_list=\"`cd ${input_dir}/${uc_target_dir} && ${my_ls} *.${file_ext} 2> /dev/null`\""
+                eval "raw_${target_dir_var}_list=\"`cd ${input_dir}/${uc_target_dir} 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`\""
             else
                 echo "    WARNING:  Directory \"${input_dir}/${uc_target_dir}\" does not exist"
             fi
@@ -484,7 +484,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             eval "file_ext=\$${target_dir_var}_ext"
 
             if [ -d "${import_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir_var}_list=\"`cd ${import_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\""
+                eval "raw_${target_dir_var}_list=\"`cd ${import_dir}/${uc_target_dir} 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`\""
             else
                 echo "    WARNING:  Directory \"${import_dir}/${uc_target_dir}\" does not exist"
             fi
@@ -849,7 +849,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             eval "file_ext=\$${target_dir}_ext"
 
             if [ -d "${prepare_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir}_list=\"`cd ${prepare_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\""
+                eval "raw_${target_dir}_list=\"`cd ${prepare_dir}/${uc_target_dir} 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`\""
             else
                 echo "    WARNING:  Directory \"${prepare_dir}/${uc_target_dir}\" does not exist"
             fi
