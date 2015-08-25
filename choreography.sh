@@ -413,7 +413,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             eval "file_ext=\$${target_dir_var}_ext"
 
             if [ -d "${input_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir_var}_list=\"`cd ${input_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\" 2> /dev/null"
+                eval "raw_${target_dir_var}_list=\"`cd ${input_dir}/${uc_target_dir} && ${my_ls} *.${file_ext} 2> /dev/null`\""
             else
                 echo "    WARNING:  Directory \"${input_dir}/${uc_target_dir}\" does not exist"
             fi
