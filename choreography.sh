@@ -186,6 +186,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         if [ ${?} -ne ${SUCCESS} ]; then
             let exit_code=${exit_code}+1
+
+            if [ ${exit_code} -ne ${SUCCESS} ]; then
+                echo "    ERROR:  Could not locate command \"${command}\""
+            fi
+
         fi
 
     done
