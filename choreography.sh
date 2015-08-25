@@ -960,7 +960,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 cd "${source_dir}" && ${my_find} . -name "*.pob" -o -name "*.depends" -o -name "*.cdm" -o -name "*.shrec" -exec ${my_rm} -f {} \;
                 echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
                 #cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
-                cd "${source_dir}" && ${my_make} -d -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+                cd "${source_dir}" && ${my_make} -d -f "${this_makefile}" ${processing_verb} 
                 exit_code=${?}
 
                 if [ ${exit_code} -ne ${SUCCESS} ]; then
