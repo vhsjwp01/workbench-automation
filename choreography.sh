@@ -43,7 +43,8 @@
 # 20150825     Jason W. Plummer          Added command line argument support.
 #                                        Added feedback during check_command.
 #                                        Added code to replace '.' with '_' for
-#                                        mapping folder name => variable name
+#                                        mapping folder name => variable name.
+#                                        Code fixes to deal with sibc_cardliba
 
 ################################################################################
 # DESCRIPTION
@@ -374,6 +375,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             TargetDataBase="${target_DB}"
         fi
 
+        DB_TYPE="${TargetDataBase}"
+
         ParallelNum=1
         
         ksh_offset="       "
@@ -386,7 +389,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             TARGETS="${input_targets}"
         fi
 
-        export PROJECT TRAVAIL LOGS TMPPROJECT WorkbenchPath LocationOfAssets PARAM REFINEDISTRIB
+        export PROJECT TRAVAIL LOGS TMPPROJECT WorkbenchPath LocationOfAssets PARAM REFINEDISTRIB DB_TYPE
     fi
 
 fi
@@ -513,8 +516,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         this_makefile="${script_dir}/makefile.${processing_verb}"
 
+        # Explcitly declare the uppercase filenames (with lowercase extensions) file lists
         export uc_copy_list=`echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g"`
         export uc_sysin_list=`echo "${sysin_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
+        export uc_sibc_cardliba_list=`echo "${sibc_cardliba}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
         export uc_batch_list=`echo "${batch_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_batch_ext}/\.${batch_ext}/g"`
         export uc_cics_list=`echo "${cics_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_cics_ext}/\.${cics_ext}/g"`
         export uc_ddl_list=`echo "${ddl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_ddl_ext}/\.${ddl_ext}/g"`
@@ -954,13 +959,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             if [ -e "${param_dir}/system.desc.template" ]; then
                 ${my_cp} -p "${param_dir}/system.desc.template" "${param_dir}/system.desc"
                 ${my_sed} -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
-                #echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
-                echo "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
-                #cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
-                cd "${source_dir}" && ${my_find} . -name "*.pob" -o -name "*.depends" -o -name "*.cdm" -o -name "*.shrec" -exec ${my_rm} -f {} \;
+                echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
+                cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
                 echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-                #cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
-                cd "${source_dir}" && ${my_make} -d -f "${this_makefile}" ${processing_verb} 
+                cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
                 exit_code=${?}
 
                 if [ ${exit_code} -ne ${SUCCESS} ]; then
