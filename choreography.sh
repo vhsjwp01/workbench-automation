@@ -314,6 +314,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         map_ext="bms"
         ddl_ext="sql"
         batch_ext="cbl"
+        sibc_cardliba_ext="sysin"
 
         # Known file extensions (upper case)
         uc_sysin_ext=`echo "${sysin_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
@@ -408,10 +409,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # Setup item lists for import
         for target_dir in ${TARGETS} ; do
             uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            eval "file_ext=\$${target_dir}_ext"
+            target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+            eval "file_ext=\$${target_dir_var}_ext"
 
             if [ -d "${input_dir}/${uc_target_dir}" ]; then
-                target_dir_var=`echo "${target_dir}" | ${my_sed} 's/\./_/g'`
                 eval "raw_${target_dir_var}_list=\"`cd ${input_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\" 2> /dev/null"
             else
                 echo "    WARNING:  Directory \"${input_dir}/${uc_target_dir}\" does not exist"
@@ -420,9 +421,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         done
 
         for list_name in ${TARGETS} ; do
-            clean_list="${list_name}_list"
+            list_name_var=`echo "${list_name}" | ${my_sed} -e 's/\./_/g'`
+            clean_list="${list_name_var}_list"
+            eval "${clean_list}=\"\""
         
-            for list_item in `eval "echo -ne \\"\\$raw_${list_name}_list\\""` ; do
+            for list_item in `eval "echo -ne \\"\\$raw_${list_name_var}_list\\""` ; do
                 eval "add_to_list ${clean_list} \"${list_item}\""
             done
 
@@ -477,10 +480,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # Setup item lists for prepare
         for target_dir in ${TARGETS} ; do
             uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            eval "file_ext=\$${target_dir}_ext"
+            target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+            eval "file_ext=\$${target_dir_var}_ext"
 
             if [ -d "${import_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir}_list=\"`cd ${import_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\""
+                eval "raw_${target_dir_var}_list=\"`cd ${import_dir}/${uc_target_dir} && ${my_ls} *.${file_ext}`\""
             else
                 echo "    WARNING:  Directory \"${import_dir}/${uc_target_dir}\" does not exist"
             fi
@@ -489,10 +493,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Try preparing
         for list_name in ${TARGETS} ; do
-            clean_list="${list_name}_list"
+            list_name_var=`echo "${list_name}" | ${my_sed} -e 's/\./_/g'`
+            clean_list="${list_name_var}_list"
             eval "${clean_list}=\"\""
         
-            for list_item in `eval "echo -ne \\"\\$raw_${list_name}_list\\""` ; do
+            for list_item in `eval "echo -ne \\"\\$raw_${list_name_var}_list\\""` ; do
                 eval "add_to_list ${clean_list} \"${list_item}\""
             done
 
@@ -853,10 +858,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Try analyzing
         for list_name in ${TARGETS} ; do
-            clean_list="${list_name}_list"
+            list_name_var=`echo "${list_name}" | ${my_sed} -e 's/\./_/g'`
+            clean_list="${list_name_var}_list"
             eval "${clean_list}=\"\""
         
-            for list_item in `eval "echo -ne \\"\\$raw_${list_name}_list\\""` ; do
+            for list_item in `eval "echo -ne \\"\\$raw_${list_name_var}_list\\""` ; do
                 eval "add_to_list ${clean_list} \"${list_item}\""
             done
 
