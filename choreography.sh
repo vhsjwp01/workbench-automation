@@ -45,6 +45,8 @@
 #                                        Added code to replace '.' with '_' for
 #                                        mapping folder name => variable name.
 #                                        Code fixes to deal with sibc_cardliba
+# 20150826     Jason W. Plummer          Added support to turn on what source
+#                                        directories contain data in system.desc
 
 ################################################################################
 # DESCRIPTION
@@ -960,6 +962,28 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             if [ -e "${param_dir}/system.desc.template" ]; then
                 ${my_cp} -p "${param_dir}/system.desc.template" "${param_dir}/system.desc"
                 ${my_sed} -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
+
+                # Enable targets based on whether or files exist in those targets
+                for target_dir in ${TARGETS} ; do
+                    uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+                    target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+                    eval "file_ext=\$${target_dir_var}_ext"
+
+                    file_count=`${my_find} ${source_dir}/${uc_target_dir}/*.${file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}'`
+
+                    if [ ${file_count} -gt 0 ]; then
+                        let is_commented_out=`${my_egrep} -c "^%directory \"${uc_target_dir}\" type" "${param_dir}/system.desc"`
+
+                        if [ ${is_commented_out} -gt 0 ]; then
+                            begin_text="% BEGIN: ${uc_target_dir}-DIRECTORY-TARGETS"
+                            end_text="% END: ${uc_target_dir}-DIRECTORY-TARGETS"
+                            ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
+                        fi
+
+                    fi
+
+                done
+                
                 echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
                 cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
                 echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
