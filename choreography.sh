@@ -1427,7 +1427,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 echo -ne "    INFO:  Post-Processing \"${source_code_dir}/${target_file}\" for regular expression translation ... "
                 tmp_file="${tmp_dir}/translate-post-processing-${uc_target}-${target_file}.$$"
                 ${my_rm} -f "${tmp_file}"
-                line_count=`${my_wc} -l "${target_dir}/${uc_target}/${target_file}" | ${my_awk} '{print $1}'`
+                line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
 
                 ${SCRIPT_BASE}/processor.pl --input_file "${source_code_dir}/${target_file}" --output_file "${tmp_file}" --data_type "${target}" --regex_file "${postconvert_dir}/${uc_target}" --mode "post"
 
