@@ -69,8 +69,8 @@
 #                           (OPTIONAL)
 # --wb_toolpath           - The ART Work Bench tool path (Default: ART 13)
 # --target_COBOL_compiler - The COBOL compiler to use    (Default: COBOL-IT)
-# --rdbms_schemas         - A comma separated list of RDBMS schemas
-# --file_schemas          - A comma separated list of file schemas
+# --rdbms_schemas         - A space or comma separated list of RDBMS schemas
+# --file_schemas          - A space or comma separated list of file schemas
 # --target_DB             - Target DataBase to use       (Default: ORACLE)
 
 ################################################################################
@@ -91,14 +91,14 @@ SCRIPT_NAME="${0}"
 
 USAGE_ENDLINE="\n${STDOUT_OFFSET}${STDOUT_OFFSET}${STDOUT_OFFSET}${STDOUT_OFFSET}"
 USAGE="${SCRIPT_NAME}${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --wb_workdir            <Path to Work Bench base directory              *REQUIRED*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --file_schemas          <A comma separated list of file schemas         *REQUIRED*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --project_name          <The Project Name to use in reporting           *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --input_targets         <A list of directories from which to draw input *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --wb_toolpath           <The ART Work Bench tool path (Default: ART 13) *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --target_COBOL_compiler <The COBOL compiler to use (Default: COBOL-IT)  *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --rdbms_schemas         <A comma separated list of RDBMS schemas        *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --target_DB             <Target DataBase to use (Default: ORACLE)       *OPTIONAL*> ]"
+USAGE="${USAGE}[ --wb_workdir            <Path to Work Bench base directory                *REQUIRED*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --file_schemas          <A space or comma separated list of file schemas  *REQUIRED*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --project_name          <The Project Name to use in reporting             *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --input_targets         <A list of directories from which to draw input   *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --wb_toolpath           <The ART Work Bench tool path (Default: ART 13)   *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --target_COBOL_compiler <The COBOL compiler to use (Default: COBOL-IT)    *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --rdbms_schemas         <A space or comma separated list of RDBMS schemas *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --target_DB             <Target DataBase to use (Default: ORACLE)         *OPTIONAL*> ]"
 
 ################################################################################
 # VARIABLES
@@ -226,7 +226,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 key=`echo "${key}" | ${my_sed} -e 's?^--??g'`
 
                 if [ "${value}" != ""  ]; then
-                    eval ${key}="${value}"
+                    eval "${key}=\"${value}\""
                     shift
                     shift
                 else
