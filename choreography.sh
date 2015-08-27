@@ -69,8 +69,8 @@
 #                           (OPTIONAL)
 # --wb_toolpath           - The ART Work Bench tool path (Default: ART 13)
 # --target_COBOL_compiler - The COBOL compiler to use    (Default: COBOL-IT)
-# --rdbms_schemas         - A space separated list of RDBMS schemas
-# --file_schemas          - A space separated list of file schemas
+# --rdbms_schemas         - A comma separated list of RDBMS schemas
+# --file_schemas          - A comma separated list of file schemas
 # --target_DB             - Target DataBase to use       (Default: ORACLE)
 
 ################################################################################
@@ -92,12 +92,12 @@ SCRIPT_NAME="${0}"
 USAGE_ENDLINE="\n${STDOUT_OFFSET}${STDOUT_OFFSET}${STDOUT_OFFSET}${STDOUT_OFFSET}"
 USAGE="${SCRIPT_NAME}${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --wb_workdir            <Path to Work Bench base directory              *REQUIRED*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --file_schemas          <A space separated list of file schemas         *REQUIRED*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --file_schemas          <A comma separated list of file schemas         *REQUIRED*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --project_name          <The Project Name to use in reporting           *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --input_targets         <A list of directories from which to draw input *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --wb_toolpath           <The ART Work Bench tool path (Default: ART 13) *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --target_COBOL_compiler <The COBOL compiler to use (Default: COBOL-IT)  *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --rdbms_schemas         <A space separated list of RDBMS schemas        *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --rdbms_schemas         <A comma separated list of RDBMS schemas        *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --target_DB             <Target DataBase to use (Default: ORACLE)       *OPTIONAL*> ]"
 
 ################################################################################
@@ -222,10 +222,26 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         case "${key}" in
 
-            --wb_workdir|--project_name|--input_targets|--wb_toolpath|--target_COBOL_compiler|--target_DB|--rdbms_schemas|--file_schemas)
+            --wb_workdir|--project_name|--input_targets|--wb_toolpath|--target_COBOL_compiler|--target_DB)
                 key=`echo "${key}" | ${my_sed} -e 's?^--??g'`
 
                 if [ "${value}" != ""  ]; then
+                    eval ${key}="${value}"
+                    shift
+                    shift
+                else
+                    echo "${STDOUT_OFFSET}ERROR:  No value assignment can be made for command line argument \"--${key}\""
+                    exit_code=${ERROR}
+                    shift
+                fi
+
+            ;;
+
+            --rdbms_schemas|--file_schemas)
+                key=`echo "${key}" | ${my_sed} -e 's?^--??g'`
+
+                if [ "${value}" != ""  ]; then
+                    value=`echo "${value}" | ${my_sed} 's/,/\ /g'`
                     eval ${key}="${value}"
                     shift
                     shift
