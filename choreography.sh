@@ -50,7 +50,9 @@
 #                                        Added support to modify version.mk
 #                                        based on targets present
 # 20150827     Jason W. Plummer          Created CONFIG section for modifying
-#                                        system.desc and version.mk
+#                                        system.desc and version.mk.  Also
+#                                        added data mapper file detection and
+#                                        munging for project name inclusion
 
 ################################################################################
 # DESCRIPTION
@@ -554,6 +556,26 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         err_msg="Could not locate both parameter file directory \"${PARAM}\" and script directory \"${script_dir}\""
         exit_code=${ERROR}
     fi
+
+fi
+
+# WHAT: Check for Mapper files
+# WHY:  Cannot proceed otherwise
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+
+    for file_schema in ${file_schemas} ; do
+
+        if [ ! -e "${param_dir}/mapper-${file_schema}.re" -o ! -e "${param_dir}/Datamap-${file_schema}.re" ]; then
+            echo "    ERROR:  Could not locate both \"${param_dir}/mapper-${file_schema}.re\" and \"${param_dir}/Datamap-${file_schema}.re\" mapper files"
+            let exit_code=${exit_code}+1
+        else 
+
+            # Fix Project name in mapper files
+            ${my_sed} -i -e "s?^\(data map ${file_schema}-map system cat::\).*\$?\1${ProjectName}?g" "${param_dir}/Datamap-${file_schema}.re"
+        fi
+
+    done
 
 fi
 
