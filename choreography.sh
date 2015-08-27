@@ -563,16 +563,18 @@ fi
 # WHY:  Cannot proceed otherwise
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
+    data_map_dir="${param_dir}/file"
 
     for file_schema in ${file_schemas} ; do
+        
 
-        if [ ! -e "${param_dir}/mapper-${file_schema}.re" -o ! -e "${param_dir}/Datamap-${file_schema}.re" ]; then
-            echo "    ERROR:  Could not locate both \"${param_dir}/mapper-${file_schema}.re\" and \"${param_dir}/Datamap-${file_schema}.re\" mapper files"
+        if [ ! -e "${data_map_dir}/mapper-${file_schema}.re" -o ! -e "${data_map_dir}/Datamap-${file_schema}.re" ]; then
+            echo "    ERROR:  Could not locate both \"${data_map_dir}/mapper-${file_schema}.re\" and \"${data_map_dir}/Datamap-${file_schema}.re\" mapper files"
             let exit_code=${exit_code}+1
         else 
 
             # Fix Project name in mapper files
-            ${my_sed} -i -e "s?^\(data map ${file_schema}-map system cat::\).*\$?\1${ProjectName}?g" "${param_dir}/Datamap-${file_schema}.re"
+            ${my_sed} -i -e "s?^\(data map ${file_schema}-map system cat::\).*\$?\1${ProjectName}?g" "${data_map_dir}/Datamap-${file_schema}.re"
         fi
 
     done
