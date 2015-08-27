@@ -87,6 +87,10 @@ export TERM PATH
 SUCCESS=0
 ERROR=1
 
+# Set the newline variable (needed for sed operations later on)
+NL='
+'
+
 STDOUT_OFFSET="    "
 
 SCRIPT_NAME="${0}"
@@ -335,9 +339,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-        # Set the newline variable (needed for sed operations later on)
-        NL='
-        '
 
         # Known file extensions (lower case)
         sysin_ext="sysin"
@@ -1368,7 +1369,7 @@ fi
 # WHY:  Needed for proper compilation
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
-    echo "POST-PROCESSING - Pattern Munging"
+    echo "POST-PROCESSING - Regular Expression Pattern Matching"
 
     # Look for any regex files located in <folder>
     # where filename indicates the prepared folder in which to operate
@@ -1464,7 +1465,9 @@ fi
 # WHY:  Aked to
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
-    echo "POST-PROCESSING - SQL timestamp Munging"
+    echo "POST-PROCESSING - SQL timestamp conversion"
+
+    pcTarget_dir="${WB_AUTOMATE}/target"
 
     for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
@@ -1499,6 +1502,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             for target_file in ${target_files} ; do
                 echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" SQL timestamp conversion ... "
+
                 # Rule #1: MWDB2ORA.MAKE_TIME change to use SYSTIMESTAMP
                 ${my_sed} -i -e "s?MWDB2ORA.MAKE_TIME(.*)?MNTC_LST_TM = SYSTIMESTAMP?g" "${source_code_dir}/${target_file}"
 
@@ -1524,15 +1528,17 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
 fi
 
+
+
 # WHAT: Munge for IEFBR14 file deletion optimization
 # WHY:  Asked to
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - IEFBR14 file deletion optimization"
 
+    pcTarget_dir="${WB_AUTOMATE}/target"
+
     for target_dir in ${TARGETS} ; do
-        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
-        eval "file_ext=\$${target_dir_var}_ext"
 
         if [ "${target_dir}" = "jcl" ]; then
             file_ext="ksh"
@@ -1597,6 +1603,8 @@ fi
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - FTPBATCH conversion"
+
+    pcTarget_dir="${WB_AUTOMATE}/target"
 
     for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
@@ -1819,6 +1827,8 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - DFDSS conversion"
 
+    pcTarget_dir="${WB_AUTOMATE}/target"
+
     for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
@@ -1851,6 +1861,8 @@ fi
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - SMTP conversion"
+
+    pcTarget_dir="${WB_AUTOMATE}/target"
 
     for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
