@@ -751,7 +751,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
-        uc_target=`echo "${target}" | ${my_tr} '[a-z]' '[A-Z]'`
+        uc_target=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
 
         # Here we slurp in each file in the target directory and plow through each
         # line skipping comment lines
@@ -1379,7 +1379,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
-        uc_target=`echo "${target}" | ${my_tr} '[a-z]' '[A-Z]'`
+        uc_target=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
 
         # Here we set the default source_code_dir
         source_code_dir="${pcTarget_dir}/${uc_target}"
