@@ -47,6 +47,8 @@
 #                                        Code fixes to deal with sibc_cardliba
 # 20150826     Jason W. Plummer          Added support to turn on what source
 #                                        directories contain data in system.desc
+#                                        Added support to modify version.mk
+#                                        based on targets present
 
 ################################################################################
 # DESCRIPTION
@@ -65,6 +67,8 @@
 #                           (OPTIONAL)
 # --wb_toolpath           - The ART Work Bench tool path (Default: ART 13)
 # --target_COBOL_compiler - The COBOL compiler to use    (Default: COBOL-IT)
+# --rdbms_schemas         - A space separated list of RDBMS schemas
+# --file_schemas          - A space separated list of file schemas
 # --target_DB             - Target DataBase to use       (Default: ORACLE)
 
 ################################################################################
@@ -85,12 +89,14 @@ SCRIPT_NAME="${0}"
 
 USAGE_ENDLINE="\n${STDOUT_OFFSET}${STDOUT_OFFSET}${STDOUT_OFFSET}${STDOUT_OFFSET}"
 USAGE="${SCRIPT_NAME}${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --wb_workdir            <Path to Work Bench base directory *REQUIRED*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --project_name          <The Project Name to use in reporting *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --wb_workdir            <Path to Work Bench base directory              *REQUIRED*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --file_schemas          <A space separated list of file schemas         *REQUIRED*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --project_name          <The Project Name to use in reporting           *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --input_targets         <A list of directories from which to draw input *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --wb_toolpath           <The ART Work Bench tool path (Default: ART 13) *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --target_COBOL_compiler <The COBOL compiler to use (Default: COBOL-IT) *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --target_DB             <Target DataBase to use (Default: ORACLE) *OPTIONAL*> ]"
+USAGE="${USAGE}[ --target_COBOL_compiler <The COBOL compiler to use (Default: COBOL-IT)  *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --rdbms_schemas         <A space separated list of RDBMS schemas        *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --target_DB             <Target DataBase to use (Default: ORACLE)       *OPTIONAL*> ]"
 
 ################################################################################
 # VARIABLES
@@ -214,7 +220,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         case "${key}" in
 
-            --wb_workdir|--project_name|--input_targets|--wb_toolpath|--target_COBOL_compiler|--target_DB)
+            --wb_workdir|--project_name|--input_targets|--wb_toolpath|--target_COBOL_compiler|--target_DB|--rdbms_schemas|--file_schemas)
                 key=`echo "${key}" | ${my_sed} -e 's?^--??g'`
 
                 if [ "${value}" != ""  ]; then
@@ -258,6 +264,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             exit_code=${ERROR}
         fi
 
+    fi
+
+    if [ ! -d "${file_schemas}" ]; then
+        err_msg="No file schema was provided.  Please set file schema with --file_schemas \"<schema name>\""
+        exit_code=${ERROR}
     fi
 
 fi
@@ -980,34 +991,65 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                             ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
                         fi
 
-                    fi
+                        # Clear out begin and end text vars so that library dependencies can be turned on 
+                        begin_text=""
+                        end_text=""
 
-                    # Clear out begin and end text vars so that library dependencies can be turned on 
-                    begin_text=""
-                    end_text=""
+                        case ${target_dir} in
+    
+                            batch|cics)
+                                # Must also include COPY files with BATCH and CICS targets
+                                begin_text="% BEGIN: COPY-DIRECTORY-TARGETS"
+                                end_text="% END: COPY-DIRECTORY-TARGETS"
 
-                    case ${target_dir} in
+                                # Now set values in {param_dir}/version.mk
+                                case ${target_dir} in 
 
-                        batch|cics)
-                            # Must also include COPY files with BATCH and CICS targets
-                            begin_text="% BEGIN: COPY-DIRECTORY-TARGETS"
-                            end_text="% END: COPY-DIRECTORY-TARGETS"
-                        ;;
+                                    batch)
+                                        ${my_sed} -i -e 's/^Find_Prg =.*$/Find_Prg = BATCH/g' "${param_dir}/version.mk"
+                                    ;;
 
-                        jcl)
-                            # Must also include PROC files with JCL target
-                            begin_text="% BEGIN: PROC-DIRECTORY-TARGETS"
-                            end_text="% END: PROC-DIRECTORY-TARGETS"
-                        ;;
+                                    cics)
+                                        ${my_sed} -i -e 's/^Find_Tpr =.*$/Find_Tpr = CICS/g' "${param_dir}/version.mk"
+                                    ;;
 
-                    esac
+                                esac
 
-                    # Turn these descriptions on in the ${param_dir}/system.desc file
-                    if [ "${begin_text}" != "" -a "${end_text}" != "" ]; then
-                        ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
+                            ;;
+    
+                            jcl)
+                                # Must also include PROC files with JCL target
+                                begin_text="% BEGIN: PROC-DIRECTORY-TARGETS"
+                                end_text="% END: PROC-DIRECTORY-TARGETS"
+
+                                # Now set values in {param_dir}/version.mk
+                                ${my_sed} -i -e 's/^Find_Jcl =.*$/Find_Jcl = JCL/g' "${param_dir}/version.mk"
+                            ;;
+
+                            map)
+                                # Now set values in {param_dir}/version.mk
+                                ${my_sed} -i -e 's/^Find_Map =.*$/Find_Map = MAP/g' "${param_dir}/version.mk"
+                            ;;
+    
+                        esac
+
+                        # Turn these descriptions on in the ${param_dir}/system.desc file
+                        if [ "${begin_text}" != "" -a "${end_text}" != "" ]; then
+                            ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
+                        fi
+
                     fi
 
                 done
+
+                # Enable RDBMS and file schemas if set
+                ${my_sed} -i -e "s/^FILE_SCHEMAS =.*\$/FILE_SCHEMAS = ${file_schemas}/g" "${param_dir}/version.mk"
+                
+                if [ "${rdbms_schemas}" != "" ]; then
+                    ${my_sed} -i -e "s/^RDBMS_SCHEMAS =.*\$/RDBMS_SCHEMAS = ${rdbms_schemas}/g" "${param_dir}/version.mk"
+                else
+                    ${my_sed} -i -e 's/^\(RDBMS_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
+                fi
                 
                 echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
                 cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
