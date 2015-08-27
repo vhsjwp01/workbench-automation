@@ -982,6 +982,31 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     fi
 
+                    # Clear out begin and end text vars so that library dependencies can be turned on 
+                    begin_text=""
+                    end_text=""
+
+                    case ${target_dir} in
+
+                        batch|cics)
+                            # Must also include COPY files with BATCH and CICS targets
+                            begin_text="% BEGIN: COPY-DIRECTORY-TARGETS"
+                            end_text="% END: COPY-DIRECTORY-TARGETS"
+                        ;;
+
+                        jcl)
+                            # Must also include PROC files with JCL target
+                            begin_text="% BEGIN: PROC-DIRECTORY-TARGETS"
+                            end_text="% END: PROC-DIRECTORY-TARGETS"
+                        ;;
+
+                    esac
+
+                    # Turn these descriptions on in the ${param_dir}/system.desc file
+                    if [ "${begin_text}" != "" -a "${end_text}" != "" ]; then
+                        ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
+                    fi
+
                 done
                 
                 echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
