@@ -49,6 +49,8 @@
 #                                        directories contain data in system.desc
 #                                        Added support to modify version.mk
 #                                        based on targets present
+# 20150827     Jason W. Plummer          Created CONFIG section for modifying
+#                                        system.desc and version.mk
 
 ################################################################################
 # DESCRIPTION
@@ -408,6 +410,136 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
 fi
 
+# WHAT: Perform config operations
+# WHY:  Needed for proper compilation
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    echo "CONFIG"
+    processing_verb="config"
+    param_dir="${PARAM}"
+    script_dir="${WB_AUTOMATE}/scripts"
+
+    if [ -d "${param_dir}" -a -d "${script_dir}" ]; then
+        echo "    INFO:  Initializing ${processing_verb} resources in directory \"${param_dir}\""
+
+        # Create ${script_dir}/project.txt
+        echo "ProjectName=${ProjectName}"                  > "${script_dir}/project.txt"
+        echo "ParallelNum=${ParallelNum}"                 >> "${script_dir}/project.txt"
+        echo "WorkbenchPath=${WorkbenchPath}"             >> "${script_dir}/project.txt"
+        echo "LocationOfAssets=${LocationOfAssets}"       >> "${script_dir}/project.txt"
+        echo "WBLOGLEVEL=${WBLOGLEVEL}"                   >> "${script_dir}/project.txt"
+        echo "WBEXITONERROR=${WBEXITONERROR}"             >> "${script_dir}/project.txt"
+        echo "OnlyParsingPhase=${OnlyParsingPhase}"       >> "${script_dir}/project.txt"
+        echo "TargetCOBOLCompiler=${TargetCOBOLCompiler}" >> "${script_dir}/project.txt"
+        echo "TargetDataBase=${TargetDataBase}"           >> "${script_dir}/project.txt"
+
+        # Create ${param_dir}/system.desc from template
+        if [ -e "${param_dir}/system.desc.template" ]; then
+
+            # Reconstruct "${param_dir}/system.desc"
+            if [ -e "${param_dir}/system.desc" ]; then
+                ${my_rm} -f "${param_dir}/system.desc"
+            fi
+
+            ${my_cp} -p "${param_dir}/system.desc.template" "${param_dir}/system.desc"
+            ${my_sed} -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
+
+            # Enable targets based on whether or files exist in those targets
+            for target_dir in ${TARGETS} ; do
+                uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+                target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+                eval "file_ext=\$${target_dir_var}_ext"
+
+                file_count=`${my_find} ${source_dir}/${uc_target_dir}/*.${file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}'`
+
+                if [ ${file_count} -gt 0 ]; then
+                    let is_commented_out=`${my_egrep} -c "^%directory \"${uc_target_dir}\" type" "${param_dir}/system.desc"`
+
+                    if [ ${is_commented_out} -gt 0 ]; then
+                        begin_text="% BEGIN: ${uc_target_dir}-DIRECTORY-TARGETS"
+                        end_text="% END: ${uc_target_dir}-DIRECTORY-TARGETS"
+                        ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
+                    fi
+
+                    # Clear out begin and end text vars so that library dependencies can be turned on 
+                    begin_text=""
+                    end_text=""
+
+                    case ${target_dir} in
+
+                        batch|cics)
+                            # Must also include COPY files with BATCH and CICS targets
+                            begin_text="% BEGIN: COPY-DIRECTORY-TARGETS"
+                            end_text="% END: COPY-DIRECTORY-TARGETS"
+
+                            # Now set values in {param_dir}/version.mk
+                            case ${target_dir} in 
+
+                                batch)
+                                    ${my_sed} -i -e 's/^Find_Prg =.*$/Find_Prg = BATCH/g' "${param_dir}/version.mk"
+                                ;;
+
+                                cics)
+                                    ${my_sed} -i -e 's/^Find_Tpr =.*$/Find_Tpr = CICS/g' "${param_dir}/version.mk"
+                                ;;
+
+                            esac
+
+                        ;;
+
+                        jcl)
+                            # Must also include PROC files with JCL target
+                            begin_text="% BEGIN: PROC-DIRECTORY-TARGETS"
+                            end_text="% END: PROC-DIRECTORY-TARGETS"
+
+                            # Now set values in {param_dir}/version.mk
+                            ${my_sed} -i -e 's/^Find_Jcl =.*$/Find_Jcl = JCL/g' "${param_dir}/version.mk"
+                        ;;
+
+                        map)
+                            # Now set values in {param_dir}/version.mk
+                            ${my_sed} -i -e 's/^Find_Map =.*$/Find_Map = MAP/g' "${param_dir}/version.mk"
+                        ;;
+
+                    esac
+
+                    # Turn these descriptions on in the ${param_dir}/system.desc file
+                    if [ "${begin_text}" != "" -a "${end_text}" != "" ]; then
+                        ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
+                    fi
+
+                fi
+
+            done
+
+            if [ -e "${param_dir}/version.mk" ]; then
+                # Enable RDBMS and file schemas if set
+                ${my_sed} -i -e 's/^#\(RDBMS_SCHEMAS =\).*$/\1/g' "${param_dir}/version.mk"
+                ${my_sed} -i -e "s/^\(FILE_SCHEMAS =\).*\$/\1 ${file_schemas}/g" "${param_dir}/version.mk"
+                
+                if [ "${rdbms_schemas}" != "" ]; then
+                    ${my_sed} -i -e "s/^\(RDBMS_SCHEMAS =\).*\$/\1 ${rdbms_schemas}/g" "${param_dir}/version.mk"
+                else
+                    ${my_sed} -i -e 's/^\(RDBMS_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
+                fi
+
+            else
+                err_msg="Could not locate \"${param_dir}/version.mk\""
+                exit_code=${ERROR}
+            fi
+
+        else
+            err_msg="Could not locate system description template file \"${param_dir}/system.desc.template\""
+            exit_code=${ERROR}
+        fi
+
+    else
+        err_msg="Could not locate both parameter file directory \"${PARAM}\" and script directory \"${script_dir}\""
+        exit_code=${ERROR}
+    fi
+
+fi
+
 # WHAT: Import data
 # WHY:  Asked to
 #
@@ -415,7 +547,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "IMPORT"
     processing_verb="import"
     umask 007
-    script_dir="${WB_AUTOMATE}/scripts"
     input_dir="${WB_AUTOMATE}/input"
     import_dir="${WB_AUTOMATE}/imported"
     prepare_dir="${WB_AUTOMATE}/prepared"
@@ -954,11 +1085,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         if [ -e "${this_makefile}" ]; then
 
-            # Reconstruct "${param_dir}/system.desc"
-            if [ -e "${param_dir}/system.desc" ]; then
-                ${my_rm} -f "${param_dir}/system.desc"
-            fi
-
             # Clean out pob subfolders
             for target_dir in ${TARGETS} ; do
                 uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
@@ -969,104 +1095,17 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             done
 
-            # Create ${param_dir}/system.desc from template, then run make
-            if [ -e "${param_dir}/system.desc.template" ]; then
-                ${my_cp} -p "${param_dir}/system.desc.template" "${param_dir}/system.desc"
-                ${my_sed} -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
+            echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
+            cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
+            echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
+            cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+            exit_code=${?}
 
-                # Enable targets based on whether or files exist in those targets
-                for target_dir in ${TARGETS} ; do
-                    uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-                    target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
-                    eval "file_ext=\$${target_dir_var}_ext"
-
-                    file_count=`${my_find} ${source_dir}/${uc_target_dir}/*.${file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}'`
-
-                    if [ ${file_count} -gt 0 ]; then
-                        let is_commented_out=`${my_egrep} -c "^%directory \"${uc_target_dir}\" type" "${param_dir}/system.desc"`
-
-                        if [ ${is_commented_out} -gt 0 ]; then
-                            begin_text="% BEGIN: ${uc_target_dir}-DIRECTORY-TARGETS"
-                            end_text="% END: ${uc_target_dir}-DIRECTORY-TARGETS"
-                            ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
-                        fi
-
-                        # Clear out begin and end text vars so that library dependencies can be turned on 
-                        begin_text=""
-                        end_text=""
-
-                        case ${target_dir} in
-    
-                            batch|cics)
-                                # Must also include COPY files with BATCH and CICS targets
-                                begin_text="% BEGIN: COPY-DIRECTORY-TARGETS"
-                                end_text="% END: COPY-DIRECTORY-TARGETS"
-
-                                # Now set values in {param_dir}/version.mk
-                                case ${target_dir} in 
-
-                                    batch)
-                                        ${my_sed} -i -e 's/^Find_Prg =.*$/Find_Prg = BATCH/g' "${param_dir}/version.mk"
-                                    ;;
-
-                                    cics)
-                                        ${my_sed} -i -e 's/^Find_Tpr =.*$/Find_Tpr = CICS/g' "${param_dir}/version.mk"
-                                    ;;
-
-                                esac
-
-                            ;;
-    
-                            jcl)
-                                # Must also include PROC files with JCL target
-                                begin_text="% BEGIN: PROC-DIRECTORY-TARGETS"
-                                end_text="% END: PROC-DIRECTORY-TARGETS"
-
-                                # Now set values in {param_dir}/version.mk
-                                ${my_sed} -i -e 's/^Find_Jcl =.*$/Find_Jcl = JCL/g' "${param_dir}/version.mk"
-                            ;;
-
-                            map)
-                                # Now set values in {param_dir}/version.mk
-                                ${my_sed} -i -e 's/^Find_Map =.*$/Find_Map = MAP/g' "${param_dir}/version.mk"
-                            ;;
-    
-                        esac
-
-                        # Turn these descriptions on in the ${param_dir}/system.desc file
-                        if [ "${begin_text}" != "" -a "${end_text}" != "" ]; then
-                            ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
-                        fi
-
-                    fi
-
-                done
-
-                # Enable RDBMS and file schemas if set
-                ${my_sed} -i -e "s/^FILE_SCHEMAS =.*\$/FILE_SCHEMAS = ${file_schemas}/g" "${param_dir}/version.mk"
-                
-                if [ "${rdbms_schemas}" != "" ]; then
-                    ${my_sed} -i -e "s/^RDBMS_SCHEMAS =.*\$/RDBMS_SCHEMAS = ${rdbms_schemas}/g" "${param_dir}/version.mk"
-                else
-                    ${my_sed} -i -e 's/^\(RDBMS_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
-                fi
-                
-                echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
-                cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
-                echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-                cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
-                exit_code=${?}
-
-                if [ ${exit_code} -ne ${SUCCESS} ]; then
-                    echo "FAILED"
-                    err_msg="${processing_verb} processing of targets failed"
-                else
-                    echo "SUCCESS"
-                fi
-
+            if [ ${exit_code} -ne ${SUCCESS} ]; then
+                echo "FAILED"
+                err_msg="${processing_verb} processing of targets failed"
             else
-                err_msg="Could not locate template file \"${param_dir}/system.desc.template\" which is used to generate \"${param_dir}/system.desc\" file"
-                exit_code=${ERROR}
+                echo "SUCCESS"
             fi
 
         else
