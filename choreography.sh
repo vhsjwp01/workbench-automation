@@ -266,7 +266,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     fi
 
-    if [ ! -d "${file_schemas}" ]; then
+    if [ "${file_schemas}" = "" ]; then
         err_msg="No file schema was provided.  Please set file schema with --file_schemas \"<schema name>\""
         exit_code=${ERROR}
     fi
