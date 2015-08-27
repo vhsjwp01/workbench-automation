@@ -1433,8 +1433,19 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                 # Move ${tmp_file} to ${source_code_dir}/${target_file}
                 if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
-                    ${my_rsync} "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
-                    echo "DONE"
+                    ${my_diff} -q "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
+
+                    if [ ${?} -ne ${SUCCESS} ]; then
+                        ${my_rsync} "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
+                        let exit_code=${exit_code}+${?}
+                    fi
+
+                else
+                    let exit_code=${exit_code}+1
+                fi
+
+                if [ ${exit_code} -eq ${SUCCESS} ]; then
+                    echo "SUCCESS"
                 else
                     echo "FAILED"
                 fi
@@ -1460,6 +1471,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ${my_sed} -i -e "s?BETWEEN MWDB2ORA.STR2DATE(\(.*\) AND \(.*\))?BETWEEN TO_DATE(\1, 'MM/DD/YYYY') AND TO_DATE(\2, 'MM/DD/YYYY')?g" "${source_code_dir}/${target_file}"
                     ${my_sed} -i -e "s?EXEC SQL SELECT MWDB2ORA.STR2DATE(\(.*\), \(.*\), .*)?EXEC SQL SELECT TO_CHAR(\1, \2, 'MM-DD-YYYY')?g" "${source_code_dir}/${target_file}"
 
+                    echo "DONE"
                 fi
 
                 # Now munge for IEFBR14 file deletion optimization
@@ -1506,11 +1518,14 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     done
 
+                    echo "DONE"
+
                     # Now munge for FTP get commands in ksh JCL conversion 
                     let has_ftpbatch=`${my_egrep} -c "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}"`
 
                     # Make sure we have an FTPBATCH section upon which to operate
                     if [ ${has_ftpbatch} -gt 0  ]; then
+                        echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for FTPBATCH conversion ... "
                         # FTPBATCH put or get?
                         let put_block=`${my_egrep} -c "^put " "${source_code_dir}/${target_file}"`
                         let get_block=`${my_egrep} -c "^get " "${source_code_dir}/${target_file}"`
@@ -1698,6 +1713,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                         fi
 
+                        echo "DONE"
                     fi
 
                     # Now munge DFDSS tar backup conversion
@@ -1705,7 +1721,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     # Make sure we have an DFDSS section upon which to operate
                     if [ ${has_dfdss} -gt 0   ]; then
-                        echo "TAR Conversion"
+                        echo "TAR Conversion ... coming soon"
                     fi
 
                     # Now munge SMTP tasks
@@ -1713,7 +1729,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     # Make sure we have an SMTP section upon which to operate
                     if [ ${has_smtp} -gt 0   ]; then
-                        echo "SMTP Conversion"
+                        echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for SMTP conversion ... "
                         line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
                         let has_cnvsmtp=`${my_egrep} -c "^\(CNVSMTP[0-9]*\)" "${source_code_dir}/${target_file}"`
 
@@ -1813,6 +1829,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                         fi
 
+                        echo "DONE"
                     fi
 
                 fi
