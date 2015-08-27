@@ -1379,10 +1379,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         eval "file_ext=\$${target}_ext"
         uc_target=`echo "${target}" | ${my_tr} '[a-z]' '[A-Z]'`
 
-#===
         # Read in regex lines from "${postconvert_dir}/${uc_target}"
         if [ -e "${postconvert_dir}/${uc_target}" -a -s "${postconvert_dir}/${uc_target}" ]; then
-#===
 
             # Here we set the default source_code_dir
             source_code_dir="${pcTarget_dir}/${uc_target}"
@@ -1428,136 +1426,360 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             for target_file in ${target_files} ; do
 
                 # Read in regex lines from "${postconvert_dir}/${uc_target}"
-                if [ -e "${postconvert_dir}/${uc_target}" -a -s "${postconvert_dir}/${uc_target}" ]; then
-                    echo -ne "    INFO:  Post-Processing \"${source_code_dir}/${target_file}\" for regular expression translation ... "
-                    tmp_file="${tmp_dir}/translate-post-processing-${uc_target}-${target_file}.$$"
-                    ${my_rm} -f "${tmp_file}"
+                if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-                    ${SCRIPT_BASE}/processor.pl --input_file "${source_code_dir}/${target_file}" --output_file "${tmp_file}" --data_type "${target}" --regex_file "${postconvert_dir}/${uc_target}" --mode "post"
+                    if [ -e "${postconvert_dir}/${uc_target}" -a -s "${postconvert_dir}/${uc_target}" ]; then
+                        echo -ne "    INFO:  Post-Processing \"${source_code_dir}/${target_file}\" for regular expression translation ... "
+                        tmp_file="${tmp_dir}/translate-post-processing-${uc_target}-${target_file}.$$"
+                        ${my_rm} -f "${tmp_file}"
 
-                    # Move ${tmp_file} to ${source_code_dir}/${target_file}
-                    if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
-                        ${my_diff} -q "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
+                        ${SCRIPT_BASE}/processor.pl --input_file "${source_code_dir}/${target_file}" --output_file "${tmp_file}" --data_type "${target}" --regex_file "${postconvert_dir}/${uc_target}" --mode "post"
 
-                        if [ ${?} -ne ${SUCCESS} ]; then
-                            ${my_rsync} "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
-                            let exit_code=${exit_code}+${?}
+                        # Move ${tmp_file} to ${source_code_dir}/${target_file}
+                        if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
+                            ${my_diff} -q "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
+
+                            if [ ${?} -ne ${SUCCESS} ]; then
+                                ${my_rsync} "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
+                                let exit_code=${exit_code}+${?}
+                            fi
+
+                        else
+                            let exit_code=${exit_code}+1
                         fi
 
-                    else
-                        let exit_code=${exit_code}+1
-                    fi
+                        if [ ${exit_code} -eq ${SUCCESS} ]; then
+                            echo "SUCCESS"
+                        else
+                            echo "FAILED"
+                        fi
 
-                    if [ ${exit_code} -eq ${SUCCESS} ]; then
-                        echo "SUCCESS"
-                    else
-                        echo "FAILED"
                     fi
 
                 fi
 
-                line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
-
                 # Munge SQL statements in Cobol programs
-                if [ "${target}" = "cics" -o "${target}" = "batch" -o "${target}" = "copy" ]; then
-                    comment_prefix='      *'
-                    echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" SQL timestamp conversion ... "
+                if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-                    # Rule #1: MWDB2ORA.MAKE_TIME change to use SYSTIMESTAMP
-                    ${my_sed} -i -e "s?MWDB2ORA.MAKE_TIME(.*)?MNTC_LST_TM = SYSTIMESTAMP?g" "${source_code_dir}/${target_file}"
+                    if [ "${target}" = "cics" -o "${target}" = "batch" -o "${target}" = "copy" ]; then
+                        comment_prefix='      *'
+                        echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" SQL timestamp conversion ... "
 
-                    # Rule #2: MWDB2ORA.TIME2HOST change to TO_CHAR
-                    ${my_sed} -i -e "s?MWDB2ORA.TIME2HOST(\(.*\))?TO_CHAR(\1,'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                        # Rule #1: MWDB2ORA.MAKE_TIME change to use SYSTIMESTAMP
+                        ${my_sed} -i -e "s?MWDB2ORA.MAKE_TIME(.*)?MNTC_LST_TM = SYSTIMESTAMP?g" "${source_code_dir}/${target_file}"
 
-                    # Rule #3: MWDB2ORA.STR2TIME change to use TO_TIMESTAMP
-                    ${my_sed} -i -e "s?MWDB2ORA.STR2TIME(\(.*\))?TO_TIMESTAMP(\1,'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                        # Rule #2: MWDB2ORA.TIME2HOST change to TO_CHAR
+                        ${my_sed} -i -e "s?MWDB2ORA.TIME2HOST(\(.*\))?TO_CHAR(\1,'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
 
-                    # Rule #4: MWDB2ORA.STR2TMS remove
-                    ${my_sed} -i -e "s?MWDB2ORA.STR2TMS(\(.*\))?\1?g" "${source_code_dir}/${target_file}"
+                        # Rule #3: MWDB2ORA.STR2TIME change to use TO_TIMESTAMP
+                        ${my_sed} -i -e "s?MWDB2ORA.STR2TIME(\(.*\))?TO_TIMESTAMP(\1,'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
 
-                    # Rule #5: MWDB2ORA.STR2DATE change to use TO_CHAR
-                    ${my_sed} -i -e "s?BETWEEN MWDB2ORA.STR2DATE(\(.*\) AND \(.*\))?BETWEEN TO_DATE(\1, 'MM/DD/YYYY') AND TO_DATE(\2, 'MM/DD/YYYY')?g" "${source_code_dir}/${target_file}"
-                    ${my_sed} -i -e "s?EXEC SQL SELECT MWDB2ORA.STR2DATE(\(.*\), \(.*\), .*)?EXEC SQL SELECT TO_CHAR(\1, \2, 'MM-DD-YYYY')?g" "${source_code_dir}/${target_file}"
+                        # Rule #4: MWDB2ORA.STR2TMS remove
+                        ${my_sed} -i -e "s?MWDB2ORA.STR2TMS(\(.*\))?\1?g" "${source_code_dir}/${target_file}"
 
-                    echo "DONE"
+                        # Rule #5: MWDB2ORA.STR2DATE change to use TO_CHAR
+                        ${my_sed} -i -e "s?BETWEEN MWDB2ORA.STR2DATE(\(.*\) AND \(.*\))?BETWEEN TO_DATE(\1, 'MM/DD/YYYY') AND TO_DATE(\2, 'MM/DD/YYYY')?g" "${source_code_dir}/${target_file}"
+                        ${my_sed} -i -e "s?EXEC SQL SELECT MWDB2ORA.STR2DATE(\(.*\), \(.*\), .*)?EXEC SQL SELECT TO_CHAR(\1, \2, 'MM-DD-YYYY')?g" "${source_code_dir}/${target_file}"
+
+                        echo "DONE"
+                    fi
+
                 fi
 
                 # Now munge for IEFBR14 file deletion optimization
-                if [ "${target}" = "jcl" ]; then
-                    comment_prefix='#'
-                    echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for MOD,DELETE,DELETE optimization ... "
-                    iefbr14_lines=($(${my_egrep} -n "^\(|IEFBR14" "${source_code_dir}/${target_file}" | ${my_egrep} -B1 "IEFBR14" | ${my_egrep} "^[0-9]*:" | ${my_awk} -F':' '{print $1}'))
+                if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-                    # Blocks of code can be detected as line number pairs
-                    let line_counter=${#iefbr14_lines[@]}-1
+                    if [ "${target}" = "jcl" ]; then
+                        comment_prefix='#'
+                        echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for MOD,DELETE,DELETE optimization ... "
+                        iefbr14_lines=($(${my_egrep} -n "^\(|IEFBR14" "${source_code_dir}/${target_file}" | ${my_egrep} -B1 "IEFBR14" | ${my_egrep} "^[0-9]*:" | ${my_awk} -F':' '{print $1}'))
 
-                    # Valid inputs occur in pairs: a line beginning with "(", and a line ending with "IEFBR14"
-                    while [ ${line_counter} -gt 0 ]; do
-                        let ending_line_number=${iefbr14_lines[$line_counter]}
-                        let line_counter=${line_counter}-1
-                        let starting_line_number=${iefbr14_lines[$line_counter]}
-                        let line_counter=${line_counter}-1
+                        # Blocks of code can be detected as line number pairs
+                        let line_counter=${#iefbr14_lines[@]}-1
 
-                        # Comment out ending_line_number
-                        ending_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${ending_line_number}:" | ${my_sed} -e "s/^${ending_line_number}://g"`
-                        ${my_sed} -i -e "${ending_line_number}s?^${ending_line}\$?#${ending_line}?g" "${source_code_dir}/${target_file}"
+                        # Valid inputs occur in pairs: a line beginning with "(", and a line ending with "IEFBR14"
+                        while [ ${line_counter} -gt 0 ]; do
+                            let ending_line_number=${iefbr14_lines[$line_counter]}
+                            let line_counter=${line_counter}-1
+                            let starting_line_number=${iefbr14_lines[$line_counter]}
+                            let line_counter=${line_counter}-1
 
-                        # Move up one element in the array
-                        let next_line_up=${ending_line_number}-1
+                            # Comment out ending_line_number
+                            ending_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${ending_line_number}:" | ${my_sed} -e "s/^${ending_line_number}://g"`
+                            ${my_sed} -i -e "${ending_line_number}s?^${ending_line}\$?#${ending_line}?g" "${source_code_dir}/${target_file}"
 
-                        # Munge all lines that match between ${starting_line_number} and ${ending_line_number}
-                        while [ ${next_line_up} -gt ${starting_line_number} ]; do
+                            # Move up one element in the array
+                            let next_line_up=${ending_line_number}-1
 
-                            # Capture this line
-                            line_to_munge=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${next_line_up}:" | ${my_sed} -e "s/^${next_line_up}://g"`
-                            let mod_del_del_check=`echo "${line_to_munge}" | ${my_egrep} -c "m_FileAssign.*MOD,DELETE,DELETE"`
+                            # Munge all lines that match between ${starting_line_number} and ${ending_line_number}
+                            while [ ${next_line_up} -gt ${starting_line_number} ]; do
 
-                            if [ ${mod_del_del_check} -gt 0 ]; then
-                                data_file=`echo "${line_to_munge}" | ${my_awk} -F'/' '{print "${DATA}/" $NF}'`
+                                # Capture this line
+                                line_to_munge=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${next_line_up}:" | ${my_sed} -e "s/^${next_line_up}://g"`
+                                let mod_del_del_check=`echo "${line_to_munge}" | ${my_egrep} -c "m_FileAssign.*MOD,DELETE,DELETE"`
 
-                                if [ "${data_file}" != "" ]; then
-                                    ${my_sed} -i -e "${next_line_up}s?^${line_to_munge}\$?${ksh_offset}m_FileExist -r DELSW1 ${data_file}\\${NL}${ksh_offset}if [[ \${DELSW1} = true ]]; then\\${NL}${ksh_offset}   m_FileDelete ${data_file}\\${NL}${ksh_offset}fi?g" "${source_code_dir}/${target_file}"
+                                if [ ${mod_del_del_check} -gt 0 ]; then
+                                    data_file=`echo "${line_to_munge}" | ${my_awk} -F'/' '{print "${DATA}/" $NF}'`
+
+                                    if [ "${data_file}" != "" ]; then
+                                        ${my_sed} -i -e "${next_line_up}s?^${line_to_munge}\$?${ksh_offset}m_FileExist -r DELSW1 ${data_file}\\${NL}${ksh_offset}if [[ \${DELSW1} = true ]]; then\\${NL}${ksh_offset}   m_FileDelete ${data_file}\\${NL}${ksh_offset}fi?g" "${source_code_dir}/${target_file}"
+                                    fi
+
+                                fi
+
+                                let next_line_up=${next_line_up}-1
+                            done
+
+                        done
+
+                        echo "DONE"
+                    fi
+
+                fi
+
+                # Now munge for FTP get commands in ksh JCL conversion 
+                if [ ${exit_code} -eq ${SUCCESS} ]; then
+
+                    if [ "${target}" = "jcl" ]; then
+                        let has_ftpbatch=`${my_egrep} -c "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}"`
+
+                        # Make sure we have an FTPBATCH section upon which to operate
+                        if [ ${has_ftpbatch} -gt 0  ]; then
+                            echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for FTPBATCH conversion ... "
+                            # FTPBATCH put or get?
+                            let put_block=`${my_egrep} -c "^put " "${source_code_dir}/${target_file}"`
+                            let get_block=`${my_egrep} -c "^get " "${source_code_dir}/${target_file}"`
+
+                            if [ ${put_block} -gt 0  ]; then
+                                echo "Found put block"
+                                line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
+                                let has_cnvtls=`${my_egrep} -c "^\(CNVTLS[0-9]*\)" "${source_code_dir}/${target_file}"`
+
+                                # Make sure the file hasn't already been converted for FTPBATCH put operations
+                                if [ ${has_cnvtls} -eq 0  ]; then
+                                    let cnvtls_data_counter=0
+                                    put_batch_lines=($(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:put " | ${my_egrep} "^[0-9]*:.*m_ProcInclude.*\ FTPBATCH" | tail -1 | ${my_awk} -F':' '{print $1}'))
+                                    let put_batch_line_count=${#put_batch_lines[@]}-1
+
+                                    # Start operating on the last FTPBATCH line, so as to not disturb line positions after processing
+                                    while [ ${put_batch_line_count} -ge 0  ]; do
+                                        function_start_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1`
+                                        function_start_line_number=`echo "${function_start_line}" | ${my_awk} -F':' '{print $1}'`
+                                        function_start_line=`echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g"`
+
+                                        function_end_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1`
+                                        function_end_line_number=`echo "${function_end_line}" | ${my_awk} -F':' '{print $1}'`
+                                        function_end_line=`echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g"`
+
+                                        jump_label=`echo "${function_start_line}" | ${my_sed} -e 's/[\(|\)]//g'`
+                                        jump_label_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:\(${jump_label}\)$" | ${my_egrep} "^[0-9]*:.*JUMP_LABEL=${jump_label}$" | tail -1`
+                                        jump_label_line_number=`echo "${jump_label_line}" | ${my_awk} -F':' '{print $1}'`
+                                        jump_label_line=`echo "${jump_label_line}" | ${my_sed} -e "s/^${jump_label_line_number}://g"`
+
+                                        let function_line_counter=${function_start_line_number}+1
+                                        let ftp_put_counter=0
+
+                                        # Figure out all the lines containing DATA file names
+                                        while [ ${function_line_counter} -lt ${function_end_line_number}  ]; do
+                                            next_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g"`
+                                            let is_data_line=`echo "${next_line}" | ${my_egrep} -c "m_FileOverride.*\ FTP\ .*{DATA}/"`
+
+                                            if [ ${is_data_line} -gt 0   ]; then
+                                                data_file[${ftp_put_counter}]=`echo "${next_line}" | ${my_awk} '{print $NF}'`
+
+                                                # Rename the ${}data_file[]} to ${data_file[]}.ftp
+                                                ${my_sed} -i -e "${function_line_counter}s?${data_file[$ftp_put_counter]}\$?${data_file[$ftp_put_counter]}.ftp?g" "${source_code_dir}/${target_file}"
+
+                                                let ftp_put_counter=${ftp_put_counter}+1
+                                            fi
+
+                                            let function_line_counter=${function_line_counter}+1
+                                        done
+
+                                        cnvtls_line=""
+                                        let data_line_counter=0
+
+                                        while [ ${data_line_counter} -lt ${ftp_put_counter}  ]; do
+
+                                            if [ "${cnvtls_line}" = ""  ]; then
+                                                cnvtls_line="###### CONVERT FILE TO LINE SEQUENTIAL ######\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}JUMP_LABEL=CNVTLS${cnvtls_data_counter}\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset};;\\${NL}"
+                                                cnvtls_line="${cnvtls_line}\\${NL}"
+                                                cnvtls_line="${cnvtls_line}(CNVTLS${cnvtls_data_counter})\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}export DD_INRSF=${data_file[$data_line_counter]}\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}export DD_OUTLSF=${data_file[$data_line_counter]}.ftp\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}export DD_INDCB=${data_file[$data_line_counter]}.dcb\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}m_ProgramExec LSCONV"
+                                            else
+                                                cnvtls_line="${cnvtls_line}\\${NL}"
+                                                cnvtls_line="${cnvtls_line}###### CONVERT FILE TO LINE SEQUENTIAL ######\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}JUMP_LABEL=CNVTLS${cnvtls_data_counter}\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset};;\\${NL}"
+                                                cnvtls_line="${cnvtls_line}\\${NL}"
+                                                cnvtls_line="${cnvtls_line}(CNVTLS${cnvtls_data_counter})\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}export DD_INRSF=${data_file[$data_line_counter]}\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}export DD_OUTLSF=${data_file[$data_line_counter]}.ftp\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}export DD_INDCB=${data_file[$data_line_counter]}.dcb\\${NL}"
+                                                cnvtls_line="${cnvtls_line}${ksh_offset}m_ProgramExec LSCONV"
+                                            fi
+
+                                            let data_line_counter=${data_line_counter}+1
+                                            let cnvtls_data_counter=${cnvtls_data_counter}+1
+                                        done
+
+                                        # Complete cnvtls_line
+                                        cnvtls_line="${cnvtls_line}\\${NL}"
+                                        cnvtls_line="${cnvtls_line}# -----------------------------------------------------------------\*\\${NL}"
+                                        cnvtls_line="${cnvtls_line}${ksh_offset}JUMP_LABEL=${jump_label}"
+
+                                        ${my_sed} -i -e "${jump_label_line_number}s?^${jump_label_line}\$?${cnvtls_line}?g" "${source_code_dir}/${target_file}"
+                                        let put_batch_line_count=${put_batch_line_count}-1
+                                    done
+
                                 fi
 
                             fi
 
-                            let next_line_up=${next_line_up}-1
-                        done
+                            if [ ${get_block} -gt 0  ]; then
+                                line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
+                                echo "Found get block"
+                                let has_cnvtrs=`${my_egrep} -c "^\(CNVTRS\)" "${source_code_dir}/${target_file}"`
 
-                    done
+                                # Make sure the file hasn't already been converted for FTPBATCH get operations
+                                if [ ${has_cnvtrs} -eq 0  ]; then
+                                    let cnvtrs_data_counter=0
+                                    get_batch_lines=($(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:get " | ${my_egrep} "^[0-9]*:.*m_ProcInclude.*\ FTPBATCH" | tail -1 | ${my_awk} -F':' '{print $1}'))
+                                    let get_batch_line_count=${#get_batch_lines[@]}-1
 
-                    echo "DONE"
+                                    # Start operating on the last FTPBATCH line, so as to not disturb line positions after processing
+                                    while [ ${get_batch_line_count} -ge 0  ]; do
+                                        function_start_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1`
+                                        function_start_line_number=`echo "${function_start_line}" | ${my_awk} -F':' '{print $1}'`
+                                        function_start_line=`echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g"`
+
+                                        function_end_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1`
+                                        function_end_line_number=`echo "${function_end_line}" | ${my_awk} -F':' '{print $1}'`
+                                        function_end_line=`echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g"`
+
+                                        let function_line_counter=${function_start_line_number}+1
+                                        let ftp_get_counter=0
+
+                                        # Figure out all the lines containing DATA file names
+                                        while [ ${function_line_counter} -lt ${function_end_line_number}  ]; do
+                                            next_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g"`
+                                            let is_data_line=`echo "${next_line}" | ${my_egrep} -c "m_FileOverride.*\ FTP\ .*{DATA}/"`
+                                            let is_get_line=`echo "${next_line}" | ${my_egrep} -c "^get"`
+
+                                            if [ ${is_data_line} -gt 0   ]; then
+                                                data_file[${ftp_get_counter}]=`echo "${next_line}" | ${my_awk} '{print $NF}'`
+
+                                                # Rename the ${}data_file[]} to ${data_file[]}.ftp
+                                                ${my_sed} -i -e "${function_line_counter}s?${data_file[$ftp_get_counter]}\$?${data_file[$ftp_get_counter]}.ftp?g" "${source_code_dir}/${target_file}"
+
+                                                let ftp_get_counter=${ftp_get_counter}+1
+                                            fi
+
+                                            if [ ${is_get_line} -gt 0   ]; then
+                                                ${my_sed} -i -e "${function_line_counter}s?^get.*\$?${next_line} \[REPLACE\]?g" "${source_code_dir}/${target_file}"
+                                            fi
+
+                                            let function_line_counter=${function_line_counter}+1
+                                        done
+
+                                        cnvtrs_line=""
+                                        let data_line_counter=0
+
+                                        while [ ${data_line_counter} -lt ${ftp_get_counter}  ]; do
+
+                                            if [ "${cnvtrs_line}" = ""  ]; then
+                                                cnvtrs_line="${function_end_line}\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${comment_prefix}\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset}JUMP_LABEL=CNVTRS${cnvtrs_data_counter}\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset};;\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}(CNVTRS${cnvtrs_data_counter})\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${comment_prefix} CONVERT FTP FILE TO RECORD SEQUENTIAL\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset}export DD_INLSF=${data_file[$data_line_counter]}.ftp\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset}export DD_OUTRSF=${data_file[$data_line_counter]}\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset}m_ProgramExec RSCONV"
+                                            else
+                                                cnvtrs_line="${cnvtrs_line}\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset}JUMP_LABEL=CNVTRS${cnvtrs_data_counter}\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset};;\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}(CNVTRS${cnvtrs_data_counter})\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${comment_prefix} CONVERT FTP FILE TO RECORD SEQUENTIAL\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset}export DD_INLSF=${data_file[$data_line_counter]}.ftp\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset}export DD_OUTRSF=${data_file[$data_line_counter]}\\${NL}"
+                                                cnvtrs_line="${cnvtrs_line}${ksh_offset}m_ProgramExec RSCONV"
+                                            fi
+
+                                            let data_line_counter=${data_line_counter}+1
+                                            let cnvtrs_data_counter=${cnvtrs_data_counter}+1
+                                        done
+
+                                        # Replace _end with cnvtrs_lines
+                                        ${my_sed} -i -e "${function_end_line_number}s?^${function_end_line}\$?${cnvtrs_line}?g" "${source_code_dir}/${target_file}"
+
+                                        let get_batch_line_count=${get_batch_line_count}-1
+                                    done
+
+                                fi
+
+                            fi
+
+                            echo "DONE"
+                        fi
+
+                    fi
+
                 fi
 
-                # Now munge for FTP get commands in ksh JCL conversion 
-                if [ "${target}" = "jcl" ]; then
-                    let has_ftpbatch=`${my_egrep} -c "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}"`
+                # Now munge DFDSS tar backup conversion
+                if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-                    # Make sure we have an FTPBATCH section upon which to operate
-                    if [ ${has_ftpbatch} -gt 0  ]; then
-                        echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for FTPBATCH conversion ... "
-                        # FTPBATCH put or get?
-                        let put_block=`${my_egrep} -c "^put " "${source_code_dir}/${target_file}"`
-                        let get_block=`${my_egrep} -c "^get " "${source_code_dir}/${target_file}"`
+                    if [ "${target}" = "jcl" ]; then
+                        let has_dfdss=`${my_egrep} -c "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}"`
 
-                        if [ ${put_block} -gt 0  ]; then
-                            echo "Found put block"
+                        # Make sure we have an DFDSS section upon which to operate
+                        if [ ${has_dfdss} -gt 0   ]; then
+                            echo "TAR Conversion ... coming soon"
+                        fi
+
+                    fi
+
+                fi
+
+                # Now munge SMTP tasks
+                if [ ${exit_code} -eq ${SUCCESS} ]; then
+
+                    if [ "${target}" = "jcl" ]; then
+                        let has_smtp=`${my_egrep} -c "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}"`
+
+                        # Make sure we have an SMTP section upon which to operate
+                        if [ ${has_smtp} -gt 0   ]; then
+                            echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for SMTP conversion ... "
                             line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
-                            let has_cnvtls=`${my_egrep} -c "^\(CNVTLS[0-9]*\)" "${source_code_dir}/${target_file}"`
+                            let has_cnvsmtp=`${my_egrep} -c "^\(CNVSMTP[0-9]*\)" "${source_code_dir}/${target_file}"`
 
-                            # Make sure the file hasn't already been converted for FTPBATCH put operations
-                            if [ ${has_cnvtls} -eq 0  ]; then
-                                let cnvtls_data_counter=0
-                                put_batch_lines=($(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:put " | ${my_egrep} "^[0-9]*:.*m_ProcInclude.*\ FTPBATCH" | tail -1 | ${my_awk} -F':' '{print $1}'))
-                                let put_batch_line_count=${#put_batch_lines[@]}-1
+                            # Make sure the file hasn't already been converted for SMTP operations
+                            if [ ${has_cnvsmtp} -eq 0  ]; then
+                                let cnvsmtp_data_counter=0
+                                smtp2_lines=($(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^[0-9]*:.*m_OutputAssign.*\ SMTP2\ " | ${my_awk} -F':' '{print $1}'))
+                                let smtp2_line_count=${#smtp2_lines[@]}-1
 
-                                # Start operating on the last FTPBATCH line, so as to not disturb line positions after processing
-                                while [ ${put_batch_line_count} -ge 0  ]; do
-                                    function_start_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1`
+                                # Start operating on the last SMTP2 line, so as to not disturb line positions during processing
+                                while [ ${smtp2_line_count} -ge 0  ]; do
+                                    function_start_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\(" | tail -1`
                                     function_start_line_number=`echo "${function_start_line}" | ${my_awk} -F':' '{print $1}'`
                                     function_start_line=`echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g"`
 
-                                    function_end_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1`
+                                    function_end_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\ *;;$" | head -1`
                                     function_end_line_number=`echo "${function_end_line}" | ${my_awk} -F':' '{print $1}'`
                                     function_end_line=`echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g"`
 
@@ -1566,286 +1788,84 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                                     jump_label_line_number=`echo "${jump_label_line}" | ${my_awk} -F':' '{print $1}'`
                                     jump_label_line=`echo "${jump_label_line}" | ${my_sed} -e "s/^${jump_label_line_number}://g"`
 
+                                    filerepro_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:.*m_FileRepro" | head -1`
+                                    filerepro_line_number=`echo "${filerepro_line}" | ${my_awk} -F':' '{print $1}'`
+                                    filerepro_line=`echo "${filerepro_line}" | ${my_sed} -e "s/^${filerepro_line_number}://g"`
+
+                                    # Now we munge the filepro line
+                                    ${my_sed} -i -e "${filerepro_line_number}s?^${filerepro_line}\$?${ksh_offset}m_Smtp -i SYSUT1?g" "${source_code_dir}/${target_file}"
+
+                                    # Now we comment out the SMTP2 line
+                                    ${my_sed} -i -e "${smtp2_lines[$smtp2_line_count]}s?\(^.*$\)?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
+
                                     let function_line_counter=${function_start_line_number}+1
-                                    let ftp_put_counter=0
+                                    let smtp_counter=0
 
                                     # Figure out all the lines containing DATA file names
                                     while [ ${function_line_counter} -lt ${function_end_line_number}  ]; do
                                         next_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g"`
-                                        let is_data_line=`echo "${next_line}" | ${my_egrep} -c "m_FileOverride.*\ FTP\ .*{DATA}/"`
+                                        let is_data_line=`echo "${next_line}" | ${my_egrep} -c "m_FileAssign.*\ *[{DATA}{TMP}]/"`
 
                                         if [ ${is_data_line} -gt 0   ]; then
-                                            data_file[${ftp_put_counter}]=`echo "${next_line}" | ${my_awk} '{print $NF}'`
+                                            data_file[${smtp_counter}]=`echo "${next_line}" | ${my_awk} '{print $NF}'`
 
-                                            # Rename the ${}data_file[]} to ${data_file[]}.ftp
-                                            ${my_sed} -i -e "${function_line_counter}s?${data_file[$ftp_put_counter]}\$?${data_file[$ftp_put_counter]}.ftp?g" "${source_code_dir}/${target_file}"
+                                            # Rename the ${}data_file[]} to ${data_file[]}.ls
+                                            ${my_sed} -i -e "${function_line_counter}s?${data_file[$smtp_counter]}\$?${data_file[$smtp_counter]}.ls?g" "${source_code_dir}/${target_file}"
 
-                                            let ftp_put_counter=${ftp_put_counter}+1
+                                            let smtp_counter=${smtp_counter}+1
                                         fi
 
                                         let function_line_counter=${function_line_counter}+1
                                     done
 
-                                    cnvtls_line=""
+                                    cnvsmtp_line=""
                                     let data_line_counter=0
 
-                                    while [ ${data_line_counter} -lt ${ftp_put_counter}  ]; do
+                                    while [ ${data_line_counter} -lt ${smtp_counter}  ]; do
 
-                                        if [ "${cnvtls_line}" = ""  ]; then
-                                            cnvtls_line="###### CONVERT FILE TO LINE SEQUENTIAL ######\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}JUMP_LABEL=CNVTLS${cnvtls_data_counter}\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset};;\\${NL}"
-                                            cnvtls_line="${cnvtls_line}\\${NL}"
-                                            cnvtls_line="${cnvtls_line}(CNVTLS${cnvtls_data_counter})\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}export DD_INRSF=${data_file[$data_line_counter]}\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}export DD_OUTLSF=${data_file[$data_line_counter]}.ftp\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}export DD_INDCB=${data_file[$data_line_counter]}.dcb\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}m_ProgramExec LSCONV"
+                                        if [ "${cnvsmtp_line}" = ""  ]; then
+                                            cnvsmtp_line="###### CONVERT FILE TO LINE SEQUENTIAL ######\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}JUMP_LABEL=CNVSMTP${cnvsmtp_data_counter}\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset};;\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}(CNVSMTP${cnvsmtp_data_counter})\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_INRSF=${data_file[$data_line_counter]}\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_OUTLSF=${data_file[$data_line_counter]}.ls\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_INDCB=${data_file[$data_line_counter]}.dcb\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}m_ProgramExec LSCONV"
                                         else
-                                            cnvtls_line="${cnvtls_line}\\${NL}"
-                                            cnvtls_line="${cnvtls_line}###### CONVERT FILE TO LINE SEQUENTIAL ######\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}JUMP_LABEL=CNVTLS${cnvtls_data_counter}\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset};;\\${NL}"
-                                            cnvtls_line="${cnvtls_line}\\${NL}"
-                                            cnvtls_line="${cnvtls_line}(CNVTLS${cnvtls_data_counter})\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}export DD_INRSF=${data_file[$data_line_counter]}\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}export DD_OUTLSF=${data_file[$data_line_counter]}.ftp\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}export DD_INDCB=${data_file[$data_line_counter]}.dcb\\${NL}"
-                                            cnvtls_line="${cnvtls_line}${ksh_offset}m_ProgramExec LSCONV"
+                                            cnvsmtp_line="${cnvsmtp_line}\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}###### CONVERT FILE TO LINE SEQUENTIAL ######\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}JUMP_LABEL=CNVSMTP${cnvsmtp_data_counter}\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset};;\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}(CNVSMTP${cnvsmtp_data_counter})\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_INRSF=${data_file[$data_line_counter]}\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_OUTLSF=${data_file[$data_line_counter]}.ls\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_INDCB=${data_file[$data_line_counter]}.dcb\\${NL}"
+                                            cnvsmtp_line="${cnvsmtp_line}${ksh_offset}m_ProgramExec LSCONV"
                                         fi
 
                                         let data_line_counter=${data_line_counter}+1
-                                        let cnvtls_data_counter=${cnvtls_data_counter}+1
+                                        let cnvsmtp_data_counter=${cnvsmtp_data_counter}+1
                                     done
 
-                                    # Complete cnvtls_line
-                                    cnvtls_line="${cnvtls_line}\\${NL}"
-                                    cnvtls_line="${cnvtls_line}# -----------------------------------------------------------------\*\\${NL}"
-                                    cnvtls_line="${cnvtls_line}${ksh_offset}JUMP_LABEL=${jump_label}"
+                                    # Complete cnvsmtp_line
+                                    cnvsmtp_line="${cnvsmtp_line}\\${NL}"
+                                    cnvsmtp_line="${cnvsmtp_line}# -----------------------------------------------------------------\*\\${NL}"
+                                    cnvsmtp_line="${cnvsmtp_line}${ksh_offset}JUMP_LABEL=${jump_label}"
 
-                                    ${my_sed} -i -e "${jump_label_line_number}s?^${jump_label_line}\$?${cnvtls_line}?g" "${source_code_dir}/${target_file}"
-                                    let put_batch_line_count=${put_batch_line_count}-1
+                                    ${my_sed} -i -e "${jump_label_line_number}s?^${jump_label_line}\$?${cnvsmtp_line}?g" "${source_code_dir}/${target_file}"
+                                    let smtp2_line_count=${smtp2_line_count}-1
                                 done
 
                             fi
 
+                            echo "DONE"
                         fi
 
-                        if [ ${get_block} -gt 0  ]; then
-                            line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
-                            echo "Found get block"
-                            let has_cnvtrs=`${my_egrep} -c "^\(CNVTRS\)" "${source_code_dir}/${target_file}"`
-
-                            # Make sure the file hasn't already been converted for FTPBATCH get operations
-                            if [ ${has_cnvtrs} -eq 0  ]; then
-                                let cnvtrs_data_counter=0
-                                get_batch_lines=($(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:get " | ${my_egrep} "^[0-9]*:.*m_ProcInclude.*\ FTPBATCH" | tail -1 | ${my_awk} -F':' '{print $1}'))
-                                let get_batch_line_count=${#get_batch_lines[@]}-1
-
-                                # Start operating on the last FTPBATCH line, so as to not disturb line positions after processing
-                                while [ ${get_batch_line_count} -ge 0  ]; do
-                                    function_start_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1`
-                                    function_start_line_number=`echo "${function_start_line}" | ${my_awk} -F':' '{print $1}'`
-                                    function_start_line=`echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g"`
-
-                                    function_end_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1`
-                                    function_end_line_number=`echo "${function_end_line}" | ${my_awk} -F':' '{print $1}'`
-                                    function_end_line=`echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g"`
-
-                                    let function_line_counter=${function_start_line_number}+1
-                                    let ftp_get_counter=0
-
-                                    # Figure out all the lines containing DATA file names
-                                    while [ ${function_line_counter} -lt ${function_end_line_number}  ]; do
-                                        next_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g"`
-                                        let is_data_line=`echo "${next_line}" | ${my_egrep} -c "m_FileOverride.*\ FTP\ .*{DATA}/"`
-                                        let is_get_line=`echo "${next_line}" | ${my_egrep} -c "^get"`
-
-                                        if [ ${is_data_line} -gt 0   ]; then
-                                            data_file[${ftp_get_counter}]=`echo "${next_line}" | ${my_awk} '{print $NF}'`
-
-                                            # Rename the ${}data_file[]} to ${data_file[]}.ftp
-                                            ${my_sed} -i -e "${function_line_counter}s?${data_file[$ftp_get_counter]}\$?${data_file[$ftp_get_counter]}.ftp?g" "${source_code_dir}/${target_file}"
-
-                                            let ftp_get_counter=${ftp_get_counter}+1
-                                        fi
-
-                                        if [ ${is_get_line} -gt 0   ]; then
-                                            ${my_sed} -i -e "${function_line_counter}s?^get.*\$?${next_line} \[REPLACE\]?g" "${source_code_dir}/${target_file}"
-                                        fi
-
-                                        let function_line_counter=${function_line_counter}+1
-                                    done
-
-                                    cnvtrs_line=""
-                                    let data_line_counter=0
-
-                                    while [ ${data_line_counter} -lt ${ftp_get_counter}  ]; do
-
-                                        if [ "${cnvtrs_line}" = ""  ]; then
-                                            cnvtrs_line="${function_end_line}\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${comment_prefix}\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset}JUMP_LABEL=CNVTRS${cnvtrs_data_counter}\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset};;\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}(CNVTRS${cnvtrs_data_counter})\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${comment_prefix} CONVERT FTP FILE TO RECORD SEQUENTIAL\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset}export DD_INLSF=${data_file[$data_line_counter]}.ftp\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset}export DD_OUTRSF=${data_file[$data_line_counter]}\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset}m_ProgramExec RSCONV"
-                                        else
-                                            cnvtrs_line="${cnvtrs_line}\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset}JUMP_LABEL=CNVTRS${cnvtrs_data_counter}\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset};;\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}(CNVTRS${cnvtrs_data_counter})\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${comment_prefix} CONVERT FTP FILE TO RECORD SEQUENTIAL\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset}export DD_INLSF=${data_file[$data_line_counter]}.ftp\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset}export DD_OUTRSF=${data_file[$data_line_counter]}\\${NL}"
-                                            cnvtrs_line="${cnvtrs_line}${ksh_offset}m_ProgramExec RSCONV"
-                                        fi
-
-                                        let data_line_counter=${data_line_counter}+1
-                                        let cnvtrs_data_counter=${cnvtrs_data_counter}+1
-                                    done
-
-                                    # Replace _end with cnvtrs_lines
-                                    ${my_sed} -i -e "${function_end_line_number}s?^${function_end_line}\$?${cnvtrs_line}?g" "${source_code_dir}/${target_file}"
-
-                                    let get_batch_line_count=${get_batch_line_count}-1
-                                done
-
-                            fi
-
-                        fi
-
-                        echo "DONE"
-                    fi
-
-                fi
-
-                # Now munge DFDSS tar backup conversion
-                if [ "${target}" = "jcl" ]; then
-                    let has_dfdss=`${my_egrep} -c "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}"`
-
-                    # Make sure we have an DFDSS section upon which to operate
-                    if [ ${has_dfdss} -gt 0   ]; then
-                        echo "TAR Conversion ... coming soon"
-                    fi
-
-                fi
-
-                # Now munge SMTP tasks
-                if [ "${target}" = "jcl" ]; then
-                    let has_smtp=`${my_egrep} -c "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}"`
-
-                    # Make sure we have an SMTP section upon which to operate
-                    if [ ${has_smtp} -gt 0   ]; then
-                        echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for SMTP conversion ... "
-                        line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
-                        let has_cnvsmtp=`${my_egrep} -c "^\(CNVSMTP[0-9]*\)" "${source_code_dir}/${target_file}"`
-
-                        # Make sure the file hasn't already been converted for SMTP operations
-                        if [ ${has_cnvsmtp} -eq 0  ]; then
-                            let cnvsmtp_data_counter=0
-                            smtp2_lines=($(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^[0-9]*:.*m_OutputAssign.*\ SMTP2\ " | ${my_awk} -F':' '{print $1}'))
-                            let smtp2_line_count=${#smtp2_lines[@]}-1
-
-                            # Start operating on the last SMTP2 line, so as to not disturb line positions during processing
-                            while [ ${smtp2_line_count} -ge 0  ]; do
-                                function_start_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\(" | tail -1`
-                                function_start_line_number=`echo "${function_start_line}" | ${my_awk} -F':' '{print $1}'`
-                                function_start_line=`echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g"`
-
-                                function_end_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\ *;;$" | head -1`
-                                function_end_line_number=`echo "${function_end_line}" | ${my_awk} -F':' '{print $1}'`
-                                function_end_line=`echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g"`
-
-                                jump_label=`echo "${function_start_line}" | ${my_sed} -e 's/[\(|\)]//g'`
-                                jump_label_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:\(${jump_label}\)$" | ${my_egrep} "^[0-9]*:.*JUMP_LABEL=${jump_label}$" | tail -1`
-                                jump_label_line_number=`echo "${jump_label_line}" | ${my_awk} -F':' '{print $1}'`
-                                jump_label_line=`echo "${jump_label_line}" | ${my_sed} -e "s/^${jump_label_line_number}://g"`
-
-                                filerepro_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:.*m_FileRepro" | head -1`
-                                filerepro_line_number=`echo "${filerepro_line}" | ${my_awk} -F':' '{print $1}'`
-                                filerepro_line=`echo "${filerepro_line}" | ${my_sed} -e "s/^${filerepro_line_number}://g"`
-
-                                # Now we munge the filepro line
-                                ${my_sed} -i -e "${filerepro_line_number}s?^${filerepro_line}\$?${ksh_offset}m_Smtp -i SYSUT1?g" "${source_code_dir}/${target_file}"
-
-                                # Now we comment out the SMTP2 line
-                                ${my_sed} -i -e "${smtp2_lines[$smtp2_line_count]}s?\(^.*$\)?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
-
-                                let function_line_counter=${function_start_line_number}+1
-                                let smtp_counter=0
-
-                                # Figure out all the lines containing DATA file names
-                                while [ ${function_line_counter} -lt ${function_end_line_number}  ]; do
-                                    next_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g"`
-                                    let is_data_line=`echo "${next_line}" | ${my_egrep} -c "m_FileAssign.*\ *[{DATA}{TMP}]/"`
-
-                                    if [ ${is_data_line} -gt 0   ]; then
-                                        data_file[${smtp_counter}]=`echo "${next_line}" | ${my_awk} '{print $NF}'`
-
-                                        # Rename the ${}data_file[]} to ${data_file[]}.ls
-                                        ${my_sed} -i -e "${function_line_counter}s?${data_file[$smtp_counter]}\$?${data_file[$smtp_counter]}.ls?g" "${source_code_dir}/${target_file}"
-
-                                        let smtp_counter=${smtp_counter}+1
-                                    fi
-
-                                    let function_line_counter=${function_line_counter}+1
-                                done
-
-                                cnvsmtp_line=""
-                                let data_line_counter=0
-
-                                while [ ${data_line_counter} -lt ${smtp_counter}  ]; do
-
-                                    if [ "${cnvsmtp_line}" = ""  ]; then
-                                        cnvsmtp_line="###### CONVERT FILE TO LINE SEQUENTIAL ######\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}JUMP_LABEL=CNVSMTP${cnvsmtp_data_counter}\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset};;\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}(CNVSMTP${cnvsmtp_data_counter})\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_INRSF=${data_file[$data_line_counter]}\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_OUTLSF=${data_file[$data_line_counter]}.ls\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_INDCB=${data_file[$data_line_counter]}.dcb\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}m_ProgramExec LSCONV"
-                                    else
-                                        cnvsmtp_line="${cnvsmtp_line}\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}###### CONVERT FILE TO LINE SEQUENTIAL ######\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}JUMP_LABEL=CNVSMTP${cnvsmtp_data_counter}\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset};;\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}(CNVSMTP${cnvsmtp_data_counter})\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}m_OutputAssign -c \"\*\" SYSPRINT\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_INRSF=${data_file[$data_line_counter]}\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_OUTLSF=${data_file[$data_line_counter]}.ls\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}export DD_INDCB=${data_file[$data_line_counter]}.dcb\\${NL}"
-                                        cnvsmtp_line="${cnvsmtp_line}${ksh_offset}m_ProgramExec LSCONV"
-                                    fi
-
-                                    let data_line_counter=${data_line_counter}+1
-                                    let cnvsmtp_data_counter=${cnvsmtp_data_counter}+1
-                                done
-
-                                # Complete cnvsmtp_line
-                                cnvsmtp_line="${cnvsmtp_line}\\${NL}"
-                                cnvsmtp_line="${cnvsmtp_line}# -----------------------------------------------------------------\*\\${NL}"
-                                cnvsmtp_line="${cnvsmtp_line}${ksh_offset}JUMP_LABEL=${jump_label}"
-
-                                ${my_sed} -i -e "${jump_label_line_number}s?^${jump_label_line}\$?${cnvsmtp_line}?g" "${source_code_dir}/${target_file}"
-                                let smtp2_line_count=${smtp2_line_count}-1
-                            done
-
-                        fi
-
-                        echo "DONE"
                     fi
 
                 fi
