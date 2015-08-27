@@ -242,7 +242,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                 if [ "${value}" != ""  ]; then
                     value=`echo "${value}" | ${my_sed} 's/,/\ /g'`
-                    eval ${key}="${value}"
+                    eval "${key}=\"${value}\""
                     shift
                     shift
                 else
