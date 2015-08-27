@@ -433,6 +433,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "CONFIG"
     processing_verb="config"
     param_dir="${PARAM}"
+    source_dir="${WB_AUTOMATE}/source"
     script_dir="${WB_AUTOMATE}/scripts"
 
     if [ -d "${param_dir}" -a -d "${script_dir}" ]; then
@@ -779,7 +780,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 target_files=`cd "${prepare_dir}/${uc_target}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
                 
                 for target_file in ${target_files} ; do
-                    echo -ne "        Processing file ${prepare_dir}/${uc_target}/${target_file} for ASIS keyword munging ... "
+                    echo -ne "            Processing file ${prepare_dir}/${uc_target}/${target_file} for ASIS keyword munging ... "
                     # This command sequence should yield the proper triplet of info
                     valid_lines=($(${my_egrep} -n "EXEC CICS RECEIVE|ASIS|END-EXEC" "${prepare_dir}/${uc_target}/${target_file}" | ${my_egrep} -A2 "EXEC CICS RECEIVE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
                     let line_counter=0
@@ -900,7 +901,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 target_files=`cd "${prepare_dir}/${uc_target}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
 
                 for target_file in ${target_files} ; do
-                    echo -ne "        Processing file ${prepare_dir}/${uc_target}/${target_file} for SUBSYS keyword munging ... "
+                    echo -ne "            Processing file ${prepare_dir}/${uc_target}/${target_file} for SUBSYS keyword munging ... "
                     this_line_count=`${my_wc} -l "${prepare_dir}/${uc_target}/${target_file}" | ${my_awk} '{print $1}'`
                     subsys_lines=($(${my_egrep} -n "SUBSYS=" "${prepare_dir}/${uc_target}/${target_file}" | ${my_awk} -F':' '{print $1}'))
 
@@ -936,7 +937,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     echo "DONE"
 
-                    echo -ne "        Processing file ${prepare_dir}/${uc_target}/${target_file} for INCLUDE keyword munging ... "
+                    echo -ne "            Processing file ${prepare_dir}/${uc_target}/${target_file} for INCLUDE keyword munging ... "
                     target_lines=($(${my_egrep} -n "INCLUDE.*MEMBER=|//[^\*|\ ]" "${prepare_dir}/${uc_target}/${target_file}" | ${my_egrep} -A1 "INCLUDE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
                     element_count=${#target_lines[@]}
 
@@ -1004,7 +1005,6 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "ANALYZE"
     processing_verb="analyze"
-    source_dir="${WB_AUTOMATE}/source"
     export source_dir
 
     if [ -d "${script_dir}" -a -d "${prepare_dir}" -a -d "${source_dir}" ]; then
@@ -1190,7 +1190,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             fi
         
         else
-            err_msg="Anomalie report file \"${anomaly_report}\" is either missing or contains no data"
+            err_msg="Anomaly report file \"${anomaly_report}\" is either missing or contains no data"
             exit_code=${ERROR}
         fi
 
