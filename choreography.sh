@@ -1451,13 +1451,16 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             fi
 
-            # Munge SQL statements in Cobol programs
-            if [ ${exit_code} -eq ${SUCCESS} ]; then
+        done
 
-                if [ "${target}" = "cics" -o "${target}" = "batch" -o "${target}" = "copy" ]; then
-                    comment_prefix='      *'
-                    echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" SQL timestamp conversion ... "
+        # Munge SQL statements in Cobol programs
+        if [ ${exit_code} -eq ${SUCCESS} ]; then
 
+            if [ "${target}" = "cics" -o "${target}" = "batch" -o "${target}" = "copy" ]; then
+                comment_prefix='      *'
+                echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" SQL timestamp conversion ... "
+
+                for target_file in ${target_files} ; do
                     # Rule #1: MWDB2ORA.MAKE_TIME change to use SYSTIMESTAMP
                     ${my_sed} -i -e "s?MWDB2ORA.MAKE_TIME(.*)?MNTC_LST_TM = SYSTIMESTAMP?g" "${source_code_dir}/${target_file}"
 
@@ -1475,14 +1478,17 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ${my_sed} -i -e "s?EXEC SQL SELECT MWDB2ORA.STR2DATE(\(.*\), \(.*\), .*)?EXEC SQL SELECT TO_CHAR(\1, \2, 'MM-DD-YYYY')?g" "${source_code_dir}/${target_file}"
 
                     echo "DONE"
-                fi
+                done
+             fi
 
-            fi
+        fi
 
-            # Now munge for IEFBR14 file deletion optimization
-            if [ ${exit_code} -eq ${SUCCESS} ]; then
+        # Now munge for IEFBR14 file deletion optimization
+        if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-                if [ "${target}" = "jcl" ]; then
+            if [ "${target}" = "jcl" ]; then
+
+                for target_file in ${target_files} ; do
                     comment_prefix='#'
                     echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for MOD,DELETE,DELETE optimization ... "
                     iefbr14_lines=($(${my_egrep} -n "^\(|IEFBR14" "${source_code_dir}/${target_file}" | ${my_egrep} -B1 "IEFBR14" | ${my_egrep} "^[0-9]*:" | ${my_awk} -F':' '{print $1}'))
@@ -1526,14 +1532,18 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     done
 
                     echo "DONE"
-                fi
+                done
 
             fi
 
-            # Now munge for FTP get commands in ksh JCL conversion 
-            if [ ${exit_code} -eq ${SUCCESS} ]; then
+        fi
 
-                if [ "${target}" = "jcl" ]; then
+        # Now munge for FTP get commands in ksh JCL conversion 
+        if [ ${exit_code} -eq ${SUCCESS} ]; then
+
+            if [ "${target}" = "jcl" ]; then
+
+                for target_file in ${target_files} ; do
                     let has_ftpbatch=`${my_egrep} -c "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}"`
 
                     # Make sure we have an FTPBATCH section upon which to operate
@@ -1729,14 +1739,18 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         echo "DONE"
                     fi
 
-                fi
+                done
 
             fi
 
-            # Now munge DFDSS tar backup conversion
-            if [ ${exit_code} -eq ${SUCCESS} ]; then
+        fi
 
-                if [ "${target}" = "jcl" ]; then
+        # Now munge DFDSS tar backup conversion
+        if [ ${exit_code} -eq ${SUCCESS} ]; then
+
+            if [ "${target}" = "jcl" ]; then
+
+                for target_file in ${target_files} ; do
                     let has_dfdss=`${my_egrep} -c "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}"`
 
                     # Make sure we have an DFDSS section upon which to operate
@@ -1744,14 +1758,18 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         echo "TAR Conversion ... coming soon"
                     fi
 
-                fi
+                done
 
             fi
 
-            # Now munge SMTP tasks
-            if [ ${exit_code} -eq ${SUCCESS} ]; then
+        fi
 
-                if [ "${target}" = "jcl" ]; then
+        # Now munge SMTP tasks
+        if [ ${exit_code} -eq ${SUCCESS} ]; then
+
+            if [ "${target}" = "jcl" ]; then
+
+                for target_file in ${target_files} ; do
                     let has_smtp=`${my_egrep} -c "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}"`
 
                     # Make sure we have an SMTP section upon which to operate
@@ -1859,11 +1877,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         echo "DONE"
                     fi
 
-                fi
+                done
 
             fi
 
-        done
+        fi
 
     done
     
