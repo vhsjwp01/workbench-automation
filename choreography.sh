@@ -749,7 +749,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     export preconvert_dir
 
     for target in ${TARGETS} ; do
-        eval "file_ext=\$${target}_ext"
+        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+        eval "file_ext=\$${target_dir_var}_ext"
         uc_target=`echo "${target}" | ${my_tr} '[a-z]' '[A-Z]'`
 
         # Here we slurp in each file in the target directory and plow through each
@@ -1376,7 +1377,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     export postconvert_dir
 
     for target in ${TARGETS} ; do
-        eval "file_ext=\$${target}_ext"
+        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+        eval "file_ext=\$${target_dir_var}_ext"
         uc_target=`echo "${target}" | ${my_tr} '[a-z]' '[A-Z]'`
 
         # Here we set the default source_code_dir
@@ -1465,9 +1467,35 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - SQL timestamp Munging"
 
     for target in ${TARGETS} ; do
+        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+        eval "file_ext=\$${target_dir_var}_ext"
 
         if [ "${target}" = "cics" -o "${target}" = "batch" -o "${target}" = "copy" ]; then
             comment_prefix='      *'
+            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+            source_code_dir="${pcTarget_dir}/${uc_target}"
+
+            # Here we set the exceptions for source_code_dir
+            case ${target} in 
+
+                copy)
+                    source_code_dir="${pcTarget_dir}/Master-${target}/${uc_target}"
+                ;;
+
+            esac
+
+            # Here we grab the target files from source_code_dir
+            case ${target} in
+
+                batch|cics)
+                    target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null ; ${my_ls} *.pco 2> /dev/null`
+                ;;
+
+                *)
+                    target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
+                ;;
+
+            esac
 
             for target_file in ${target_files} ; do
                 echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" SQL timestamp conversion ... "
@@ -1503,9 +1531,15 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - IEFBR14 file deletion optimization"
 
     for target in ${TARGETS} ; do
+        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+        eval "file_ext=\$${target_dir_var}_ext"
 
         if [ "${target}" = "jcl" ]; then
+            file_ext="ksh"
             comment_prefix='#'
+            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+            source_code_dir="${pcTarget_dir}/${uc_target}"
+            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.{file_ext} 2> /dev/null`
 
             for target_file in ${target_files} ; do
                 echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for MOD,DELETE,DELETE optimization ... "
@@ -1565,9 +1599,15 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - FTPBATCH conversion"
 
     for target in ${TARGETS} ; do
+        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+        eval "file_ext=\$${target_dir_var}_ext"
 
         if [ "${target}" = "jcl" ]; then
+            file_ext="ksh"
             comment_prefix='#'
+            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+            source_code_dir="${pcTarget_dir}/${uc_target}"
+            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.{file_ext} 2> /dev/null`
 
             for target_file in ${target_files} ; do
                 let has_ftpbatch=`${my_egrep} -c "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}"`
@@ -1780,9 +1820,15 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - DFDSS conversion"
 
     for target in ${TARGETS} ; do
+        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+        eval "file_ext=\$${target_dir_var}_ext"
 
         if [ "${target}" = "jcl" ]; then
+            file_ext="ksh"
             comment_prefix='#'
+            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+            source_code_dir="${pcTarget_dir}/${uc_target}"
+            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.{file_ext} 2> /dev/null`
 
             for target_file in ${target_files} ; do
                 let has_dfdss=`${my_egrep} -c "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}"`
@@ -1807,9 +1853,15 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - SMTP conversion"
 
     for target in ${TARGETS} ; do
+        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+        eval "file_ext=\$${target_dir_var}_ext"
 
         if [ "${target}" = "jcl" ]; then
+            file_ext="ksh"
             comment_prefix='#'
+            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+            source_code_dir="${pcTarget_dir}/${uc_target}"
+            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.{file_ext} 2> /dev/null`
 
             for target_file in ${target_files} ; do
                 let has_smtp=`${my_egrep} -c "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}"`
