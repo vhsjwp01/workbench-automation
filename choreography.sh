@@ -1095,6 +1095,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         if [ -d "${report_dir}" ]; then
             echo "    INFO:  Removing reporting directory \"${report_dir}\""
             ${my_rm} -rf "${report_dir}"
+            ${mkdir} -p "${report_dir}"
         fi
 
         this_makefile="${source_dir}/makefile.${processing_verb}"
