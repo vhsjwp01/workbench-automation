@@ -1097,7 +1097,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             ${my_rm} -rf "${report_dir}"
         fi
 
-        ${mkdir} -p "${report_dir}"
+        ${my_mkdir} -p "${report_dir}"
 
         this_makefile="${source_dir}/makefile.${processing_verb}"
 
