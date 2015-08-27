@@ -1379,8 +1379,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         eval "file_ext=\$${target}_ext"
         uc_target=`echo "${target}" | ${my_tr} '[a-z]' '[A-Z]'`
 
+#===
         # Read in regex lines from "${postconvert_dir}/${uc_target}"
         if [ -e "${postconvert_dir}/${uc_target}" -a -s "${postconvert_dir}/${uc_target}" ]; then
+#===
 
             # Here we set the default source_code_dir
             source_code_dir="${pcTarget_dir}/${uc_target}"
@@ -1424,31 +1426,37 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             fi
 
             for target_file in ${target_files} ; do
-                echo -ne "    INFO:  Post-Processing \"${source_code_dir}/${target_file}\" for regular expression translation ... "
-                tmp_file="${tmp_dir}/translate-post-processing-${uc_target}-${target_file}.$$"
-                ${my_rm} -f "${tmp_file}"
-                line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
 
-                ${SCRIPT_BASE}/processor.pl --input_file "${source_code_dir}/${target_file}" --output_file "${tmp_file}" --data_type "${target}" --regex_file "${postconvert_dir}/${uc_target}" --mode "post"
+                # Read in regex lines from "${postconvert_dir}/${uc_target}"
+                if [ -e "${postconvert_dir}/${uc_target}" -a -s "${postconvert_dir}/${uc_target}" ]; then
+                    echo -ne "    INFO:  Post-Processing \"${source_code_dir}/${target_file}\" for regular expression translation ... "
+                    tmp_file="${tmp_dir}/translate-post-processing-${uc_target}-${target_file}.$$"
+                    ${my_rm} -f "${tmp_file}"
 
-                # Move ${tmp_file} to ${source_code_dir}/${target_file}
-                if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
-                    ${my_diff} -q "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
+                    ${SCRIPT_BASE}/processor.pl --input_file "${source_code_dir}/${target_file}" --output_file "${tmp_file}" --data_type "${target}" --regex_file "${postconvert_dir}/${uc_target}" --mode "post"
 
-                    if [ ${?} -ne ${SUCCESS} ]; then
-                        ${my_rsync} "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
-                        let exit_code=${exit_code}+${?}
+                    # Move ${tmp_file} to ${source_code_dir}/${target_file}
+                    if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
+                        ${my_diff} -q "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
+
+                        if [ ${?} -ne ${SUCCESS} ]; then
+                            ${my_rsync} "${tmp_file}" "${source_code_dir}/${target_file}" > /dev/null 2>&1
+                            let exit_code=${exit_code}+${?}
+                        fi
+
+                    else
+                        let exit_code=${exit_code}+1
                     fi
 
-                else
-                    let exit_code=${exit_code}+1
+                    if [ ${exit_code} -eq ${SUCCESS} ]; then
+                        echo "SUCCESS"
+                    else
+                        echo "FAILED"
+                    fi
+
                 fi
 
-                if [ ${exit_code} -eq ${SUCCESS} ]; then
-                    echo "SUCCESS"
-                else
-                    echo "FAILED"
-                fi
+                line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
 
                 # Munge SQL statements in Cobol programs
                 if [ "${target}" = "cics" -o "${target}" = "batch" -o "${target}" = "copy" ]; then
@@ -1519,8 +1527,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     done
 
                     echo "DONE"
+                fi
 
-                    # Now munge for FTP get commands in ksh JCL conversion 
+                # Now munge for FTP get commands in ksh JCL conversion 
+                if [ "${target}" = "jcl" ]; then
                     let has_ftpbatch=`${my_egrep} -c "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}"`
 
                     # Make sure we have an FTPBATCH section upon which to operate
@@ -1716,7 +1726,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         echo "DONE"
                     fi
 
-                    # Now munge DFDSS tar backup conversion
+                fi
+
+                # Now munge DFDSS tar backup conversion
+                if [ "${target}" = "jcl" ]; then
                     let has_dfdss=`${my_egrep} -c "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}"`
 
                     # Make sure we have an DFDSS section upon which to operate
@@ -1724,7 +1737,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         echo "TAR Conversion ... coming soon"
                     fi
 
-                    # Now munge SMTP tasks
+                fi
+
+                # Now munge SMTP tasks
+                if [ "${target}" = "jcl" ]; then
                     let has_smtp=`${my_egrep} -c "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}"`
 
                     # Make sure we have an SMTP section upon which to operate
