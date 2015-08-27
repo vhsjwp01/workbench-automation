@@ -748,7 +748,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     preconvert_dir="${WB_AUTOMATE}/param/regex/pre_conversion"
     export preconvert_dir
 
-    for target in ${TARGETS} ; do
+    for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
         uc_target=`echo "${target}" | ${my_tr} '[a-z]' '[A-Z]'`
@@ -1376,7 +1376,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     postconvert_dir="${WB_AUTOMATE}/param/regex/post_conversion"
     export postconvert_dir
 
-    for target in ${TARGETS} ; do
+    for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
         uc_target=`echo "${target}" | ${my_tr} '[a-z]' '[A-Z]'`
@@ -1466,7 +1466,7 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - SQL timestamp Munging"
 
-    for target in ${TARGETS} ; do
+    for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
 
@@ -1530,7 +1530,7 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - IEFBR14 file deletion optimization"
 
-    for target in ${TARGETS} ; do
+    for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
 
@@ -1598,7 +1598,7 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - FTPBATCH conversion"
 
-    for target in ${TARGETS} ; do
+    for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
 
@@ -1819,7 +1819,7 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - DFDSS conversion"
 
-    for target in ${TARGETS} ; do
+    for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
 
@@ -1852,7 +1852,7 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - SMTP conversion"
 
-    for target in ${TARGETS} ; do
+    for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
 
