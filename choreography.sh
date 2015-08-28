@@ -724,7 +724,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         for refresh_dir in ${refresh_dirs} ; do
 
             for possible_target in ${possible_targets} ; do
-                uc_possible_target=`echo "${possible_target}" | ${my_tr} '[a-z]' '[]A-Z]'`
+                uc_possible_target=`echo "${possible_target}" | ${my_tr} '[a-z]' '[A-Z]'`
 
                 if [ -d "${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}" ]; then
                     echo "    INFO:  Refreshing ${refresh_dir} directory \"${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}\""
@@ -740,7 +740,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             echo "    INFO:  Refreshing target directory \"${WB_AUTOMATE}/target\""
             ${my_rm} -rf "${WB_AUTOMATE}/target"/*
         fi
-
 
         # Flush the logs
         if [ -d "${WB_AUTOMATE}/Logs" ]; then
