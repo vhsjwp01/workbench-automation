@@ -739,7 +739,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         fi
 
         # Make the target directories based on what is defined in ${TARGETS}
-        for refresh_dir in prepare source target ; do
+        for refresh_dir in prepared source target ; do
 
             for target_dir in ${TARGETS} ; do
                 uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
