@@ -117,6 +117,8 @@ err_msg=""
 exit_code=${SUCCESS}
 
 possible_targets="sysin cics proc jcl copy map ddl batch sibc.cardliba"
+refresh_dirs="prepared source"
+real_targets=""
 
 ################################################################################
 # SUBROUTINES
@@ -689,7 +691,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     if [ -d "${script_dir}" -a -d "${import_dir}" -a -d "${prepare_dir}" ]; then
 
-        # Setup item lists for prepare
+        # Find the files
         for target_dir in ${TARGETS} ; do
             uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
             target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
@@ -703,7 +705,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     
         done
 
-        # Try preparing
+        # Build a list
         for list_name in ${TARGETS} ; do
             list_name_var=`echo "${list_name}" | ${my_sed} -e 's/\./_/g'`
             clean_list="${list_name_var}_list"
@@ -716,9 +718,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             eval "export ${clean_list}"
         done
 
-        # Clean all *POSSIBLE* target directories in prepare, source, and target under
+        # Clean all *POSSIBLE* target directories in prepared, source, and target under
         # ${WB_AUTOMATE}
-        for refresh_dir in prepared source ; do
+
+        for refresh_dir in ${refresh_dirs} ; do
 
             for possible_target in ${possible_targets} ; do
                 uc_possible_target=`echo "${possible_target}" | ${my_tr} '[a-z]' '[]A-Z]'`
@@ -738,19 +741,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             ${my_rm} -rf "${WB_AUTOMATE}/target"/*
         fi
 
-        # Make the target directories based on what is defined in ${TARGETS}
-        for refresh_dir in prepared source target ; do
-
-            for target_dir in ${TARGETS} ; do
-                uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-
-                if [ ! -d "${WB_AUTOMATE}/${refresh_dir}/${uc_target_dir}" ]; then
-                    ${my_mkdir} -p "${WB_AUTOMATE}/${refresh_dir}/${uc_target_dir}"
-                fi
-
-            done
-
-        done
 
         # Flush the logs
         if [ -d "${WB_AUTOMATE}/Logs" ]; then
@@ -764,39 +754,62 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # if defined
         if [ "${uc_copy_list}" != "" ]; then
             export uc_copy_list=`echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g"`
+            add_to_list real_targets "copy"
         fi
 
         if [ "${uc_sysin_list}" != "" ]; then
             export uc_sysin_list=`echo "${sysin_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
+            add_to_list real_targets "sysin"
         fi
 
         if [ "${uc_sibc_cardliba_list}" != "" ]; then
             export uc_sibc_cardliba_list=`echo "${sibc_cardliba_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sibc_cardliba_ext}/\.${sibc_cardliba_ext}/g"`
+            add_to_list real_targets "sibc.cardliba"
         fi
 
         if [ "${uc_batch_list}" != "" ]; then
             export uc_batch_list=`echo "${batch_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_batch_ext}/\.${batch_ext}/g"`
+            add_to_list real_targets "batch"
         fi
 
         if [ "${uc_cics_list}" != "" ]; then
             export uc_cics_list=`echo "${cics_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_cics_ext}/\.${cics_ext}/g"`
+            add_to_list real_targets "cics"
         fi
 
         if [ "${uc_ddl_list}" != "" ]; then
             export uc_ddl_list=`echo "${ddl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_ddl_ext}/\.${ddl_ext}/g"`
+            add_to_list real_targets "ddl"
         fi
 
         if [ "${uc_map_list}" != "" ]; then
             export uc_map_list=`echo "${map_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_map_ext}/\.${map_ext}/g"`
+            add_to_list real_targets "map"
         fi
 
         if [ "${uc_jcl_list}" != "" ]; then
             export uc_jcl_list=`echo "${jcl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_jcl_ext}/\.${jcl_ext}/g"`
+            add_to_list real_targets "jcl"
         fi
 
         if [ "${uc_proc_list}" != "" ]; then
             export uc_proc_list=`echo "${proc_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_proc_ext}/\.${proc_ext}/g"`
+            add_to_list real_targets "proc"
         fi
+
+        # Make the target directories based on what is defined in ${real_targets}
+        for refresh_dir in ${refresh_dirs} ; do
+
+            for real_target in ${real_targets} ; do
+                uc_real_target=`echo "${real_target}" | ${my_tr} '[a-z]' '[A-Z]'`
+
+                if [ ! -d "${WB_AUTOMATE}/${refresh_dir}/${uc_real_target}" ]; then
+                    ${my_mkdir} -p "${WB_AUTOMATE}/${refresh_dir}/${uc_real_target}"
+                fi
+
+            done
+
+        done
 
         if [ -e "${this_makefile}" ]; then
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} all\" ... "
