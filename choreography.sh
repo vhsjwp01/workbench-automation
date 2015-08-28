@@ -728,7 +728,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                 if [ -d "${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}" ]; then
                     echo "    INFO:  Refreshing ${refresh_dir} directory \"${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}\""
-                    ${my_rf} -rf "${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}"
+                    ${my_rm} -rf "${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}"
                 fi
 
             done
