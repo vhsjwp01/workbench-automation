@@ -116,6 +116,8 @@ USAGE="${USAGE}[ --target_DB             <Target DataBase to use (Default: ORACL
 err_msg=""
 exit_code=${SUCCESS}
 
+possible_targets="sysin cics proc jcl copy map ddl batch sibc.cardliba"
+
 ################################################################################
 # SUBROUTINES
 ################################################################################
@@ -714,43 +716,81 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             eval "export ${clean_list}"
         done
 
-        for target_dir in ${TARGETS} ; do
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            echo "    INFO:  Refreshing ${processing_verb} directory \"${prepare_dir}/${uc_target_dir}\""
-            ${my_rm} -rf "${prepare_dir}/${uc_target_dir}"
-            ${my_mkdir} -p "${prepare_dir}/${uc_target_dir}"
+        # Clean all *POSSIBLE* target directories in prepare, source, and target under
+        # ${WB_AUTOMATE}
+        for refresh_dir in prepare source target ; do
+
+            for possible_target in ${possible_targets} ; do
+                uc_possible_target=`echo "${possible_target}" | ${my_tr} '[a-z]' '[]A-Z]'`
+
+                if [ -d "${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}" ]; then
+                    echo "    INFO:  Refreshing ${refresh_dir} directory \"${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}\""
+                    ${my_rf} -rf "${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}"
+                fi
+
+            done
+
         done
 
-        for target_dir in ${TARGETS} ; do
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            echo "    INFO:  Refreshing source directory \"${WB_AUTOMATE}/source/${uc_target_dir}\""
-            ${my_rm} -rf "${WB_AUTOMATE}/source/${uc_target_dir}"
-            ${my_mkdir} -p "${WB_AUTOMATE}/source/${uc_target_dir}"
-        done
+        # Make the target directories based on what is defined in ${TARGETS}
+        for refresh_dir in prepare source target ; do
 
-        for target_dir in ${TARGETS} ; do
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            echo "    INFO:  Refreshing target directory \"${WB_AUTOMATE}/target/${uc_target_dir}\""
-            ${my_rm} -rf "${WB_AUTOMATE}/target/${uc_target_dir}"
-            ${my_mkdir} -p "${WB_AUTOMATE}/target/${uc_target_dir}"
+            for target_dir in ${TARGETS} ; do
+                uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+
+                if [ ! -d "${WB_AUTOMATE}/${refresh_dir}/${uc_target_dir}" ]; then
+                    ${my_mkdir} -p "${WB_AUTOMATE}/${refresh_dir}/${uc_target_dir}"
+                fi
+
+            done
+
         done
 
         # Flush the logs
-        echo "    INFO:  Refreshing Log directory \"${WB_AUTOMATE}/Logs\""
-        ${my_rm} -rf "${WB_AUTOMATE}/Logs"/*
+        if [ -d "${WB_AUTOMATE}/Logs" ]; then
+            echo "    INFO:  Refreshing Log directory \"${WB_AUTOMATE}/Logs\""
+            ${my_rm} -rf "${WB_AUTOMATE}/Logs"/*
+        fi
 
         this_makefile="${script_dir}/makefile.${processing_verb}"
 
-        # Explcitly declare the uppercase filenames (with lowercase extensions) file lists
-        export uc_copy_list=`echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g"`
-        export uc_sysin_list=`echo "${sysin_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
-        export uc_sibc_cardliba_list=`echo "${sibc_cardliba_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sibc_cardliba_ext}/\.${sibc_cardliba_ext}/g"`
-        export uc_batch_list=`echo "${batch_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_batch_ext}/\.${batch_ext}/g"`
-        export uc_cics_list=`echo "${cics_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_cics_ext}/\.${cics_ext}/g"`
-        export uc_ddl_list=`echo "${ddl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_ddl_ext}/\.${ddl_ext}/g"`
-        export uc_map_list=`echo "${map_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_map_ext}/\.${map_ext}/g"`
-        export uc_jcl_list=`echo "${jcl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_jcl_ext}/\.${jcl_ext}/g"`
-        export uc_proc_list=`echo "${proc_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_proc_ext}/\.${proc_ext}/g"`
+        # Explcitly explort the uppercase filenames (with lowercase extensions) file lists
+        # if defined
+        if [ "${uc_copy_list}" != "" ]; then
+            export uc_copy_list=`echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g"`
+        fi
+
+        if [ "${uc_sysin_list}" != "" ]; then
+            export uc_sysin_list=`echo "${sysin_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
+        fi
+
+        if [ "${uc_sibc_cardliba_list}" != "" ]; then
+            export uc_sibc_cardliba_list=`echo "${sibc_cardliba_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sibc_cardliba_ext}/\.${sibc_cardliba_ext}/g"`
+        fi
+
+        if [ "${uc_batch_list}" != "" ]; then
+            export uc_batch_list=`echo "${batch_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_batch_ext}/\.${batch_ext}/g"`
+        fi
+
+        if [ "${uc_cics_list}" != "" ]; then
+            export uc_cics_list=`echo "${cics_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_cics_ext}/\.${cics_ext}/g"`
+        fi
+
+        if [ "${uc_ddl_list}" != "" ]; then
+            export uc_ddl_list=`echo "${ddl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_ddl_ext}/\.${ddl_ext}/g"`
+        fi
+
+        if [ "${uc_map_list}" != "" ]; then
+            export uc_map_list=`echo "${map_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_map_ext}/\.${map_ext}/g"`
+        fi
+
+        if [ "${uc_jcl_list}" != "" ]; then
+            export uc_jcl_list=`echo "${jcl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_jcl_ext}/\.${jcl_ext}/g"`
+        fi
+
+        if [ "${uc_proc_list}" != "" ]; then
+            export uc_proc_list=`echo "${proc_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_proc_ext}/\.${proc_ext}/g"`
+        fi
 
         if [ -e "${this_makefile}" ]; then
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} all\" ... "
