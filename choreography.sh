@@ -718,7 +718,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Clean all *POSSIBLE* target directories in prepare, source, and target under
         # ${WB_AUTOMATE}
-        for refresh_dir in prepare source target ; do
+        for refresh_dir in prepared source ; do
 
             for possible_target in ${possible_targets} ; do
                 uc_possible_target=`echo "${possible_target}" | ${my_tr} '[a-z]' '[]A-Z]'`
@@ -731,6 +731,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             done
 
         done
+
+        # Flush the target directory outright
+        if [ -d "${WB_AUTOMATE}/target" ]; then
+            echo "    INFO:  Refreshing target directory \"${WB_AUTOMATE}/target\""
+            ${my_rf} -rf "${WB_AUTOMATE}/target"/*
+        fi
 
         # Make the target directories based on what is defined in ${TARGETS}
         for refresh_dir in prepare source target ; do
