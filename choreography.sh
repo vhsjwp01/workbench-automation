@@ -735,7 +735,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # Flush the target directory outright
         if [ -d "${WB_AUTOMATE}/target" ]; then
             echo "    INFO:  Refreshing target directory \"${WB_AUTOMATE}/target\""
-            ${my_rf} -rf "${WB_AUTOMATE}/target"/*
+            ${my_rm} -rf "${WB_AUTOMATE}/target"/*
         fi
 
         # Make the target directories based on what is defined in ${TARGETS}
