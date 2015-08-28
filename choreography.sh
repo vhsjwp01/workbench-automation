@@ -566,6 +566,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 exit_code=${ERROR}
             fi
 
+            # Clean out 
+
         else
             err_msg="Could not locate system description template file \"${param_dir}/system.desc.template\""
             exit_code=${ERROR}
@@ -718,6 +720,24 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             ${my_rm} -rf "${prepare_dir}/${uc_target_dir}"
             ${my_mkdir} -p "${prepare_dir}/${uc_target_dir}"
         done
+
+        for target_dir in ${TARGETS} ; do
+            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+            echo "    INFO:  Refreshing source directory \"${WB_AUTOMATE}/source/${uc_target_dir}\""
+            ${my_rm} -rf "${WB_AUTOMATE}/source/${uc_target_dir}"
+            ${my_mkdir} -p "${WB_AUTOMATE}/source/${uc_target_dir}"
+        done
+
+        for target_dir in ${TARGETS} ; do
+            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+            echo "    INFO:  Refreshing target directory \"${WB_AUTOMATE}/target/${uc_target_dir}\""
+            ${my_rm} -rf "${WB_AUTOMATE}/target/${uc_target_dir}"
+            ${my_mkdir} -p "${WB_AUTOMATE}/target/${uc_target_dir}"
+        done
+
+        # Flush the logs
+        echo "    INFO:  Refreshing Log directory \"${WB_AUTOMATE}/Logs\""
+        ${my_rm} -rf "${WB_AUTOMATE}/Logs"/*
 
         this_makefile="${script_dir}/makefile.${processing_verb}"
 
