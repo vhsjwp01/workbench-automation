@@ -749,7 +749,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         this_makefile="${script_dir}/makefile.${processing_verb}"
 
-        # Explcitly explort the uppercase filenames (with lowercase extensions) file lists
+        # Explcitly export the uppercase filenames (with lowercase extensions) file lists
         # if defined
         if [ "${uc_copy_list}" != "" ]; then
             export uc_copy_list=`echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g"`
@@ -803,6 +803,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 uc_real_target=`echo "${real_target}" | ${my_tr} '[a-z]' '[A-Z]'`
 
                 if [ ! -d "${WB_AUTOMATE}/${refresh_dir}/${uc_real_target}" ]; then
+                    echo "    INFO:  Creating directory \"${WB_AUTOMATE}/${refresh_dir}/${uc_real_target}\""
                     ${my_mkdir} -p "${WB_AUTOMATE}/${refresh_dir}/${uc_real_target}"
                 fi
 
