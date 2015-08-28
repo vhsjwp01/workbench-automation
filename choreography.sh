@@ -53,6 +53,8 @@
 #                                        system.desc and version.mk.  Also
 #                                        added data mapper file detection and
 #                                        munging for project name inclusion
+# 20150828     Jason W. Plummer          Added TARGETS modififcation based
+#                                        dependency
 
 ################################################################################
 # DESCRIPTION
@@ -488,6 +490,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     case ${target_dir} in
 
                         batch|cics)
+
                             # Must also include COPY files with BATCH and CICS targets
                             begin_text="% BEGIN: COPY-DIRECTORY-TARGETS"
                             end_text="% END: COPY-DIRECTORY-TARGETS"
@@ -505,6 +508,13 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                             esac
 
+                            # Now add 'copy' to TARGETS if absent
+                            let is_present=`echo "${TARGETS}" | ${my_sed} -e 's/\./_/g' | ${my_egrep} -c '\bcopy\b'`
+
+                            if [ ${is_present} -eq 0 ]; then
+                                add_to_list TARGETS copy
+                            fi
+
                         ;;
 
                         jcl)
@@ -514,6 +524,14 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                             # Now set values in {param_dir}/version.mk
                             ${my_sed} -i -e 's/^Find_Jcl =.*$/Find_Jcl = JCL/g' "${param_dir}/version.mk"
+
+                            # Now add 'proc' to TARGETS if absent
+                            let is_present=`echo "${TARGETS}" | ${my_sed} -e 's/\./_/g' |${my_egrep} -c '\bproc\b'`
+
+                            if [ ${is_present} -eq 0 ]; then
+                                add_to_list TARGETS proc
+                            fi
+
                         ;;
 
                         map)
@@ -1407,7 +1425,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             jcl)
                 file_ext="ksh"
-                target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.{file_ext} 2> /dev/null`
+                target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
                 comment_prefix="#"
             ;;
 
@@ -1466,8 +1484,6 @@ fi
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - SQL timestamp conversion"
-
-    pcTarget_dir="${WB_AUTOMATE}/target"
 
     for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
@@ -1528,15 +1544,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
 fi
 
-
-
 # WHAT: Munge for IEFBR14 file deletion optimization
 # WHY:  Asked to
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - IEFBR14 file deletion optimization"
-
-    pcTarget_dir="${WB_AUTOMATE}/target"
 
     for target_dir in ${TARGETS} ; do
 
@@ -1545,7 +1557,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             comment_prefix='#'
             uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
             source_code_dir="${pcTarget_dir}/${uc_target_dir}"
-            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.{file_ext} 2> /dev/null`
+            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
 
             for target_file in ${target_files} ; do
                 echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for MOD,DELETE,DELETE optimization ... "
@@ -1604,8 +1616,6 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - FTPBATCH conversion"
 
-    pcTarget_dir="${WB_AUTOMATE}/target"
-
     for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
@@ -1615,7 +1625,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             comment_prefix='#'
             uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
             source_code_dir="${pcTarget_dir}/${uc_target_dir}"
-            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.{file_ext} 2> /dev/null`
+            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
 
             for target_file in ${target_files} ; do
                 let has_ftpbatch=`${my_egrep} -c "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}"`
@@ -1827,8 +1837,6 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - DFDSS conversion"
 
-    pcTarget_dir="${WB_AUTOMATE}/target"
-
     for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
@@ -1838,7 +1846,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             comment_prefix='#'
             uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
             source_code_dir="${pcTarget_dir}/${uc_target_dir}"
-            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.{file_ext} 2> /dev/null`
+            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
 
             for target_file in ${target_files} ; do
                 let has_dfdss=`${my_egrep} -c "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}"`
@@ -1862,8 +1870,6 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "POST-PROCESSING - SMTP conversion"
 
-    pcTarget_dir="${WB_AUTOMATE}/target"
-
     for target_dir in ${TARGETS} ; do
         target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
         eval "file_ext=\$${target_dir_var}_ext"
@@ -1873,7 +1879,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             comment_prefix='#'
             uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
             source_code_dir="${pcTarget_dir}/${uc_target_dir}"
-            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.{file_ext} 2> /dev/null`
+            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
 
             for target_file in ${target_files} ; do
                 let has_smtp=`${my_egrep} -c "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}"`
