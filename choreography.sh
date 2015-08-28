@@ -1638,7 +1638,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     let get_block=`${my_egrep} -c "^get " "${source_code_dir}/${target_file}"`
 
                     if [ ${put_block} -gt 0  ]; then
-                        echo "Found put block"
+                        echo -ne "Found put block ... "
                         line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
                         let has_cnvtls=`${my_egrep} -c "^\(CNVTLS[0-9]*\)" "${source_code_dir}/${target_file}"`
 
@@ -1732,7 +1732,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     if [ ${get_block} -gt 0  ]; then
                         line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
-                        echo "Found get block"
+                        echo -ne "Found get block ... "
                         let has_cnvtrs=`${my_egrep} -c "^\(CNVTRS\)" "${source_code_dir}/${target_file}"`
 
                         # Make sure the file hasn't already been converted for FTPBATCH get operations
