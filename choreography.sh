@@ -751,47 +751,47 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Explcitly export the uppercase filenames (with lowercase extensions) file lists
         # if defined
-        if [ "${uc_copy_list}" != "" ]; then
+        if [ "${copy_list}" != "" ]; then
             export uc_copy_list=`echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g"`
             add_to_list real_targets "copy"
         fi
 
-        if [ "${uc_sysin_list}" != "" ]; then
+        if [ "${sysin_list}" != "" ]; then
             export uc_sysin_list=`echo "${sysin_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
             add_to_list real_targets "sysin"
         fi
 
-        if [ "${uc_sibc_cardliba_list}" != "" ]; then
+        if [ "${sibc_cardliba_list}" != "" ]; then
             export uc_sibc_cardliba_list=`echo "${sibc_cardliba_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sibc_cardliba_ext}/\.${sibc_cardliba_ext}/g"`
             add_to_list real_targets "sibc.cardliba"
         fi
 
-        if [ "${uc_batch_list}" != "" ]; then
+        if [ "${batch_list}" != "" ]; then
             export uc_batch_list=`echo "${batch_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_batch_ext}/\.${batch_ext}/g"`
             add_to_list real_targets "batch"
         fi
 
-        if [ "${uc_cics_list}" != "" ]; then
+        if [ "${cics_list}" != "" ]; then
             export uc_cics_list=`echo "${cics_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_cics_ext}/\.${cics_ext}/g"`
             add_to_list real_targets "cics"
         fi
 
-        if [ "${uc_ddl_list}" != "" ]; then
+        if [ "${ddl_list}" != "" ]; then
             export uc_ddl_list=`echo "${ddl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_ddl_ext}/\.${ddl_ext}/g"`
             add_to_list real_targets "ddl"
         fi
 
-        if [ "${uc_map_list}" != "" ]; then
+        if [ "${map_list}" != "" ]; then
             export uc_map_list=`echo "${map_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_map_ext}/\.${map_ext}/g"`
             add_to_list real_targets "map"
         fi
 
-        if [ "${uc_jcl_list}" != "" ]; then
+        if [ "${jcl_list}" != "" ]; then
             export uc_jcl_list=`echo "${jcl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_jcl_ext}/\.${jcl_ext}/g"`
             add_to_list real_targets "jcl"
         fi
 
-        if [ "${uc_proc_list}" != "" ]; then
+        if [ "${proc_list}" != "" ]; then
             export uc_proc_list=`echo "${proc_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_proc_ext}/\.${proc_ext}/g"`
             add_to_list real_targets "proc"
         fi
