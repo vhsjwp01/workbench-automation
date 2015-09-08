@@ -667,8 +667,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     umask 007
     input_dir="${WB_AUTOMATE}/input"
     import_dir="${WB_AUTOMATE}/imported"
-    prepare_dir="${WB_AUTOMATE}/prepared"
-    export import_dir prepare_dir
+    prepared_dir="${WB_AUTOMATE}/prepared"
+    export import_dir prepared_dir
 
     if [ -d "${script_dir}" -a -d "${input_dir}" -a -d "${import_dir}" ]; then
 
@@ -742,8 +742,8 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "PREPARE"
     processing_verb="prepare"
-    prepare_dir="${WB_AUTOMATE}/prepared"
-    export prepare_dir
+    prepared_dir="${WB_AUTOMATE}/prepared"
+    export prepared_dir
 
     if [ -d "${script_dir}" -a -d "${import_dir}" -a -d "${prepared_dir}" ]; then
 
