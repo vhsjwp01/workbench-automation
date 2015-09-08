@@ -1205,7 +1205,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ################################################################
 
                     echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for P9COMM keyword translation ... "
-                    let has_p9comm=$(${my_egrep} -c -a "COPY\ *P9COMM\." "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings})
+                    let has_p9comm=$(${my_egrep} -c -a "COPY\ *P9COMM\." "${prepared_dir}/${uc_target_dir}/${target_file}")
 
                     if [ ${has_p9comm} -gt 0 ]; then
                         ${my_sed} -i -e "s?COPY\ *P9COMM\.?COPY P9IN\.\\${NL}${cbl_offset}COPY P9OUT\.\\${NL}${cbl_offset}COPY P9AUDIT\.?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
@@ -1607,28 +1607,28 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             if [ "${fatal_check}" = "no" -o "${fatal_check}" = "off" ]; then
                 let fatal_count=0
             else
-                let fatal_count=$(${my_egrep} -c -a ";FATAL;" "${anomaly_report}" | ${my_strings})
+                let fatal_count=$(${my_egrep} -c -a ";FATAL;" "${anomaly_report}")
             fi
 
             # Set error check
             if [ "${error_check}" = "no" -o "${error_check}" = "off" ]; then
                 let error_count=0
             else
-                let error_count=$(${my_egrep} -c -a ";ERROR;" "${anomaly_report}" | ${my_strings})
+                let error_count=$(${my_egrep} -c -a ";ERROR;" "${anomaly_report}")
             fi
 
             # Set warning check
             if [ "${warning_check}" = "no" -o "${warning_check}" = "off" ]; then
                 let warning_count=0
             else
-                let warning_count=$(${my_egrep} -c -a ";WARNING;" "${anomaly_report}" | ${my_strings})
+                let warning_count=$(${my_egrep} -c -a ";WARNING;" "${anomaly_report}")
             fi
 
             # Set missing check
             if [ "${missing_check}" = "no" -o "${missing_check}" = "off" ]; then
                 let missing_count=0
             else
-                let missing_count=$(${my_egrep} -c -a ";MISSING;" "${anomaly_report}" | ${my_strings})
+                let missing_count=$(${my_egrep} -c -a ";MISSING;" "${anomaly_report}")
             fi
 
             if [ ${fatal_count} -gt 0 -o ${error_count} -gt 0 -o ${warning_count} -ge ${max_warnings} -o ${missing_count} -ge ${max_missing} ]; then
@@ -1682,7 +1682,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     if [ -e "${cobol_copy_report}" ]; then
         echo -ne "    INFO:  Checking Cobol-Copy report for issues of concern ... "
-        let cobol_copy_missing_count=$(${my_egrep} -c -a ";MISSING;" "${cobol_copy_report}" | ${my_strings})
+        let cobol_copy_missing_count=$(${my_egrep} -c -a ";MISSING;" "${cobol_copy_report}")
 
         if [ ${cobol_copy_missing_count} -ge ${max_missing} ]; then
             echo "issues found [FAILED]"
@@ -2165,19 +2165,19 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
                 target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-                let has_ftpbatch=$(${my_egrep} -c -n "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}" | ${my_strings})
+                let has_ftpbatch=$(${my_egrep} -c -n "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}")
 
                 # Make sure we have an FTPBATCH section upon which to operate
                 if [ ${has_ftpbatch} -gt 0 ]; then
                     echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for FTPBATCH conversion ... "
                     # FTPBATCH put or get?
-                    let put_block=$(${my_egrep} -c -a "^put " "${source_code_dir}/${target_file}" | ${my_strings})
-                    let get_block=$(${my_egrep} -c -a "^get " "${source_code_dir}/${target_file}" | ${my_strings})
+                    let put_block=$(${my_egrep} -c -a "^put " "${source_code_dir}/${target_file}")
+                    let get_block=$(${my_egrep} -c -a "^get " "${source_code_dir}/${target_file}")
 
                     if [ ${put_block} -gt 0 ]; then
                         echo -ne "Found put block ... "
                         line_count=$(${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}')
-                        let has_cnvtls=$(${my_egrep} -c -a "^\(CNVTLS[0-9]*\)" "${source_code_dir}/${target_file}" | ${my_strings})
+                        let has_cnvtls=$(${my_egrep} -c -a "^\(CNVTLS[0-9]*\)" "${source_code_dir}/${target_file}")
 
                         # Make sure the file hasn't already been converted for FTPBATCH put operations
                         if [ ${has_cnvtls} -eq 0 ]; then
@@ -2270,7 +2270,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     if [ ${get_block} -gt 0 ]; then
                         line_count=$(${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}')
                         echo -ne "Found get block ... "
-                        let has_cnvtrs=$(${my_egrep} -c -a "^\(CNVTRS\)" "${source_code_dir}/${target_file}" | ${my_strings})
+                        let has_cnvtrs=$(${my_egrep} -c -a "^\(CNVTRS\)" "${source_code_dir}/${target_file}")
 
                         # Make sure the file hasn't already been converted for FTPBATCH get operations
                         if [ ${has_cnvtrs} -eq 0 ]; then
@@ -2383,7 +2383,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
                 target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-                let has_dfdss=$(${my_egrep} -c -a "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}" | ${my_strings})
+                let has_dfdss=$(${my_egrep} -c -a "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}")
 
                 # Make sure we have an DFDSS section upon which to operate
                 if [ ${has_dfdss} -gt 0  ]; then
@@ -2404,13 +2404,13 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
                 target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-                let has_smtp=$(${my_egrep} -c -a "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}" | ${my_strings})
+                let has_smtp=$(${my_egrep} -c -a "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}")
 
                 # Make sure we have an SMTP section upon which to operate
                 if [ ${has_smtp} -gt 0  ]; then
                     echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for SMTP conversion ... "
                     line_count=$(${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}')
-                    let has_cnvsmtp=$(${my_egrep} -c -a "^\(CNVSMTP[0-9]*\)" "${source_code_dir}/${target_file}" | ${my_strings})
+                    let has_cnvsmtp=$(${my_egrep} -c -a "^\(CNVSMTP[0-9]*\)" "${source_code_dir}/${target_file}")
 
                     # Make sure the file hasn't already been converted for SMTP operations
                     if [ ${has_cnvsmtp} -eq 0 ]; then
