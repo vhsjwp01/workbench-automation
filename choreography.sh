@@ -236,7 +236,7 @@ add_to_list() {
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-    for command in awk basename cp cut diff dirname egrep find id ls make mkdir pcregrep pwd rm rsync sed sort tr uname wc ; do
+    for command in awk basename cp cut diff dirname egrep find id ls make mkdir pcregrep pwd rm rsync sed sort strings tr uname wc ; do
         unalias ${command} > /dev/null 2>&1
         f__check_command "${command}"
 
@@ -557,7 +557,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 let file_count=$(${my_find} "${source_dir}/${uc_target_dir}"/*.${file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}')
 
                 if [ ${file_count} -gt 0 ]; then
-                    let is_commented_out=$(${my_egrep} -a -c "^%directory \"${uc_target_dir}\" type" "${param_dir}/system.desc")
+                    let is_commented_out=$(${my_egrep} -c -a "^%directory \"${uc_target_dir}\" type" "${param_dir}/system.desc")
 
                     if [ ${is_commented_out} -gt 0 ]; then
                         begin_text="% BEGIN: ${uc_target_dir}-DIRECTORY-TARGETS"
@@ -565,7 +565,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
 
                         # Find any Library dependencies
-                        library_dependencies=$(${my_egrep} -a -A1 "directory.*\"${uc_target_dir}\"" "${param_dir}/system.desc" | ${my_egrep} "libraries" | ${my_sed} -e 's/[^A-Z,]//g' -e 's/,/\ /g')
+                        library_dependencies=$(${my_egrep} -A1 -a "directory.*\"${uc_target_dir}\"" "${param_dir}/system.desc" | ${my_strings} | ${my_egrep} "libraries" | ${my_sed} -e 's/[^A-Z,]//g' -e 's/,/\ /g')
 
                         for library_dependency in ${library_dependencies} ; do
                             library_dependency_var=$(echo "${library_dependency}" | ${my_sed} -e 's/\./_/g' | ${my_tr} '[A-Z]' '[a-z]')
@@ -990,7 +990,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for ASIS keyword translation ... "
                     # This command sequence should yield the proper triplet of info
-                    valid_lines=($(${my_egrep} -a -n "EXEC CICS RECEIVE|ASIS|END-EXEC" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -A2 "EXEC CICS RECEIVE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
+                    valid_lines=($(${my_egrep} -n -a "EXEC CICS RECEIVE|ASIS|END-EXEC" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} -A2 "EXEC CICS RECEIVE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
                     let line_counter=0
                 
                     # Valid inputs occur in threes: a line with "EXEC CICS RECEIVE", followed by a line with "ASIS", followed by "END-EXEC"
@@ -1037,7 +1037,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ################################################################
 
                     echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for IBCABEND filename translation ... "
-                    ibcabend_lines=$(${my_egrep} -a -n "\bCOPY\ *IBCABEND\." "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_sed} -e 's?\ ?:ZZqC:?g')
+                    ibcabend_lines=$(${my_egrep} -n -a "\bCOPY\ *IBCABEND\." "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_sed} -e 's?\ ?:ZZqC:?g')
 
                     for ibcabend_line in ${ibcabend_lines} ; do
                         ibcabend_line=$(echo "${ibcabend_line}" | ${my_sed} -e 's?:ZZqC:?\ ?g')
@@ -1070,7 +1070,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     # Must process in reverse order to maintain line number
 
                     echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for C1MATCHI keyword translation ... "
-                    c1matchi_lines=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_pcregrep} -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
+                    c1matchi_lines=$(${my_egrep} -n -a "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_pcregrep} -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
 
                     for c1matchi_line in ${c1matchi_lines} ; do
                         real_line=$(echo "${c1matchi_line}" | ${my_sed} -e 's/:ZZqC:/\ /g')
@@ -1126,7 +1126,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ################################################################
 
                     echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for DUMP TRANSACTION keyword translation ... "
-                    dump_lines=$(${my_egrep} -a -n "DUMP" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_sed} -e 's?\ ?:ZZqC:?g')
+                    dump_lines=$(${my_egrep} -n -a "DUMP" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_sed} -e 's?\ ?:ZZqC:?g')
                     
                     for dump_line in ${dump_lines} ; do
                         let add_transaction=0
@@ -1136,21 +1136,21 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         if [ ${has_transaction_in_it} -eq 0 ]; then
                             let this_line=$(echo "${dump_line}" | ${my_awk} -F':' '{print $1}')
                             let next_line=${this_line}+1
-                            let has_transaction_after_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${next_line}:.*\bTRANSACTION\b")
+                            let has_transaction_after_it=$(${my_egrep} -n -a "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} -c "^${next_line}:.*\bTRANSACTION\b")
                     
                             if [ ${has_transaction_after_it} -eq 0 ]; then
-                                let has_cics_in_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${this_line}:.*\bCICS\b")
+                                let has_cics_in_it=$(${my_egrep} -n -a "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} -c "^${this_line}:.*\bCICS\b")
                     
                                 if [ ${has_cics_in_it} -eq 0 ]; then
                                     let previous_line=${this_line}-1
-                                    let has_cics_before_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bCICS\b")
+                                    let has_cics_before_it=$(${my_egrep} -n -a "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} -c "^${previous_line}:.*\bCICS\b")
                     
                                     if [ ${has_cics_before_it} -gt 0 ]; then
-                                        let has_exec_in_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bEXEC\b")
+                                        let has_exec_in_it=$(${my_egrep} -n -a "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} -c "^${previous_line}:.*\bEXEC\b")
                     
                                         if [ ${has_exec_in_it} -eq 0 ]; then
                                             let previous_previous_line=${previous_line}-1
-                                            let has_exec_before_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_previous_line}:.*\bEXEC\b")
+                                            let has_exec_before_it=$(${my_egrep} -n -a "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} -c "^${previous_previous_line}:.*\bEXEC\b")
                     
                                             if [ ${has_exec_before_it} -gt 0 ];then
                                                 let add_transaction=${add_transaction}+1
@@ -1163,11 +1163,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                                     fi
                     
                                 else
-                                    let has_exec_in_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${this_line}:.*\bEXEC\b")
+                                    let has_exec_in_it=$(${my_egrep} -n -a "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} -c "^${this_line}:.*\bEXEC\b")
                     
                                     if [ ${has_exec_in_it} -eq 0 ]; then
                                         let previous_line=${this_line}-1
-                                        let has_exec_before_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bEXEC\b")
+                                        let has_exec_before_it=$(${my_egrep} -n -a "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} -c "^${previous_line}:.*\bEXEC\b")
                     
                                         if [ ${has_exec_before_it} -gt 0 ];then
                                             let add_transaction=${add_transaction}+1
@@ -1205,7 +1205,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ################################################################
 
                     echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for P9COMM keyword translation ... "
-                    let has_p9comm=$(${my_egrep} -a -c "COPY\ *P9COMM\." "${prepared_dir}/${uc_target_dir}/${target_file}")
+                    let has_p9comm=$(${my_egrep} -c -a "COPY\ *P9COMM\." "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings})
 
                     if [ ${has_p9comm} -gt 0 ]; then
                         ${my_sed} -i -e "s?COPY\ *P9COMM\.?COPY P9IN\.\\${NL}${cbl_offset}COPY P9OUT\.\\${NL}${cbl_offset}COPY P9AUDIT\.?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
@@ -1230,63 +1230,63 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 if [ "${target_dir}" = "cics" ]; then
                     echo -ne "    INFO:  Extra Pre-Processing ${prepared_dir}/${uc_target_dir} files for PTFIX translation ... "
 
-                    files_to_touch=$(${my_egrep} -a -H "15 CURSOR-ATTR-1     PIC S9\(9\) COMP VALUE \+16777152\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -H -a "15 CURSOR-ATTR-1     PIC S9\(9\) COMP VALUE \+16777152\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ptfix *          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ a\ptfix            15 CURSOR-ATTR-1     PIC X(4) VALUE X'\''00FFFF20'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 FILLER            PIC S9\(9\) COMP VALUE \+16777160\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -H -a "15 FILLER            PIC S9\(9\) COMP VALUE \+16777160\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 FILLER            PIC S9(9) COMP VALUE +16777160./ptfix *          15 FILLER            PIC S9(9) COMP VALUE +16777160./' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 FILLER            PIC S9(9) COMP VALUE +16777160./ a\ptfix            15 FILLER            PIC X(4) VALUE X'\''00FFFF48'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "OK-ATTR-1         PIC S9\(9\) COMP VALUE \+4210880\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -H -a "OK-ATTR-1         PIC S9\(9\) COMP VALUE \+4210880\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /ptfix *          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. / a\ptfix            15 OK-ATTR-1         PIC X(4) VALUE X'\''00000020'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 PROT-ATTR-1       PIC S9\(9\) COMP VALUE \+4210928\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -H -a "15 PROT-ATTR-1       PIC S9\(9\) COMP VALUE \+4210928\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /ptfix *          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. / a\ptfix            15 PROT-ATTR-1       PIC X(4) VALUE X'\''00000030'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 BLANK-ATTR-1      PIC S9\(9\) COMP VALUE \+4210940\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -H -a "15 BLANK-ATTR-1      PIC S9\(9\) COMP VALUE \+4210940\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /ptfix *          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. / a\ptfix            15 BLANK-ATTR-1      PIC X(4) VALUE X'\''00000025'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 CBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+16777164\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -H -a "15 CBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+16777164\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ptfix *          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ a\ptfix            15 CBLANK-ATTR-1     PIC X(4) VALUE X'\''00FFFF3C'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 IBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+4210892\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -H -a "15 IBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+4210892\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /ptfix *          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. / a\ptfix            15 IBLANK-ATTR-1     PIC X(4) VALUE X'\''0000003C'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 OHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210936\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -H -a "15 OHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210936\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /ptfix *          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. / a\ptfix            15 OHIGH-ATTR-1      PIC X(4) VALUE X'\''00000038'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 IHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210888\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -H -a "15 IHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210888\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /ptfix *          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
@@ -1326,24 +1326,27 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 for target_file in ${target_files} ; do
                     echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for SUBSYS keyword translation ... "
                     this_line_count=$(${my_wc} -l "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_awk} '{print $1}')
-                    subsys_lines=($(${my_egrep} -a -n "SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_awk} -F':' '{print $1}'))
+                    subsys_lines=($(${my_egrep} -n -a "SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_awk} -F':' '{print $1}'))
 
                     for subsys_line in ${subsys_lines[*]} ; do
                         alt_label=""
                     
                         # Get the original label
                         let orig_label_line=${subsys_line}
-                        orig_label=$(${my_egrep} -a -n "SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "^${subsys_line}:" | ${my_awk} '{print $1}' | ${my_awk} -F'/' '{print $NF}')
-                        alt_label=$(${my_egrep} -a -A${this_line_count} "//${orig_label}.*SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "DDNAME=" | head -1 | ${my_awk} -F',' '{print $1}' | ${my_awk} -F'=' '{print $NF}')
+                        orig_label=$(${my_egrep} -n -a "SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} "^${subsys_line}:" | ${my_awk} '{print $1}' | ${my_awk} -F'/' '{print $NF}')
+                        alt_label=$(${my_egrep} -A${this_line_count} -a "//${orig_label}.*SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} "DDNAME=" | head -1 | ${my_awk} -F',' '{print $1}' | ${my_awk} -F'=' '{print $NF}')
                     
                         # Munge the labels if we have enough pieces
                         if [ "${orig_label}" != "" -a "${alt_label}" != "" ]; then
-                            let alt_label_line=$(${my_egrep} -a -n "^//${alt_label}" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_awk} -F':' '{print $1}')
+#===
+                            echo -ne "\n ... ALT LABEL is ${alt_label} ... "
+#===
+                            let alt_label_line=$(${my_egrep} -n -a "^//${alt_label}" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_awk} -F':' '{print $1}')
                             let label_line_counter=${orig_label_line}
                     
                             # Comment out all the lines between SUBSYS start and the line above "^//${alt_label}"
                             while [ ${label_line_counter} -lt ${alt_label_line} ]; do
-                                this_line=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "^${label_line_counter}:" | ${my_sed} -e "s/^${label_line_counter}://g")
+                                this_line=$(${my_egrep} -n -a "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} "^${label_line_counter}:" | ${my_sed} -e "s/^${label_line_counter}://g")
                                 first3_chars=$(echo "${this_line}" | ${my_cut} -b 1-3 | ${my_sed} -e 's/\*/\\\*/g')
                                 line_remainder=$(echo "${this_line}" | ${my_sed} -e "s?^${first3_chars}??g" -e 's/\*/\\\*/g')
                                 ${my_sed} -i -e "${label_line_counter}s?^${this_line}\$?${comment_prefix}${line_remainder}?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
@@ -1361,7 +1364,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     echo "DONE"
 
                     echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for INCLUDE keyword translation ... "
-                    target_lines=($(${my_egrep} -a -n "INCLUDE.*MEMBER=|//[^\*|\ ]" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -A1 "INCLUDE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
+                    target_lines=($(${my_egrep} -n -a "INCLUDE.*MEMBER=|//[^\*|\ ]" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} -A1 "INCLUDE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
                     element_count=${#target_lines[@]}
 
                     # There should always be pairs of lines found, a start line and an end line
@@ -1388,7 +1391,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         let lines_after=${end_line}-${start_line}
                 
                         # Get the actual lines to be munged
-                        real_target_lines=($(${my_egrep} -a -A${lines_after} "^${real_start_line}$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_sed} -e 's/\ /:ZZqC:/g'))
+                        real_target_lines=($(${my_egrep} -A${lines_after} -a "^${real_start_line}$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_sed} -e 's/\ /:ZZqC:/g'))
                 
                         # Munge the lines in question
                         for real_target_line in ${real_target_lines[*]} ; do
@@ -1604,28 +1607,28 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             if [ "${fatal_check}" = "no" -o "${fatal_check}" = "off" ]; then
                 let fatal_count=0
             else
-                let fatal_count=$(${my_egrep} -a -c ";FATAL;" "${anomaly_report}")
+                let fatal_count=$(${my_egrep} -c -a ";FATAL;" "${anomaly_report}" | ${my_strings})
             fi
 
             # Set error check
             if [ "${error_check}" = "no" -o "${error_check}" = "off" ]; then
                 let error_count=0
             else
-                let error_count=$(${my_egrep} -a -c ";ERROR;" "${anomaly_report}")
+                let error_count=$(${my_egrep} -c -a ";ERROR;" "${anomaly_report}" | ${my_strings})
             fi
 
             # Set warning check
             if [ "${warning_check}" = "no" -o "${warning_check}" = "off" ]; then
                 let warning_count=0
             else
-                let warning_count=$(${my_egrep} -a -c ";WARNING;" "${anomaly_report}")
+                let warning_count=$(${my_egrep} -c -a ";WARNING;" "${anomaly_report}" | ${my_strings})
             fi
 
             # Set missing check
             if [ "${missing_check}" = "no" -o "${missing_check}" = "off" ]; then
                 let missing_count=0
             else
-                let missing_count=$(${my_egrep} -a -c ";MISSING;" "${anomaly_report}")
+                let missing_count=$(${my_egrep} -c -a ";MISSING;" "${anomaly_report}" | ${my_strings})
             fi
 
             if [ ${fatal_count} -gt 0 -o ${error_count} -gt 0 -o ${warning_count} -ge ${max_warnings} -o ${missing_count} -ge ${max_missing} ]; then
@@ -1679,7 +1682,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     if [ -e "${cobol_copy_report}" ]; then
         echo -ne "    INFO:  Checking Cobol-Copy report for issues of concern ... "
-        let cobol_copy_missing_count=$(${my_egrep} -a -c ";MISSING;" "${cobol_copy_report}")
+        let cobol_copy_missing_count=$(${my_egrep} -c -a ";MISSING;" "${cobol_copy_report}" | ${my_strings})
 
         if [ ${cobol_copy_missing_count} -ge ${max_missing} ]; then
             echo "issues found [FAILED]"
@@ -1916,11 +1919,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
                 target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-                # egrep -n "^.*$" /tmp/junk | pcregrep -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | sort -rn
+                # egrep -n -a "^.*$" /tmp/junk | strings | pcregrep -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | sort -rn
 
                 #for pattern in "MWDB2ORA\.MAKE_TIME" "MWDB2ORA\.TIME2HOST" "MWDB2ORA\.STR2TIME" "MWDB2ORA\.STR2TMS" "MWDB2ORA\.STR2DATE" ; do
                 #    echo -ne "            Processing file ${source_code_dir}/${target_file} for ${pattern} keyword translation ... "
-                #    matched_lines=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_pcregrep} -M -e "\b${pattern}\b\([[:space:]|\n\d+:]*.*[[:space:]|\n\d+:]*\)" | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
+                #    matched_lines=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_pcregrep} -M -e "\b${pattern}\b\([[:space:]|\n\d+:]*.*[[:space:]|\n\d+:]*\)" | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
                 #    let matched_line_count=$(echo -ne "${matched_lines}\n" | ${my_wc} -l | ${my_awk} '{print $1}')
 
                 #    start_line_keyword="${pattern}\("
@@ -2107,7 +2110,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
                 target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-                iefbr14_lines=($(${my_egrep} -a -n "^\(|IEFBR14" "${source_code_dir}/${target_file}" | ${my_egrep} -B1 "IEFBR14" | ${my_egrep} "^[0-9]*:" | ${my_awk} -F':' '{print $1}'))
+                iefbr14_lines=($(${my_egrep} -n -a "^\(|IEFBR14" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -B1 "IEFBR14" | ${my_egrep} "^[0-9]*:" | ${my_awk} -F':' '{print $1}'))
 
                 # Blocks of code can be detected as line number pairs
                 let line_counter=${#iefbr14_lines[@]}-1
@@ -2120,7 +2123,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     let line_counter=${line_counter}-1
 
                     # Comment out ending_line_number
-                    ending_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${ending_line_number}:" | ${my_sed} -e "s/^${ending_line_number}://g")
+                    ending_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} "^${ending_line_number}:" | ${my_sed} -e "s/^${ending_line_number}://g")
                     ${my_sed} -i -e "${ending_line_number}s?^${ending_line}\$?#${ending_line}?g" "${source_code_dir}/${target_file}"
 
                     # Move up one element in the array
@@ -2130,7 +2133,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     while [ ${next_line_up} -gt ${starting_line_number} ]; do
 
                         # Capture this line
-                        line_to_munge=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${next_line_up}:" | ${my_sed} -e "s/^${next_line_up}://g")
+                        line_to_munge=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} "^${next_line_up}:" | ${my_sed} -e "s/^${next_line_up}://g")
                         let mod_del_del_check=$(echo "${line_to_munge}" | ${my_egrep} -c "m_FileAssign.*MOD,DELETE,DELETE")
 
                         if [ ${mod_del_del_check} -gt 0 ]; then
@@ -2162,38 +2165,38 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
                 target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-                let has_ftpbatch=$(${my_egrep} -a -c "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}")
+                let has_ftpbatch=$(${my_egrep} -c -n "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}" | ${my_strings})
 
                 # Make sure we have an FTPBATCH section upon which to operate
                 if [ ${has_ftpbatch} -gt 0 ]; then
                     echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for FTPBATCH conversion ... "
                     # FTPBATCH put or get?
-                    let put_block=$(${my_egrep} -a -c "^put " "${source_code_dir}/${target_file}")
-                    let get_block=$(${my_egrep} -a -c "^get " "${source_code_dir}/${target_file}")
+                    let put_block=$(${my_egrep} -c -a "^put " "${source_code_dir}/${target_file}" | ${my_strings})
+                    let get_block=$(${my_egrep} -c -a "^get " "${source_code_dir}/${target_file}" | ${my_strings})
 
                     if [ ${put_block} -gt 0 ]; then
                         echo -ne "Found put block ... "
                         line_count=$(${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}')
-                        let has_cnvtls=$(${my_egrep} -a -c "^\(CNVTLS[0-9]*\)" "${source_code_dir}/${target_file}")
+                        let has_cnvtls=$(${my_egrep} -c -a "^\(CNVTLS[0-9]*\)" "${source_code_dir}/${target_file}" | ${my_strings})
 
                         # Make sure the file hasn't already been converted for FTPBATCH put operations
                         if [ ${has_cnvtls} -eq 0 ]; then
                             let cnvtls_data_counter=0
-                            put_batch_lines=($(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:put " | ${my_egrep} "^[0-9]*:.*m_ProcInclude.*\ FTPBATCH" | tail -1 | ${my_awk} -F':' '{print $1}'))
+                            put_batch_lines=($(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -B${line_count} "^[0-9]*:put " | ${my_egrep} "^[0-9]*:.*m_ProcInclude.*\ FTPBATCH" | tail -1 | ${my_awk} -F':' '{print $1}'))
                             let put_batch_line_count=${#put_batch_lines[@]}-1
 
                             # Start operating on the last FTPBATCH line, so as to not disturb line positions after processing
                             while [ ${put_batch_line_count} -ge 0 ]; do
-                                function_start_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1)
+                                function_start_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -B${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1)
                                 function_start_line_number=$(echo "${function_start_line}" | ${my_awk} -F':' '{print $1}')
                                 function_start_line=$(echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g")
 
-                                function_end_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1)
+                                function_end_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -A${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1)
                                 function_end_line_number=$(echo "${function_end_line}" | ${my_awk} -F':' '{print $1}')
                                 function_end_line=$(echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g")
 
                                 jump_label=$(echo "${function_start_line}" | ${my_sed} -e 's/[\(|\)]//g')
-                                jump_label_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:\(${jump_label}\)$" | ${my_egrep} "^[0-9]*:.*JUMP_LABEL=${jump_label}$" | tail -1)
+                                jump_label_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -B${line_count} "^[0-9]*:\(${jump_label}\)$" | ${my_egrep} "^[0-9]*:.*JUMP_LABEL=${jump_label}$" | tail -1)
                                 jump_label_line_number=$(echo "${jump_label_line}" | ${my_awk} -F':' '{print $1}')
                                 jump_label_line=$(echo "${jump_label_line}" | ${my_sed} -e "s/^${jump_label_line_number}://g")
 
@@ -2202,7 +2205,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                                 # Figure out all the lines containing DATA file names
                                 while [ ${function_line_counter} -lt ${function_end_line_number} ]; do
-                                    next_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g")
+                                    next_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g")
                                     let is_data_line=$(echo "${next_line}" | ${my_egrep} -c "m_FileOverride.*\ FTP\ .*{DATA}/")
 
                                     if [ ${is_data_line} -gt 0  ]; then
@@ -2267,21 +2270,21 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     if [ ${get_block} -gt 0 ]; then
                         line_count=$(${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}')
                         echo -ne "Found get block ... "
-                        let has_cnvtrs=$(${my_egrep} -a -c "^\(CNVTRS\)" "${source_code_dir}/${target_file}")
+                        let has_cnvtrs=$(${my_egrep} -c -a "^\(CNVTRS\)" "${source_code_dir}/${target_file}" | ${my_strings})
 
                         # Make sure the file hasn't already been converted for FTPBATCH get operations
                         if [ ${has_cnvtrs} -eq 0 ]; then
                             let cnvtrs_data_counter=0
-                            get_batch_lines=($(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:get " | ${my_egrep} "^[0-9]*:.*m_ProcInclude.*\ FTPBATCH" | tail -1 | ${my_awk} -F':' '{print $1}'))
+                            get_batch_lines=($(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -B${line_count} "^[0-9]*:get " | ${my_egrep} "^[0-9]*:.*m_ProcInclude.*\ FTPBATCH" | tail -1 | ${my_awk} -F':' '{print $1}'))
                             let get_batch_line_count=${#get_batch_lines[@]}-1
 
                             # Start operating on the last FTPBATCH line, so as to not disturb line positions after processing
                             while [ ${get_batch_line_count} -ge 0 ]; do
-                                function_start_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1)
+                                function_start_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -B${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1)
                                 function_start_line_number=$(echo "${function_start_line}" | ${my_awk} -F':' '{print $1}')
                                 function_start_line=$(echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g")
 
-                                function_end_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1)
+                                function_end_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -A${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1)
                                 function_end_line_number=$(echo "${function_end_line}" | ${my_awk} -F':' '{print $1}')
                                 function_end_line=$(echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g")
 
@@ -2290,7 +2293,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                                 # Figure out all the lines containing DATA file names
                                 while [ ${function_line_counter} -lt ${function_end_line_number} ]; do
-                                    next_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g")
+                                    next_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g")
                                     let is_data_line=$(echo "${next_line}" | ${my_egrep} -c "m_FileOverride.*\ FTP\ .*{DATA}/")
                                     let is_get_line=$(echo "${next_line}" | ${my_egrep} -c "^get")
 
@@ -2355,7 +2358,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     fi
 
                     # Comment out locsite lines
-                    locsite_lines=$(${my_egrep} -a -n "^.*locsite" "${source_code_dir}/${target_file}" | egrep -v "#.*locsite")
+                    locsite_lines=$(${my_egrep} -n -a "^.*locsite" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -v "#.*locsite")
 
                     for locsite_line in ${locsite_lines} ; do
                         this_line_number=$(echo "${locsite_line}" | ${my_awk} -F':' '{print $1}')
@@ -2380,7 +2383,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
                 target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-                let has_dfdss=$(${my_egrep} -a -c "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}")
+                let has_dfdss=$(${my_egrep} -c -a "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}" | ${my_strings})
 
                 # Make sure we have an DFDSS section upon which to operate
                 if [ ${has_dfdss} -gt 0  ]; then
@@ -2401,36 +2404,36 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
                 target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-                let has_smtp=$(${my_egrep} -a -c "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}")
+                let has_smtp=$(${my_egrep} -c -a "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}" | ${my_strings})
 
                 # Make sure we have an SMTP section upon which to operate
                 if [ ${has_smtp} -gt 0  ]; then
                     echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for SMTP conversion ... "
                     line_count=$(${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}')
-                    let has_cnvsmtp=$(${my_egrep} -a -c "^\(CNVSMTP[0-9]*\)" "${source_code_dir}/${target_file}")
+                    let has_cnvsmtp=$(${my_egrep} -c -a "^\(CNVSMTP[0-9]*\)" "${source_code_dir}/${target_file}" | ${my_strings})
 
                     # Make sure the file hasn't already been converted for SMTP operations
                     if [ ${has_cnvsmtp} -eq 0 ]; then
                         let cnvsmtp_data_counter=0
-                        smtp2_lines=($(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^[0-9]*:.*m_OutputAssign.*\ SMTP2\ " | ${my_awk} -F':' '{print $1}'))
+                        smtp2_lines=($(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} "^[0-9]*:.*m_OutputAssign.*\ SMTP2\ " | ${my_awk} -F':' '{print $1}'))
                         let smtp2_line_count=${#smtp2_lines[@]}-1
 
                         # Start operating on the last SMTP2 line, so as to not disturb line positions during processing
                         while [ ${smtp2_line_count} -ge 0 ]; do
-                            function_start_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\(" | tail -1)
+                            function_start_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -B${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\(" | tail -1)
                             function_start_line_number=$(echo "${function_start_line}" | ${my_awk} -F':' '{print $1}')
                             function_start_line=$(echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g")
 
-                            function_end_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\ *;;$" | head -1)
+                            function_end_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\ *;;$" | head -1)
                             function_end_line_number=$(echo "${function_end_line}" | ${my_awk} -F':' '{print $1}')
                             function_end_line=$(echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g")
 
                             jump_label=$(echo "${function_start_line}" | ${my_sed} -e 's/[\(|\)]//g')
-                            jump_label_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:\(${jump_label}\)$" | ${my_egrep} "^[0-9]*:.*JUMP_LABEL=${jump_label}$" | tail -1)
+                            jump_label_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -B${line_count} "^[0-9]*:\(${jump_label}\)$" | ${my_egrep} "^[0-9]*:.*JUMP_LABEL=${jump_label}$" | tail -1)
                             jump_label_line_number=$(echo "${jump_label_line}" | ${my_awk} -F':' '{print $1}')
                             jump_label_line=$(echo "${jump_label_line}" | ${my_sed} -e "s/^${jump_label_line_number}://g")
 
-                            filerepro_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:.*m_FileRepro" | head -1)
+                            filerepro_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:.*m_FileRepro" | head -1)
                             filerepro_line_number=$(echo "${filerepro_line}" | ${my_awk} -F':' '{print $1}')
                             filerepro_line=$(echo "${filerepro_line}" | ${my_sed} -e "s/^${filerepro_line_number}://g")
 
@@ -2445,7 +2448,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                             # Figure out all the lines containing DATA file names
                             while [ ${function_line_counter} -lt ${function_end_line_number} ]; do
-                                next_line=$(${my_egrep} -a -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g")
+                                next_line=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g")
                                 let is_data_line=$(echo "${next_line}" | ${my_egrep} -c "m_FileAssign.*\ *[{DATA}{TMP}]/")
 
                                 if [ ${is_data_line} -gt 0  ]; then
