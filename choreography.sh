@@ -745,7 +745,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     prepare_dir="${WB_AUTOMATE}/prepared"
     export prepare_dir
 
-    if [ -d "${script_dir}" -a -d "${import_dir}" -a -d "${prepare_dir}" ]; then
+    if [ -d "${script_dir}" -a -d "${import_dir}" -a -d "${prepared_dir}" ]; then
 
         # Find the files
         for target_dir in ${TARGETS} ; do
@@ -914,7 +914,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Here we slurp in each file in the target directory and plow through each
         # line skipping comment lines
-        target_files=$(cd "${prepare_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)
+        target_files=$(cd "${prepared_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)
         tmp_dir="/tmp/${USER}/$$"
 
         if [ ! -d "${tmp_dir}" ]; then
@@ -928,20 +928,20 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         ########################################################################
 
         for target_file in ${target_files} ; do
-            echo -ne "    INFO:  Pre-Processing \"${prepare_dir}/${uc_target_dir}/${target_file}\" for regular expression translation ... "
+            echo -ne "    INFO:  Pre-Processing \"${prepared_dir}/${uc_target_dir}/${target_file}\" for regular expression translation ... "
             tmp_file="${tmp_dir}/translate-pre-processing-${uc_target_dir}-${target_file}.$$"
             ${my_rm} -f "${tmp_file}"
 
             # Read in regex lines from "${preconvert_dir}/${uc_target_dir}"
             if [ -e "${preconvert_dir}/${uc_target_dir}" -a -s "${preconvert_dir}/${uc_target_dir}" ]; then
-                "${SCRIPT_BASE}"/processor.pl --input_file "${prepare_dir}/${uc_target_dir}/${target_file}" --output_file "${tmp_file}" --data_type "${target_dir}" --regex_file "${preconvert_dir}/${uc_target_dir}" --mode "pre"
+                "${SCRIPT_BASE}"/processor.pl --input_file "${prepared_dir}/${uc_target_dir}/${target_file}" --output_file "${tmp_file}" --data_type "${target_dir}" --regex_file "${preconvert_dir}/${uc_target_dir}" --mode "pre"
                         
-                # Move ${tmp_file} to ${prepare_dir}/${uc_target_dir}/${target_file}
+                # Move ${tmp_file} to ${prepared_dir}/${uc_target_dir}/${target_file}
                 if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
-                    ${my_diff} -q "${tmp_file}" "${prepare_dir}/${uc_target_dir}/${target_file}" > /dev/null 2>&1
+                    ${my_diff} -q "${tmp_file}" "${prepared_dir}/${uc_target_dir}/${target_file}" > /dev/null 2>&1
 
                     if [ ${?} -ne ${SUCCESS} ]; then
-                        ${my_rsync} "${tmp_file}" "${prepare_dir}/${uc_target_dir}/${target_file}" > /dev/null 2>&1
+                        ${my_rsync} "${tmp_file}" "${prepared_dir}/${uc_target_dir}/${target_file}" > /dev/null 2>&1
                         let exit_code=${exit_code}+${?}
                     fi
 
@@ -977,8 +977,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             copy|batch|cics)
                 comment_prefix='      *'
-                echo "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target_dir} files for ASIS translation:"
-                target_files=$(cd "${prepare_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)
+                echo "    INFO:  Extra Pre-Processing ${prepared_dir}/${uc_target_dir} files for ASIS translation:"
+                target_files=$(cd "${prepared_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)
                 
                 for target_file in ${target_files} ; do
 
@@ -988,9 +988,9 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ####
                     ################################################################
 
-                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for ASIS keyword translation ... "
+                    echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for ASIS keyword translation ... "
                     # This command sequence should yield the proper triplet of info
-                    valid_lines=($(${my_egrep} -a -n "EXEC CICS RECEIVE|ASIS|END-EXEC" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -A2 "EXEC CICS RECEIVE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
+                    valid_lines=($(${my_egrep} -a -n "EXEC CICS RECEIVE|ASIS|END-EXEC" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -A2 "EXEC CICS RECEIVE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
                     let line_counter=0
                 
                     # Valid inputs occur in threes: a line with "EXEC CICS RECEIVE", followed by a line with "ASIS", followed by "END-EXEC"
@@ -1016,7 +1016,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         if [ ${is_exec_line} -eq 1 -a ${is_asis_line} -eq 1 -a ${is_end_line} -eq 1 ]; then
                             line_prefix=$(echo "${real_asis_line}" | ${my_cut} -b 1-7)
                             line_remainder=$(echo "${real_asis_line}" | ${my_sed} -e "s/^${line_prefix}//g")
-                            ${my_sed} -i -e "${asis_line_number}s/^${real_asis_line}/${comment_prefix}${line_remainder}/g" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                            ${my_sed} -i -e "${asis_line_number}s/^${real_asis_line}/${comment_prefix}${line_remainder}/g" "${prepared_dir}/${uc_target_dir}/${target_file}"
                         fi
 
                         let line_counter=${line_counter}+1
@@ -1036,8 +1036,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ####
                     ################################################################
 
-                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for IBCABEND filename translation ... "
-                    ibcabend_lines=$(${my_egrep} -a -n "\bCOPY\ *IBCABEND\." "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_sed} -e 's?\ ?:ZZqC:?g')
+                    echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for IBCABEND filename translation ... "
+                    ibcabend_lines=$(${my_egrep} -a -n "\bCOPY\ *IBCABEND\." "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_sed} -e 's?\ ?:ZZqC:?g')
 
                     for ibcabend_line in ${ibcabend_lines} ; do
                         ibcabend_line=$(echo "${ibcabend_line}" | ${my_sed} -e 's?:ZZqC:?\ ?g')
@@ -1046,7 +1046,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                         if [ ${has_cpy_suffix} -eq 0 ]; then
                             this_line=$(echo "${ibcabend_line}" | ${my_awk} -F':' '{print $1}')
-                            ${my_sed} -i -e "${this_line}s?^\(.*COPY\) *\(IBCABEND\)\.\(.*\)?\1\\${NL}${offset}\2\.cpy\.\3?g" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                            ${my_sed} -i -e "${this_line}s?^\(.*COPY\) *\(IBCABEND\)\.\(.*\)?\1\\${NL}${offset}\2\.cpy\.\3?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
                         fi
 
                     done
@@ -1069,8 +1069,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     # egrep -n "^.*$" /tmp/junk | pcregrep -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | sort -rn
                     # Must process in reverse order to maintain line number
 
-                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for C1MATCHI keyword translation ... "
-                    c1matchi_lines=$(${my_egrep} -a -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_pcregrep} -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
+                    echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for C1MATCHI keyword translation ... "
+                    c1matchi_lines=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_pcregrep} -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
 
                     for c1matchi_line in ${c1matchi_lines} ; do
                         real_line=$(echo "${c1matchi_line}" | ${my_sed} -e 's/:ZZqC:/\ /g')
@@ -1091,13 +1091,13 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                             # Change the last line to the proper sequence
                             let delta=${last_line_number}-${first_line_number}
-                            ${my_sed} -i -e "${last_line_number}s?^${last_line}\$?${cbl_offset}CALL 'c1matchi' USING\\${NL}${cbl_offset}${cbl_offset}P9IN P9OUT P9AUDIT\.?g" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                            ${my_sed} -i -e "${last_line_number}s?^${last_line}\$?${cbl_offset}CALL 'c1matchi' USING\\${NL}${cbl_offset}${cbl_offset}P9IN P9OUT P9AUDIT\.?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
                             let delta_counter=1
 
                             # Now delete the rest
                             while [ ${delta_counter} -le ${delta} ]; do
                                 let this_line_number=${last_line_number}-${delta_counter}
-                                ${my_sed} -i -e "${this_line_number}d" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                                ${my_sed} -i -e "${this_line_number}d" "${prepared_dir}/${uc_target_dir}/${target_file}"
                                 let delta_counter=${delta_counter}+1
                             done
 
@@ -1125,8 +1125,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ####
                     ################################################################
 
-                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for DUMP TRANSACTION keyword translation ... "
-                    dump_lines=$(${my_egrep} -a -n "DUMP" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_sed} -e 's?\ ?:ZZqC:?g')
+                    echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for DUMP TRANSACTION keyword translation ... "
+                    dump_lines=$(${my_egrep} -a -n "DUMP" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_sed} -e 's?\ ?:ZZqC:?g')
                     
                     for dump_line in ${dump_lines} ; do
                         let add_transaction=0
@@ -1136,21 +1136,21 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         if [ ${has_transaction_in_it} -eq 0 ]; then
                             let this_line=$(echo "${dump_line}" | ${my_awk} -F':' '{print $1}')
                             let next_line=${this_line}+1
-                            let has_transaction_after_it=$(${my_egrep} -a -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${next_line}:.*\bTRANSACTION\b")
+                            let has_transaction_after_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${next_line}:.*\bTRANSACTION\b")
                     
                             if [ ${has_transaction_after_it} -eq 0 ]; then
-                                let has_cics_in_it=$(${my_egrep} -a -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${this_line}:.*\bCICS\b")
+                                let has_cics_in_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${this_line}:.*\bCICS\b")
                     
                                 if [ ${has_cics_in_it} -eq 0 ]; then
                                     let previous_line=${this_line}-1
-                                    let has_cics_before_it=$(${my_egrep} -a -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bCICS\b")
+                                    let has_cics_before_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bCICS\b")
                     
                                     if [ ${has_cics_before_it} -gt 0 ]; then
-                                        let has_exec_in_it=$(${my_egrep} -a -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bEXEC\b")
+                                        let has_exec_in_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bEXEC\b")
                     
                                         if [ ${has_exec_in_it} -eq 0 ]; then
                                             let previous_previous_line=${previous_line}-1
-                                            let has_exec_before_it=$(${my_egrep} -a -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_previous_line}:.*\bEXEC\b")
+                                            let has_exec_before_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_previous_line}:.*\bEXEC\b")
                     
                                             if [ ${has_exec_before_it} -gt 0 ];then
                                                 let add_transaction=${add_transaction}+1
@@ -1163,11 +1163,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                                     fi
                     
                                 else
-                                    let has_exec_in_it=$(${my_egrep} -a -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${this_line}:.*\bEXEC\b")
+                                    let has_exec_in_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${this_line}:.*\bEXEC\b")
                     
                                     if [ ${has_exec_in_it} -eq 0 ]; then
                                         let previous_line=${this_line}-1
-                                        let has_exec_before_it=$(${my_egrep} -a -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bEXEC\b")
+                                        let has_exec_before_it=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bEXEC\b")
                     
                                         if [ ${has_exec_before_it} -gt 0 ];then
                                             let add_transaction=${add_transaction}+1
@@ -1185,7 +1185,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     
                         if [ ${add_transaction} -gt 0 ]; then
                             real_line=$(echo "${dump_line}" | ${my_sed} -e 's?^[0-9]*:??g')
-                            ${my_sed} -i -e "${this_line}s?^\(${real_line}\)\$?\1\\${NL}${cbl_offset}TRANSACTION?g" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                            ${my_sed} -i -e "${this_line}s?^\(${real_line}\)\$?\1\\${NL}${cbl_offset}TRANSACTION?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
                         fi
                     
                     done
@@ -1204,11 +1204,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ####
                     ################################################################
 
-                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for P9COMM keyword translation ... "
-                    let has_p9comm=$(${my_egrep} -a -c "COPY\ *P9COMM\." "${prepare_dir}/${uc_target_dir}/${target_file}")
+                    echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for P9COMM keyword translation ... "
+                    let has_p9comm=$(${my_egrep} -a -c "COPY\ *P9COMM\." "${prepared_dir}/${uc_target_dir}/${target_file}")
 
                     if [ ${has_p9comm} -gt 0 ]; then
-                        ${my_sed} -i -e "s?COPY\ *P9COMM\.?COPY P9IN\.\\${NL}${cbl_offset}COPY P9OUT\.\\${NL}${cbl_offset}COPY P9AUDIT\.?g" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                        ${my_sed} -i -e "s?COPY\ *P9COMM\.?COPY P9IN\.\\${NL}${cbl_offset}COPY P9OUT\.\\${NL}${cbl_offset}COPY P9AUDIT\.?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
                     fi
 
                     echo "DONE"
@@ -1228,76 +1228,76 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 ####################################################################
 
                 if [ "${target_dir}" = "cics" ]; then
-                    echo -ne "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target_dir} files for PTFIX translation ... "
+                    echo -ne "    INFO:  Extra Pre-Processing ${prepared_dir}/${uc_target_dir} files for PTFIX translation ... "
 
-                    files_to_touch=$(${my_egrep} -a -H "15 CURSOR-ATTR-1     PIC S9\(9\) COMP VALUE \+16777152\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -a -H "15 CURSOR-ATTR-1     PIC S9\(9\) COMP VALUE \+16777152\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
-                        ${my_sed} -i 's/                 15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ptfix *          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
-                        ${my_sed} -i '/ptfix \*          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ a\ptfix            15 CURSOR-ATTR-1     PIC X(4) VALUE X'\''00FFFF20'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
+                        ${my_sed} -i 's/                 15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ptfix *          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
+                        ${my_sed} -i '/ptfix \*          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ a\ptfix            15 CURSOR-ATTR-1     PIC X(4) VALUE X'\''00FFFF20'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 FILLER            PIC S9\(9\) COMP VALUE \+16777160\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -a -H "15 FILLER            PIC S9\(9\) COMP VALUE \+16777160\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
-                        ${my_sed} -i 's/                 15 FILLER            PIC S9(9) COMP VALUE +16777160./ptfix *          15 FILLER            PIC S9(9) COMP VALUE +16777160./' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
-                        ${my_sed} -i '/ptfix \*          15 FILLER            PIC S9(9) COMP VALUE +16777160./ a\ptfix            15 FILLER            PIC X(4) VALUE X'\''00FFFF48'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
+                        ${my_sed} -i 's/                 15 FILLER            PIC S9(9) COMP VALUE +16777160./ptfix *          15 FILLER            PIC S9(9) COMP VALUE +16777160./' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
+                        ${my_sed} -i '/ptfix \*          15 FILLER            PIC S9(9) COMP VALUE +16777160./ a\ptfix            15 FILLER            PIC X(4) VALUE X'\''00FFFF48'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "OK-ATTR-1         PIC S9\(9\) COMP VALUE \+4210880\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -a -H "OK-ATTR-1         PIC S9\(9\) COMP VALUE \+4210880\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
-                        ${my_sed} -i 's/                 15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /ptfix *          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
-                        ${my_sed} -i '/ptfix \*          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. / a\ptfix            15 OK-ATTR-1         PIC X(4) VALUE X'\''00000020'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
+                        ${my_sed} -i 's/                 15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /ptfix *          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
+                        ${my_sed} -i '/ptfix \*          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. / a\ptfix            15 OK-ATTR-1         PIC X(4) VALUE X'\''00000020'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 PROT-ATTR-1       PIC S9\(9\) COMP VALUE \+4210928\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -a -H "15 PROT-ATTR-1       PIC S9\(9\) COMP VALUE \+4210928\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
-                        ${my_sed} -i 's/                 15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /ptfix *          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
-                        ${my_sed} -i '/ptfix \*          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. / a\ptfix            15 PROT-ATTR-1       PIC X(4) VALUE X'\''00000030'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
+                        ${my_sed} -i 's/                 15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /ptfix *          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
+                        ${my_sed} -i '/ptfix \*          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. / a\ptfix            15 PROT-ATTR-1       PIC X(4) VALUE X'\''00000030'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 BLANK-ATTR-1      PIC S9\(9\) COMP VALUE \+4210940\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -a -H "15 BLANK-ATTR-1      PIC S9\(9\) COMP VALUE \+4210940\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
-                        ${my_sed} -i 's/                 15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /ptfix *          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
-                        ${my_sed} -i '/ptfix \*          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. / a\ptfix            15 BLANK-ATTR-1      PIC X(4) VALUE X'\''00000025'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
+                        ${my_sed} -i 's/                 15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /ptfix *          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
+                        ${my_sed} -i '/ptfix \*          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. / a\ptfix            15 BLANK-ATTR-1      PIC X(4) VALUE X'\''00000025'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 CBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+16777164\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -a -H "15 CBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+16777164\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
-                        ${my_sed} -i 's/                 15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ptfix *          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
-                        ${my_sed} -i '/ptfix \*          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ a\ptfix            15 CBLANK-ATTR-1     PIC X(4) VALUE X'\''00FFFF3C'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
+                        ${my_sed} -i 's/                 15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ptfix *          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
+                        ${my_sed} -i '/ptfix \*          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ a\ptfix            15 CBLANK-ATTR-1     PIC X(4) VALUE X'\''00FFFF3C'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 IBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+4210892\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -a -H "15 IBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+4210892\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
-                        ${my_sed} -i 's/                 15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /ptfix *          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
-                        ${my_sed} -i '/ptfix \*          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. / a\ptfix            15 IBLANK-ATTR-1     PIC X(4) VALUE X'\''0000003C'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
+                        ${my_sed} -i 's/                 15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /ptfix *          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
+                        ${my_sed} -i '/ptfix \*          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. / a\ptfix            15 IBLANK-ATTR-1     PIC X(4) VALUE X'\''0000003C'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 OHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210936\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -a -H "15 OHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210936\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
-                        ${my_sed} -i 's/                 15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /ptfix *          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
-                        ${my_sed} -i '/ptfix \*          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. / a\ptfix            15 OHIGH-ATTR-1      PIC X(4) VALUE X'\''00000038'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
+                        ${my_sed} -i 's/                 15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /ptfix *          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
+                        ${my_sed} -i '/ptfix \*          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. / a\ptfix            15 OHIGH-ATTR-1      PIC X(4) VALUE X'\''00000038'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=$(${my_egrep} -a -H "15 IHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210888\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
+                    files_to_touch=$(${my_egrep} -a -H "15 IHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210888\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
-                        ${my_sed} -i 's/                 15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /ptfix *          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
-                        ${my_sed} -i '/ptfix \*          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. / a\ptfix            15 IHIGH-ATTR-1      PIC X(4) VALUE X'\''00000048'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
+                        ${my_sed} -i 's/                 15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /ptfix *          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
+                        ${my_sed} -i '/ptfix \*          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. / a\ptfix            15 IHIGH-ATTR-1      PIC X(4) VALUE X'\''00000048'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
                     if [ ${?} -eq ${SUCCESS} ]; then
                         echo "SUCCESS"
                     else
                         echo "FAILED"
-                        err_msg="Extra PracTrans sed translation failed on ${prepare_dir}/${uc_target_dir} Cobol files"
+                        err_msg="Extra PracTrans sed translation failed on ${prepared_dir}/${uc_target_dir} Cobol files"
                         exit_code=${ERROR}
                     fi
 
@@ -1320,38 +1320,38 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 ####################################################################
 
                 comment_prefix='//*'
-                echo "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target_dir} files for SUBSYS and INCLUDE translation:"
-                target_files=$(cd "${prepare_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)
+                echo "    INFO:  Extra Pre-Processing ${prepared_dir}/${uc_target_dir} files for SUBSYS and INCLUDE translation:"
+                target_files=$(cd "${prepared_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)
 
                 for target_file in ${target_files} ; do
-                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for SUBSYS keyword translation ... "
-                    this_line_count=$(${my_wc} -l "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_awk} '{print $1}')
-                    subsys_lines=($(${my_egrep} -a -n "SUBSYS=" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_awk} -F':' '{print $1}'))
+                    echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for SUBSYS keyword translation ... "
+                    this_line_count=$(${my_wc} -l "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_awk} '{print $1}')
+                    subsys_lines=($(${my_egrep} -a -n "SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_awk} -F':' '{print $1}'))
 
                     for subsys_line in ${subsys_lines[*]} ; do
                         alt_label=""
                     
                         # Get the original label
                         let orig_label_line=${subsys_line}
-                        orig_label=$(${my_egrep} -a -n "SUBSYS=" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "^${subsys_line}:" | ${my_awk} '{print $1}' | ${my_awk} -F'/' '{print $NF}')
-                        alt_label=$(${my_egrep} -a -A${this_line_count} "//${orig_label}.*SUBSYS=" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "DDNAME=" | head -1 | ${my_awk} -F',' '{print $1}' | ${my_awk} -F'=' '{print $NF}')
-                        let alt_label_line=$(${my_egrep} -a -n "^//${alt_label}" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_awk} -F':' '{print $1}')
+                        orig_label=$(${my_egrep} -a -n "SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "^${subsys_line}:" | ${my_awk} '{print $1}' | ${my_awk} -F'/' '{print $NF}')
+                        alt_label=$(${my_egrep} -a -A${this_line_count} "//${orig_label}.*SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "DDNAME=" | head -1 | ${my_awk} -F',' '{print $1}' | ${my_awk} -F'=' '{print $NF}')
                     
                         # Munge the labels if we have enough pieces
                         if [ "${orig_label}" != "" -a "${alt_label}" != "" ]; then
+                            let alt_label_line=$(${my_egrep} -a -n "^//${alt_label}" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_awk} -F':' '{print $1}')
                             let label_line_counter=${orig_label_line}
                     
                             # Comment out all the lines between SUBSYS start and the line above "^//${alt_label}"
                             while [ ${label_line_counter} -lt ${alt_label_line} ]; do
-                                this_line=$(${my_egrep} -a -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "^${label_line_counter}:" | ${my_sed} -e "s/^${label_line_counter}://g")
+                                this_line=$(${my_egrep} -a -n "^.*$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "^${label_line_counter}:" | ${my_sed} -e "s/^${label_line_counter}://g")
                                 first3_chars=$(echo "${this_line}" | ${my_cut} -b 1-3 | ${my_sed} -e 's/\*/\\\*/g')
                                 line_remainder=$(echo "${this_line}" | ${my_sed} -e "s?^${first3_chars}??g" -e 's/\*/\\\*/g')
-                                ${my_sed} -i -e "${label_line_counter}s?^${this_line}\$?${comment_prefix}${line_remainder}?g" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                                ${my_sed} -i -e "${label_line_counter}s?^${this_line}\$?${comment_prefix}${line_remainder}?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
                                 let label_line_counter=${label_line_counter}+1
                             done
                     
                             # Fix the alt label line
-                            ${my_sed} -i -e "s?^//${alt_label}?//${orig_label}?g" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                            ${my_sed} -i -e "s?^//${alt_label}?//${orig_label}?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
                         else
                             echo -ne " Missing label(s): ORIG LABEL=${orig_label}, ALT_LABEL=${alt_label} ... "
                         fi
@@ -1360,8 +1360,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     echo "DONE"
 
-                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for INCLUDE keyword translation ... "
-                    target_lines=($(${my_egrep} -a -n "INCLUDE.*MEMBER=|//[^\*|\ ]" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -A1 "INCLUDE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
+                    echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for INCLUDE keyword translation ... "
+                    target_lines=($(${my_egrep} -a -n "INCLUDE.*MEMBER=|//[^\*|\ ]" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -A1 "INCLUDE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
                     element_count=${#target_lines[@]}
 
                     # There should always be pairs of lines found, a start line and an end line
@@ -1388,7 +1388,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         let lines_after=${end_line}-${start_line}
                 
                         # Get the actual lines to be munged
-                        real_target_lines=($(${my_egrep} -a -A${lines_after} "^${real_start_line}$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_sed} -e 's/\ /:ZZqC:/g'))
+                        real_target_lines=($(${my_egrep} -a -A${lines_after} "^${real_start_line}$" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_sed} -e 's/\ /:ZZqC:/g'))
                 
                         # Munge the lines in question
                         for real_target_line in ${real_target_lines[*]} ; do
@@ -1397,7 +1397,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                             line_remainder=$(echo "${real_target_line}" | ${my_sed} -e "s?^${first3_chars}??g")
 
                             if [ "${real_target_line}" != "${comment_prefix}${line_remainder}" ]; then
-                                eval "${my_sed} -i -e 's?^${real_target_line}\$?${comment_prefix}${line_remainder}?g' \"${prepare_dir}/${uc_target_dir}/${target_file}\""
+                                eval "${my_sed} -i -e 's?^${real_target_line}\$?${comment_prefix}${line_remainder}?g' \"${prepared_dir}/${uc_target_dir}/${target_file}\""
                             fi
 
                         done
@@ -1405,7 +1405,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         # Munge the start line
                         first3_chars=$(echo "${real_start_line}" | ${my_cut} -b 1-3 | ${my_sed} -e 's/\*/\\\*/g')
                         line_remainder=$(echo "${real_start_line}" | ${my_sed} -e "s?^${first3_chars}??g")
-                        eval "${my_sed} -i -e 's?^${real_start_line}\$?${comment_prefix}${line_remainder}?g' \"${prepare_dir}/${uc_target_dir}/${target_file}\""
+                        eval "${my_sed} -i -e 's?^${real_start_line}\$?${comment_prefix}${line_remainder}?g' \"${prepared_dir}/${uc_target_dir}/${target_file}\""
                 
                         # Increment line_counter to start next pair
                         let line_counter=${line_counter}+1
@@ -1442,7 +1442,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     processing_verb="analyze"
     export source_dir
 
-    if [ -d "${script_dir}" -a -d "${prepare_dir}" -a -d "${source_dir}" ]; then
+    if [ -d "${script_dir}" -a -d "${prepared_dir}" -a -d "${source_dir}" ]; then
 
         # Setup item lists for source
         for target_dir in ${TARGETS} ; do
@@ -1450,10 +1450,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             target_dir_var=$(echo "${target_dir}" | ${my_sed} -e 's/\./_/g')
             eval "file_ext=\$${target_dir_var}_ext"
 
-            if [ -d "${prepare_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir_var}_list=\"\$(cd ${prepare_dir}/${uc_target_dir} 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)\""
+            if [ -d "${prepared_dir}/${uc_target_dir}" ]; then
+                eval "raw_${target_dir_var}_list=\"\$(cd ${prepared_dir}/${uc_target_dir} 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)\""
             else
-                echo "    WARNING:  Directory \"${prepare_dir}/${uc_target_dir}\" does not exist"
+                echo "    WARNING:  Directory \"${prepared_dir}/${uc_target_dir}\" does not exist"
             fi
     
         done
