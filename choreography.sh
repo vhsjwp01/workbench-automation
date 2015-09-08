@@ -270,7 +270,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         *)
             let in_tuxedo_group=$(${my_id} | ${my_egrep} -ci "\(\btuxedo\b\)")
 
-            if [ ${in_tuxedo_group} -eq 0 ]; then
+            if [ ${in_tuxedo_group} -gt 0 ]; then
                 exit_code=${SUCCESS}
             fi
         
