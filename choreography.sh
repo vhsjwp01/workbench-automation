@@ -463,7 +463,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         cbl_offset="       "
 
         # Default targets
-        TARGETS=$(cd "${LocationOfAssets}" 2> /dev/null && ${my_ls} -d ./* 2> /dev/null | ${my_tr} '[A-Z]' '[a-z]')
+        TARGETS=$(cd "${LocationOfAssets}" 2> /dev/null && ${my_ls} -d * 2> /dev/null | ${my_tr} '[A-Z]' '[a-z]')
 
         # Override TARGETS if ${input_targets} has been set
         if [ "${input_targets}" != "" ]; then
