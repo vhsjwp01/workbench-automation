@@ -54,7 +54,15 @@
 #                                        added data mapper file detection and
 #                                        munging for project name inclusion
 # 20150828     Jason W. Plummer          Added TARGETS modififcation based
-#                                        dependency
+#                                        dependency.  Added report alert 
+#                                        toggles
+# 20150831     Jason W. Plummer          Made library dependency detection
+#                                        more intelligent.  Added line length
+#                                        management to MWDB2ORA post ops
+# 20150908     Jason W. Plummer          Added option to disable directory
+#                                        refresh.  Added code for cleanpob
+#                                        rather than call makefile directive for
+#                                        same
 
 ################################################################################
 # DESCRIPTION
@@ -73,9 +81,22 @@
 #                           (OPTIONAL)
 # --wb_toolpath           - The ART Work Bench tool path (Default: ART 13)
 # --target_COBOL_compiler - The COBOL compiler to use    (Default: COBOL-IT)
+# --file_schemas          - The Project Name to use in reporting (OPTIONAL)
 # --rdbms_schemas         - A space or comma separated list of RDBMS schemas
 # --file_schemas          - A space or comma separated list of file schemas
+# --fatal_check           - An on/off toggle for FATAL report checking (OPTIONAL)
+# --error_check           - An on/off toggle for ERROR report checking (OPTIONAL)
+# --warning_check         - An on/off toggle for WARNING report checking (OPTIONAL)
+# --missing_check         - An on/off toggle for MISSING report checking (OPTIONAL)
+# --clean_dirs            - An on/off toggle for expunging target dirs (OPTIONAL)
 # --target_DB             - Target DataBase to use       (Default: ORACLE)
+
+USAGE="${USAGE}[ --fatal_check           <on/off toggle for FATAL report checking)         *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --error_check           <on/off toggle for ERROR report checking)         *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --warning_check         <on/off toggle for WARNING report checking)       *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --missing_check         <on/off toggle for MISSING report checking)       *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --clean_dirs            <on/off toggle for expunging target dirs)         *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --target_DB             <Target DataBase to use (Default: ORACLE)         *OPTIONAL*> ]"
 
 ################################################################################
 # CONSTANTS
@@ -93,6 +114,8 @@ ERROR=1
 NL='
 '
 
+CLEAN_DIRS="yes"
+
 STDOUT_OFFSET="    "
 
 SCRIPT_NAME="${0}"
@@ -106,6 +129,11 @@ USAGE="${USAGE}[ --input_targets         <A list of directories from which to dr
 USAGE="${USAGE}[ --wb_toolpath           <The ART Work Bench tool path (Default: ART 13)   *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --target_COBOL_compiler <The COBOL compiler to use (Default: COBOL-IT)    *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --rdbms_schemas         <A space or comma separated list of RDBMS schemas *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --fatal_check           <on/off toggle for FATAL report checking)         *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --error_check           <on/off toggle for ERROR report checking)         *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --warning_check         <on/off toggle for WARNING report checking)       *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --missing_check         <on/off toggle for MISSING report checking)       *OPTIONAL*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --clean_dirs            <on/off toggle for expunging target dirs)         *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --target_DB             <Target DataBase to use (Default: ORACLE)         *OPTIONAL*> ]"
 
 ################################################################################
@@ -138,12 +166,12 @@ f__check_command() {
     my_command="${1}"
 
     if [ "${my_command}" != "" ]; then
-        my_command_check=`unalias "${i}" 2> /dev/null ; which "${1}" 2> /dev/null`
+        my_command_check=$(unalias "${i}" 2> /dev/null ; which "${1}" 2> /dev/null)
 
         if [ "${my_command_check}" = "" ]; then
             return_code=${ERROR}
         else
-            eval my_${my_command}="${my_command_check}"
+            eval "my_${my_command}=\"${my_command_check}\""
         fi
 
     else
@@ -162,8 +190,8 @@ add_to_array() {
     return_code=${SUCCESS}
 
     if [ "${1}" != "" -a "${2}" != "" ]; then
-        eval let element_count=\${#${1}[@]}
-        eval ${1}[$element_count]="${2}"
+        eval "let element_count=\${#${1}[@]}"
+        eval "${1}[$element_count]=${2}"
     else
         /bin/false
     fi
@@ -179,12 +207,12 @@ add_to_list() {
     return_code=${SUCCESS}
 
     if [ "${1}" != "" -a "${2}" != "" ]; then
-        is_empty=`eval "echo \\$${1}"`
+        eval "is_empty=\$${1}"
 
         if [ "${is_empty}" = "" ]; then
             eval "${1}=\"${2}\""
         else
-            eval "${1}=\"`echo \\"\\$${1}\\"` ${2}\""
+            eval "${1}=\"\$${1} ${2}\""
         fi
 
     else
@@ -206,7 +234,7 @@ add_to_list() {
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-    for command in awk cp cut diff dirname egrep find ls make mkdir pwd rm rsync sed sort tr uname wc ; do
+    for command in awk basename cp cut diff dirname egrep find ls make mkdir pcregrep pwd rm rsync sed sort tr uname wc ; do
         unalias ${command} > /dev/null 2>&1
         f__check_command "${command}"
 
@@ -229,15 +257,15 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     while (( "${#}"  )); do
-        key=`echo "${1}" | ${my_sed} -e 's?\`??g'`
-        value=`echo "${2}" | ${my_sed} -e 's?\`??g'`
+        key=$(echo "${1}" | ${my_sed} -e 's?\)??g')
+        value=$(echo "${2}" | ${my_sed} -e 's?\)??g')
 
         case "${key}" in
 
-            --wb_workdir|--project_name|--input_targets|--wb_toolpath|--target_COBOL_compiler|--target_DB)
-                key=`echo "${key}" | ${my_sed} -e 's?^--??g'`
+            --wb_workdir|--project_name|--input_targets|--wb_toolpath|--target_COBOL_compiler|--target_DB|--fatal_check|--error_check|--warning_check|--missing_check|--clean_dirs)
+                key=$(echo "${key}" | ${my_sed} -e 's?^--??g')
 
-                if [ "${value}" != ""  ]; then
+                if [ "${value}" != "" ]; then
                     eval "${key}=\"${value}\""
                     shift
                     shift
@@ -250,10 +278,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             ;;
 
             --rdbms_schemas|--file_schemas)
-                key=`echo "${key}" | ${my_sed} -e 's?^--??g'`
+                key=$(echo "${key}" | ${my_sed} -e 's?^--??g')
 
-                if [ "${value}" != ""  ]; then
-                    value=`echo "${value}" | ${my_sed} 's/,/\ /g'`
+                if [ "${value}" != "" ]; then
+                    value=$(echo "${value}" | ${my_sed} 's/,/\ /g')
                     eval "${key}=\"${value}\""
                     shift
                     shift
@@ -296,9 +324,17 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     fi
 
-    if [ "${file_schemas}" = "" ]; then
-        err_msg="No file schema was provided.  Please set file schema with --file_schemas \"<schema name>\""
-        exit_code=${ERROR}
+    if [ "${clean_dirs}" != "" ]; then
+        lc_clean_dirs=$(echo "${clean_dirs}" | ${my_tr} '[A-Z]' '[a-z]')
+
+        case ${lc_clean_dirs} in 
+
+            n|no|false)
+                CLEAN_DIRS="no"
+            ;;
+
+        esac
+
     fi
 
 fi
@@ -307,11 +343,11 @@ fi
 # WHY:  Cannot proceed otherwise
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
-    script_dirname=`${my_dirname} "${SCRIPT_NAME}"`
-    SCRIPT_BASE=`cd "${script_dirname}" && ${my_pwd}`
+    script_dirname=$(${my_dirname} "${SCRIPT_NAME}")
+    SCRIPT_BASE=$(cd "${script_dirname}" && ${my_pwd})
     
-    os_type=`${my_uname} -s | ${my_tr} '[A-Z]' '[a-z]'`
-    cpu_arch=`${my_uname} -m | ${my_tr} '[A-Z]' '[a-z]' | ${my_sed} -e 's/i[345]86/i686/g'`
+    os_type=$(${my_uname} -s | ${my_tr} '[A-Z]' '[a-z]')
+    cpu_arch=$(${my_uname} -m | ${my_tr} '[A-Z]' '[a-z]' | ${my_sed} -e 's/i[345]86/i686/g')
 
     case ${os_type} in
 
@@ -345,28 +381,31 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-
         # Known file extensions (lower case)
-        sysin_ext="sysin"
-        cics_ext="cbl"
-        proc_ext="proc"
-        jcl_ext="jcl"
-        copy_ext="cpy"
-        map_ext="bms"
-        ddl_ext="sql"
         batch_ext="cbl"
+        cics_ext="cbl"
+        copy_ext="cpy"
+        ddl_ext="sql"
+        jcl_ext="jcl"
+        map_ext="bms"
+        proc_ext="proc"
         sibc_cardliba_ext="sysin"
+        sysin_ext="sysin"
+
+        all_file_extensions="${batch_ext} ${cics_ext} ${copy_ext} ${ddl_ext} ${jcl_ext} ${map_ext} ${proc_ext} ${sibc_cardliba_ext} ${sysin_ext}"
+
+        file_extensions=$(for i in ${all_file_extensions}; do echo "${i}" ; done | ${my_sort} -u)
 
         # Known file extensions (upper case)
-        uc_sibc_cardliba_ext=`echo "${sibc_cardliba_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
-        uc_sysin_ext=`echo "${sysin_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
-        uc_cics_ext=`echo "${cics_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
-        uc_proc_ext=`echo "${proc_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
-        uc_jcl_ext=`echo "${jcl_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
-        uc_copy_ext=`echo "${copy_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
-        uc_map_ext=`echo "${map_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
-        uc_ddl_ext=`echo "${ddl_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
-        uc_batch_ext=`echo "${batch_ext}" | ${my_tr} '[a-z]' '[A-Z]'`
+        uc_batch_ext=$(echo "${batch_ext}" | ${my_tr} '[a-z]' '[A-Z]')
+        uc_cics_ext=$(echo "${cics_ext}" | ${my_tr} '[a-z]' '[A-Z]')
+        uc_copy_ext=$(echo "${copy_ext}" | ${my_tr} '[a-z]' '[A-Z]')
+        uc_ddl_ext=$(echo "${ddl_ext}" | ${my_tr} '[a-z]' '[A-Z]')
+        uc_jcl_ext=$(echo "${jcl_ext}" | ${my_tr} '[a-z]' '[A-Z]')
+        uc_map_ext=$(echo "${map_ext}" | ${my_tr} '[a-z]' '[A-Z]')
+        uc_proc_ext=$(echo "${proc_ext}" | ${my_tr} '[a-z]' '[A-Z]')
+        uc_sibc_cardliba_ext=$(echo "${sibc_cardliba_ext}" | ${my_tr} '[a-z]' '[A-Z]')
+        uc_sysin_ext=$(echo "${sysin_ext}" | ${my_tr} '[a-z]' '[A-Z]')
 
         # This directory houses eclipse/ART WB harvested script assets
         WB_AUTOMATE="${wb_workdir}"
@@ -379,7 +418,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             ProjectName="${project_name}"
         fi
 
-        ucProjectName=`echo "${ProjectName}" | ${my_tr} '[a-z]' '[A-Z]'`
+        ucProjectName=$(echo "${ProjectName}" | ${my_tr} '[a-z]' '[A-Z]')
 
         # Set the default Work Bench tool path
         WorkbenchPath="/opt/tuxedo/art_wb12.1.3.0.0"
@@ -421,9 +460,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         ParallelNum=1
         
         ksh_offset="       "
+        cbl_offset="       "
 
         # Default targets
-        TARGETS=`cd "${LocationOfAssets}" 2> /dev/null && ${my_ls} -d * 2> /dev/null | ${my_tr} '[A-Z]' '[a-z]'`
+        TARGETS=$(cd "${LocationOfAssets}" 2> /dev/null && ${my_ls} -d ./* 2> /dev/null | ${my_tr} '[A-Z]' '[a-z]')
 
         # Override TARGETS if ${input_targets} has been set
         if [ "${input_targets}" != "" ]; then
@@ -450,14 +490,19 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Create ${script_dir}/project.txt
         echo "ProjectName=${ProjectName}"                  > "${script_dir}/project.txt"
-        echo "ParallelNum=${ParallelNum}"                 >> "${script_dir}/project.txt"
-        echo "WorkbenchPath=${WorkbenchPath}"             >> "${script_dir}/project.txt"
-        echo "LocationOfAssets=${LocationOfAssets}"       >> "${script_dir}/project.txt"
-        echo "WBLOGLEVEL=${WBLOGLEVEL}"                   >> "${script_dir}/project.txt"
-        echo "WBEXITONERROR=${WBEXITONERROR}"             >> "${script_dir}/project.txt"
-        echo "OnlyParsingPhase=${OnlyParsingPhase}"       >> "${script_dir}/project.txt"
-        echo "TargetCOBOLCompiler=${TargetCOBOLCompiler}" >> "${script_dir}/project.txt"
-        echo "TargetDataBase=${TargetDataBase}"           >> "${script_dir}/project.txt"
+
+        for attrib in ParallelNum WorkbenchPath LocationOfAssets WBLOGLEVEL WBEXITONERROR OnlyParsingPhase TargetCOBOLCompiler TargetDataBase ; do
+            eval "echo ${attrib}=\"\$${attrib}\" >> \"${script_dir}/project.txt\""
+        done
+
+        #echo "ParallelNum=${ParallelNum}"                 >> "${script_dir}/project.txt"
+        #echo "WorkbenchPath=${WorkbenchPath}"             >> "${script_dir}/project.txt"
+        #echo "LocationOfAssets=${LocationOfAssets}"       >> "${script_dir}/project.txt"
+        #echo "WBLOGLEVEL=${WBLOGLEVEL}"                   >> "${script_dir}/project.txt"
+        #echo "WBEXITONERROR=${WBEXITONERROR}"             >> "${script_dir}/project.txt"
+        #echo "OnlyParsingPhase=${OnlyParsingPhase}"       >> "${script_dir}/project.txt"
+        #echo "TargetCOBOLCompiler=${TargetCOBOLCompiler}" >> "${script_dir}/project.txt"
+        #echo "TargetDataBase=${TargetDataBase}"           >> "${script_dir}/project.txt"
 
         # Create ${param_dir}/system.desc from template
         if [ -e "${param_dir}/system.desc.template" ]; then
@@ -470,84 +515,46 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             ${my_cp} -p "${param_dir}/system.desc.template" "${param_dir}/system.desc"
             ${my_sed} -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
 
-            # Enable targets based on whether or files exist in those targets
+            # Enable targets based on whether or not files exist in those targets
             for target_dir in ${TARGETS} ; do
-                uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-                target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+                uc_target_dir=$(echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]')
+                target_dir_var=$(echo "${target_dir}" | ${my_sed} -e 's/\./_/g')
                 eval "file_ext=\$${target_dir_var}_ext"
 
-                file_count=`${my_find} ${source_dir}/${uc_target_dir}/*.${file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}'`
+                let file_count=$(${my_find} "${source_dir}/${uc_target_dir}"/*.${file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}')
 
                 if [ ${file_count} -gt 0 ]; then
-                    let is_commented_out=`${my_egrep} -c "^%directory \"${uc_target_dir}\" type" "${param_dir}/system.desc"`
+                    let is_commented_out=$(${my_egrep} -c "^%directory \"${uc_target_dir}\" type" "${param_dir}/system.desc")
 
                     if [ ${is_commented_out} -gt 0 ]; then
                         begin_text="% BEGIN: ${uc_target_dir}-DIRECTORY-TARGETS"
                         end_text="% END: ${uc_target_dir}-DIRECTORY-TARGETS"
                         ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
-                    fi
 
-                    # Clear out begin and end text vars so that library dependencies can be turned on 
-                    begin_text=""
-                    end_text=""
+                        # Find any Library dependencies
+                        library_dependencies=$(${my_egrep} -A1 "directory.*\"${uc_target_dir}\"" "${param_dir}/system.desc" | ${my_egrep} "libraries" | ${my_sed} -e 's/[^A-Z,]//g' -e 's/,/\ /g')
 
-                    case ${target_dir} in
+                        for library_dependency in ${library_dependencies} ; do
+                            library_dependency_var=$(echo "${library_dependency}" | ${my_sed} -e 's/\./_/g' | ${my_tr} '[A-Z]' '[a-z]')
+                            eval "dep_file_ext=\$${library_dependency_var}_ext"
+                            let dep_file_count=$(${my_find} "${source_dir}/${library_dependency}"/*.${dep_file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}')
 
-                        batch|cics)
+                            if [ ${dep_file_count} -gt 0 ]; then
+                                begin_text="% BEGIN: ${library_dependency}-DIRECTORY-TARGETS"
+                                end_text="% END: ${library_dependency}-DIRECTORY-TARGETS"
+                                ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
 
-                            # Must also include COPY files with BATCH and CICS targets
-                            begin_text="% BEGIN: COPY-DIRECTORY-TARGETS"
-                            end_text="% END: COPY-DIRECTORY-TARGETS"
+                                # Now add to TARGETS if absent
+                                let is_a_target=$(echo "${TARGETS}" | ${my_sed} -e 's/\./_/g' | ${my_egrep} -c '\bcopy\b')
 
-                            # Now set values in {param_dir}/version.mk
-                            case ${target_dir} in 
+                                if [ ${is_a_target} -eq 0 ]; then
+                                    add_to_list TARGETS library_dependency
+                                fi
 
-                                batch)
-                                    ${my_sed} -i -e 's/^Find_Prg =.*$/Find_Prg = BATCH/g' "${param_dir}/version.mk"
-                                ;;
-
-                                cics)
-                                    ${my_sed} -i -e 's/^Find_Tpr =.*$/Find_Tpr = CICS/g' "${param_dir}/version.mk"
-                                ;;
-
-                            esac
-
-                            # Now add 'copy' to TARGETS if absent
-                            let is_present=`echo "${TARGETS}" | ${my_sed} -e 's/\./_/g' | ${my_egrep} -c '\bcopy\b'`
-
-                            if [ ${is_present} -eq 0 ]; then
-                                add_to_list TARGETS copy
                             fi
 
-                        ;;
+                        done
 
-                        jcl)
-                            # Must also include PROC files with JCL target
-                            begin_text="% BEGIN: PROC-DIRECTORY-TARGETS"
-                            end_text="% END: PROC-DIRECTORY-TARGETS"
-
-                            # Now set values in {param_dir}/version.mk
-                            ${my_sed} -i -e 's/^Find_Jcl =.*$/Find_Jcl = JCL/g' "${param_dir}/version.mk"
-
-                            # Now add 'proc' to TARGETS if absent
-                            let is_present=`echo "${TARGETS}" | ${my_sed} -e 's/\./_/g' |${my_egrep} -c '\bproc\b'`
-
-                            if [ ${is_present} -eq 0 ]; then
-                                add_to_list TARGETS proc
-                            fi
-
-                        ;;
-
-                        map)
-                            # Now set values in {param_dir}/version.mk
-                            ${my_sed} -i -e 's/^Find_Map =.*$/Find_Map = MAP/g' "${param_dir}/version.mk"
-                        ;;
-
-                    esac
-
-                    # Turn these descriptions on in the ${param_dir}/system.desc file
-                    if [ "${begin_text}" != "" -a "${end_text}" != "" ]; then
-                        ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
                     fi
 
                 fi
@@ -555,14 +562,23 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             done
 
             if [ -e "${param_dir}/version.mk" ]; then
-                # Enable RDBMS and file schemas if set
+
+                # Prep SCHEMA* variables for detection
                 ${my_sed} -i -e 's/^#\(RDBMS_SCHEMAS =\).*$/\1/g' "${param_dir}/version.mk"
-                ${my_sed} -i -e "s/^\(FILE_SCHEMAS =\).*\$/\1 ${file_schemas}/g" "${param_dir}/version.mk"
+                ${my_sed} -i -e "s/^#\(FILE_SCHEMAS =\).*\$/\1/g" "${param_dir}/version.mk"
                 
+                # If found, set value, otherwise comment out
                 if [ "${rdbms_schemas}" != "" ]; then
                     ${my_sed} -i -e "s/^\(RDBMS_SCHEMAS =\).*\$/\1 ${rdbms_schemas}/g" "${param_dir}/version.mk"
                 else
                     ${my_sed} -i -e 's/^\(RDBMS_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
+                fi
+
+                # If found, set value, otherwise comment out
+                if [ "${file_schemas}" != "" ]; then
+                    ${my_sed} -i -e "s/^\(FILE_SCHEMAS =\).*\$/\1 ${file_schemas}/g" "${param_dir}/version.mk"
+                else
+                    ${my_sed} -i -e 's/^\(FILE_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
                 fi
 
             else
@@ -588,21 +604,24 @@ fi
 # WHY:  Cannot proceed otherwise
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
-    data_map_dir="${param_dir}/file"
 
-    for file_schema in ${file_schemas} ; do
+    if [ "${file_schemas}" != "" ]; then
+        data_map_dir="${param_dir}/file"
         
+        for file_schema in ${file_schemas} ; do
+            
+            if [ ! -e "${data_map_dir}/mapper-${file_schema}.re" -o ! -e "${data_map_dir}/Datamap-${file_schema}.re" ]; then
+                echo "    ERROR:  Could not locate both \"${data_map_dir}/mapper-${file_schema}.re\" and \"${data_map_dir}/Datamap-${file_schema}.re\" mapper files"
+                let exit_code=${exit_code}+1
+            else 
 
-        if [ ! -e "${data_map_dir}/mapper-${file_schema}.re" -o ! -e "${data_map_dir}/Datamap-${file_schema}.re" ]; then
-            echo "    ERROR:  Could not locate both \"${data_map_dir}/mapper-${file_schema}.re\" and \"${data_map_dir}/Datamap-${file_schema}.re\" mapper files"
-            let exit_code=${exit_code}+1
-        else 
+                # Fix Project name in mapper files
+                ${my_sed} -i -e "s?^\(data map ${file_schema}-map system cat::\).*\$?\1${ProjectName}?g" "${data_map_dir}/Datamap-${file_schema}.re"
+            fi
 
-            # Fix Project name in mapper files
-            ${my_sed} -i -e "s?^\(data map ${file_schema}-map system cat::\).*\$?\1${ProjectName}?g" "${data_map_dir}/Datamap-${file_schema}.re"
-        fi
+        done
 
-    done
+    fi
 
 fi
 
@@ -622,12 +641,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Setup item lists for import
         for target_dir in ${TARGETS} ; do
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+            uc_target_dir=$(echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]')
+            target_dir_var=$(echo "${target_dir}" | ${my_sed} -e 's/\./_/g')
             eval "file_ext=\$${target_dir_var}_ext"
 
             if [ -d "${input_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir_var}_list=\"`cd ${input_dir}/${uc_target_dir} 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`\""
+                eval "raw_${target_dir_var}_list=\"\$(cd \"${input_dir}/${uc_target_dir}\" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)\""
             else
                 echo "    WARNING:  Directory \"${input_dir}/${uc_target_dir}\" does not exist"
             fi
@@ -635,23 +654,27 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         done
 
         for list_name in ${TARGETS} ; do
-            list_name_var=`echo "${list_name}" | ${my_sed} -e 's/\./_/g'`
+            list_name_var=$(echo "${list_name}" | ${my_sed} -e 's/\./_/g')
             clean_list="${list_name_var}_list"
             eval "${clean_list}=\"\""
+            raw_list="raw_${list_name_var}_list"
         
-            for list_item in `eval "echo -ne \\"\\$raw_${list_name_var}_list\\""` ; do
+            for list_item in $(eval "echo \$${raw_list}") ; do
                 eval "add_to_list ${clean_list} \"${list_item}\""
             done
 
             eval "export ${clean_list}"
         done
 
-        for target_dir in ${TARGETS} ; do
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            echo "    INFO:  Refreshing ${processing_verb} directory \"${import_dir}/${uc_target_dir}\""
-            ${my_rm} -rf "${import_dir}/${uc_target_dir}"
-            ${my_mkdir} -p "${import_dir}/${uc_target_dir}"
-        done
+        if [ "${CLEAN_DIRS}" = "yes" ]; then
+
+            for target_dir in ${TARGETS} ; do
+                uc_target_dir=$(echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]')
+                echo "    INFO:  Refreshing ${processing_verb} directory \"${import_dir}/${uc_target_dir}\""
+                ${my_rm} -rf "${import_dir}/${uc_target_dir}"
+                ${my_mkdir} -p "${import_dir}/${uc_target_dir}"
+            done
+        fi
 
         this_makefile="${script_dir}/makefile.${processing_verb}"
 
@@ -693,12 +716,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Find the files
         for target_dir in ${TARGETS} ; do
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+            uc_target_dir=$(echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]')
+            target_dir_var=$(echo "${target_dir}" | ${my_sed} -e 's/\./_/g')
             eval "file_ext=\$${target_dir_var}_ext"
 
             if [ -d "${import_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir_var}_list=\"`cd ${import_dir}/${uc_target_dir} 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`\""
+                eval "raw_${target_dir_var}_list=\"\$(cd \"${import_dir}/${uc_target_dir}\" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)\""
             else
                 echo "    WARNING:  Directory \"${import_dir}/${uc_target_dir}\" does not exist"
             fi
@@ -707,11 +730,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Build a list
         for list_name in ${TARGETS} ; do
-            list_name_var=`echo "${list_name}" | ${my_sed} -e 's/\./_/g'`
+            list_name_var=$(echo "${list_name}" | ${my_sed} -e 's/\./_/g')
             clean_list="${list_name_var}_list"
             eval "${clean_list}=\"\""
+            raw_list="raw_${list_name_var}_list"
         
-            for list_item in `eval "echo -ne \\"\\$raw_${list_name_var}_list\\""` ; do
+            for list_item in $(eval "echo \$${raw_list}") ; do
                 eval "add_to_list ${clean_list} \"${list_item}\""
             done
 
@@ -721,30 +745,34 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # Clean all *POSSIBLE* target directories in prepared, source, and target under
         # ${WB_AUTOMATE}
 
-        for refresh_dir in ${refresh_dirs} ; do
+        if [ "${CLEAN_DIRS}" = "yes" ]; then
 
-            for possible_target in ${possible_targets} ; do
-                uc_possible_target=`echo "${possible_target}" | ${my_tr} '[a-z]' '[A-Z]'`
+            for refresh_dir in ${refresh_dirs} ; do
 
-                if [ -d "${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}" ]; then
-                    echo "    INFO:  Refreshing ${refresh_dir} directory \"${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}\""
-                    ${my_rm} -rf "${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}"
-                fi
+                for possible_target in ${possible_targets} ; do
+                    uc_possible_target=$(echo "${possible_target}" | ${my_tr} '[a-z]' '[A-Z]')
+
+                    if [ -d "${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}" ]; then
+                        echo "    INFO:  Refreshing ${refresh_dir} directory \"${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}\""
+                        ${my_rm} -rf "${WB_AUTOMATE}/${refresh_dir}/${uc_possible_target}"
+                    fi
+
+                done
 
             done
 
-        done
+            # Flush the target directory outright
+            if [ -d "${WB_AUTOMATE}/target" ]; then
+                echo "    INFO:  Refreshing target directory \"${WB_AUTOMATE}/target\""
+                ${my_rm} -rf "${WB_AUTOMATE}/target"/*
+            fi
 
-        # Flush the target directory outright
-        if [ -d "${WB_AUTOMATE}/target" ]; then
-            echo "    INFO:  Refreshing target directory \"${WB_AUTOMATE}/target\""
-            ${my_rm} -rf "${WB_AUTOMATE}/target"/*
-        fi
+            # Flush the logs
+            if [ -d "${WB_AUTOMATE}/Logs" ]; then
+                echo "    INFO:  Refreshing Log directory \"${WB_AUTOMATE}/Logs\""
+                ${my_rm} -rf "${WB_AUTOMATE}/Logs"/*
+            fi
 
-        # Flush the logs
-        if [ -d "${WB_AUTOMATE}/Logs" ]; then
-            echo "    INFO:  Refreshing Log directory \"${WB_AUTOMATE}/Logs\""
-            ${my_rm} -rf "${WB_AUTOMATE}/Logs"/*
         fi
 
         this_makefile="${script_dir}/makefile.${processing_verb}"
@@ -752,47 +780,47 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # Explcitly export the uppercase filenames (with lowercase extensions) file lists
         # if defined
         if [ "${copy_list}" != "" ]; then
-            export uc_copy_list=`echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g"`
+            export uc_copy_list=$(echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g")
             add_to_list real_targets "copy"
         fi
 
         if [ "${sysin_list}" != "" ]; then
-            export uc_sysin_list=`echo "${sysin_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
+            export uc_sysin_list=$(echo "${sysin_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g")
             add_to_list real_targets "sysin"
         fi
 
         if [ "${sibc_cardliba_list}" != "" ]; then
-            export uc_sibc_cardliba_list=`echo "${sibc_cardliba_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sibc_cardliba_ext}/\.${sibc_cardliba_ext}/g"`
+            export uc_sibc_cardliba_list=$(echo "${sibc_cardliba_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sibc_cardliba_ext}/\.${sibc_cardliba_ext}/g")
             add_to_list real_targets "sibc.cardliba"
         fi
 
         if [ "${batch_list}" != "" ]; then
-            export uc_batch_list=`echo "${batch_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_batch_ext}/\.${batch_ext}/g"`
+            export uc_batch_list=$(echo "${batch_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_batch_ext}/\.${batch_ext}/g")
             add_to_list real_targets "batch"
         fi
 
         if [ "${cics_list}" != "" ]; then
-            export uc_cics_list=`echo "${cics_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_cics_ext}/\.${cics_ext}/g"`
+            export uc_cics_list=$(echo "${cics_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_cics_ext}/\.${cics_ext}/g")
             add_to_list real_targets "cics"
         fi
 
         if [ "${ddl_list}" != "" ]; then
-            export uc_ddl_list=`echo "${ddl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_ddl_ext}/\.${ddl_ext}/g"`
+            export uc_ddl_list=$(echo "${ddl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_ddl_ext}/\.${ddl_ext}/g")
             add_to_list real_targets "ddl"
         fi
 
         if [ "${map_list}" != "" ]; then
-            export uc_map_list=`echo "${map_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_map_ext}/\.${map_ext}/g"`
+            export uc_map_list=$(echo "${map_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_map_ext}/\.${map_ext}/g")
             add_to_list real_targets "map"
         fi
 
         if [ "${jcl_list}" != "" ]; then
-            export uc_jcl_list=`echo "${jcl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_jcl_ext}/\.${jcl_ext}/g"`
+            export uc_jcl_list=$(echo "${jcl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_jcl_ext}/\.${jcl_ext}/g")
             add_to_list real_targets "jcl"
         fi
 
         if [ "${proc_list}" != "" ]; then
-            export uc_proc_list=`echo "${proc_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_proc_ext}/\.${proc_ext}/g"`
+            export uc_proc_list=$(echo "${proc_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_proc_ext}/\.${proc_ext}/g")
             add_to_list real_targets "proc"
         fi
 
@@ -800,7 +828,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         for refresh_dir in ${refresh_dirs} ; do
 
             for real_target in ${real_targets} ; do
-                uc_real_target=`echo "${real_target}" | ${my_tr} '[a-z]' '[A-Z]'`
+                uc_real_target=$(echo "${real_target}" | ${my_tr} '[a-z]' '[A-Z]')
 
                 if [ ! -d "${WB_AUTOMATE}/${refresh_dir}/${uc_real_target}" ]; then
                     echo "    INFO:  Creating directory \"${WB_AUTOMATE}/${refresh_dir}/${uc_real_target}\""
@@ -847,18 +875,24 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     export preconvert_dir
 
     for target_dir in ${TARGETS} ; do
-        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+        target_dir_var=$(echo "${target_dir}" | ${my_sed} -e 's/\./_/g')
         eval "file_ext=\$${target_dir_var}_ext"
-        uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+        uc_target_dir=$(echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]')
 
         # Here we slurp in each file in the target directory and plow through each
         # line skipping comment lines
-        target_files=`cd "${prepare_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
+        target_files=$(cd "${prepare_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)
         tmp_dir="/tmp/${USER}/$$"
 
         if [ ! -d "${tmp_dir}" ]; then
             ${my_mkdir} -p "${tmp_dir}"
         fi
+
+        ########################################################################
+        ####
+        #### BEGIN Regular expression translation via PERL program processor.pl
+        ####
+        ########################################################################
 
         for target_file in ${target_files} ; do
             echo -ne "    INFO:  Pre-Processing \"${prepare_dir}/${uc_target_dir}/${target_file}\" for regular expression translation ... "
@@ -867,7 +901,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             # Read in regex lines from "${preconvert_dir}/${uc_target_dir}"
             if [ -e "${preconvert_dir}/${uc_target_dir}" -a -s "${preconvert_dir}/${uc_target_dir}" ]; then
-                ${SCRIPT_BASE}/processor.pl --input_file "${prepare_dir}/${uc_target_dir}/${target_file}" --output_file "${tmp_file}" --data_type "${target_dir}" --regex_file "${preconvert_dir}/${uc_target_dir}" --mode "pre"
+                "${SCRIPT_BASE}"/processor.pl --input_file "${prepare_dir}/${uc_target_dir}/${target_file}" --output_file "${tmp_file}" --data_type "${target_dir}" --regex_file "${preconvert_dir}/${uc_target_dir}" --mode "pre"
                         
                 # Move ${tmp_file} to ${prepare_dir}/${uc_target_dir}/${target_file}
                 if [ -e "${tmp_file}" -a -s "${tmp_file}" ]; then
@@ -894,43 +928,61 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         done
 
-        # Extra pre-processing by type
+        ########################################################################
+        ####
+        #### END Regular expression translation via PERL program processor.pl
+        ####
+        ########################################################################
+
+        ########################################################################
+        ####
+        #### BEGIN Extra pre-processing by type
+        ####
+        ########################################################################
+
         case ${target_dir} in 
 
             copy|batch|cics)
                 comment_prefix='      *'
                 echo "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target_dir} files for ASIS translation:"
-                target_files=`cd "${prepare_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
+                target_files=$(cd "${prepare_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)
                 
                 for target_file in ${target_files} ; do
-                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for ASIS keyword munging ... "
+
+                    ################################################################
+                    ####
+                    #### BEGIN ASIS keyword translation
+                    ####
+                    ################################################################
+
+                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for ASIS keyword translation ... "
                     # This command sequence should yield the proper triplet of info
                     valid_lines=($(${my_egrep} -n "EXEC CICS RECEIVE|ASIS|END-EXEC" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -A2 "EXEC CICS RECEIVE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
                     let line_counter=0
                 
                     # Valid inputs occur in threes: a line with "EXEC CICS RECEIVE", followed by a line with "ASIS", followed by "END-EXEC"
                     while [ ${line_counter} -lt ${#valid_lines[@]} ]; do
-                        exec_line_number=`echo "${valid_lines[$line_counter]}" | ${my_awk} -F':' '{print $1}'`
-                        real_exec_line=`echo "${valid_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' -e "s/^${exec_line_number}://g"`
-                        let is_exec_line=`echo "${real_exec_line}" | ${my_egrep} -c "EXEC CICS RECEIVE"`
+                        exec_line_number=$(echo "${valid_lines[$line_counter]}" | ${my_awk} -F':' '{print $1}')
+                        real_exec_line=$(echo "${valid_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' -e "s/^${exec_line_number}://g")
+                        let is_exec_line=$(echo "${real_exec_line}" | ${my_egrep} -c "EXEC CICS RECEIVE")
                 
                         let line_counter=${line_counter}+1
                 
-                        asis_line_number=`echo "${valid_lines[$line_counter]}" | ${my_awk} -F':' '{print $1}'`
-                        real_asis_line=`echo "${valid_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' -e "s/^${asis_line_number}://g"`
-                        let is_asis_line=`echo "${real_asis_line}" | ${my_egrep} -c "ASIS"`
+                        asis_line_number=$(echo "${valid_lines[$line_counter]}" | ${my_awk} -F':' '{print $1}')
+                        real_asis_line=$(echo "${valid_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' -e "s/^${asis_line_number}://g")
+                        let is_asis_line=$(echo "${real_asis_line}" | ${my_egrep} -c "ASIS")
                 
                         let line_counter=${line_counter}+1
                 
-                        end_line_number=`echo "${valid_lines[$line_counter]}" | ${my_awk} -F':' '{print $1}'`
-                        real_end_line=`echo "${valid_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' -e "s/^${end_line_number}://g"`
-                        let is_end_line=`echo "${real_end_line}" | ${my_egrep} -c "END-EXEC"`
+                        end_line_number=$(echo "${valid_lines[$line_counter]}" | ${my_awk} -F':' '{print $1}')
+                        real_end_line=$(echo "${valid_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' -e "s/^${end_line_number}://g")
+                        let is_end_line=$(echo "${real_end_line}" | ${my_egrep} -c "END-EXEC")
                 
                         # If all three tests are equal to 1, then we found the properly ordered triplet
                         # And we need to comment out the line number containing ASIS
                         if [ ${is_exec_line} -eq 1 -a ${is_asis_line} -eq 1 -a ${is_end_line} -eq 1 ]; then
-                            line_prefix=`echo "${real_asis_line}" | ${my_cut} -b 1-7`
-                            line_remainder=`echo "${real_asis_line}" | ${my_sed} -e "s/^${line_prefix}//g"`
+                            line_prefix=$(echo "${real_asis_line}" | ${my_cut} -b 1-7)
+                            line_remainder=$(echo "${real_asis_line}" | ${my_sed} -e "s/^${line_prefix}//g")
                             ${my_sed} -i -e "${asis_line_number}s/^${real_asis_line}/${comment_prefix}${line_remainder}/g" "${prepare_dir}/${uc_target_dir}/${target_file}"
                         fi
 
@@ -938,68 +990,270 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     done
 
                     echo "DONE"
+
+                    ################################################################
+                    ####
+                    #### END ASIS keyword translation
+                    ####
+                    ################################################################
+
+                    ################################################################
+                    ####
+                    #### BEGIN IBCABEND keyword translation
+                    ####
+                    ################################################################
+
+                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for IBCABEND filename translation ... "
+                    ibcabend_lines=$(${my_egrep} -n "\bCOPY\ *IBCABEND\." "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_sed} -e 's?\ ?:ZZqC:?g')
+
+                    for ibcabend_line in ${ibcabend_lines} ; do
+                        ibcabend_line=$(echo "${ibcabend_line}" | ${my_sed} -e 's?:ZZqC:?\ ?g')
+
+                        let has_cpy_suffix=$(echo "${ibcabend_line}" | ${my_egrep} -c "IBCABEND\.cpy\.")
+
+                        if [ ${has_cpy_suffix} -eq 0 ]; then
+                            this_line=$(echo "${ibcabend_line}" | ${my_awk} -F':' '{print $1}')
+                            ${my_sed} -i -e "${this_line}s?^\(.*COPY\) *\(IBCABEND\)\.\(.*\)?\1\\${NL}${offset}\2\.cpy\.\3?g" "{prepare_dir}/${uc_target_dir}/${target_file}"
+                        fi
+
+                    done
+
+                    echo "DONE"
+
+                    ################################################################
+                    ####
+                    #### END IBCABEND keyword translation
+                    ####
+                    ################################################################
+
+                    ################################################################
+                    ####
+                    #### BEGIN C1MATCHI keyword translation
+                    ####
+                    ################################################################
+
+                    # MULTILINE GREP!!!!
+                    # egrep -n "^.*$" /tmp/junk | pcregrep -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | sort -rn
+                    # Must process in reverse order to maintain line number
+
+                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for C1MATCHI keyword translation ... "
+                    c1matchi_lines=$(${my_egrep} -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_pcregrep} -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
+
+                    for c1matchi_line in ${c1matchi_lines} ; do
+                        real_line=$(echo "${c1matchi_line}" | ${my_sed} -e 's/:ZZqC:/\ /g')
+                        start_line=$(echo "${real_line}" | ${my_egrep} "\bEXEC\b" | ${my_egrep} -v "\bEND\-EXEC\b\.")
+                        end_line=$(echo "${real_line}" | ${my_egrep} "\bEND\-EXEC\.\b")
+
+                        if [ "${start_line}" != "" ]; then
+                            first_line_number=$(echo "${start_line}" | ${my_awk} -F ':' '{print $1}')
+                            first_line=$(echo "${start_line}" | ${my_sed} -e "s/^${first_line_number}://g")
+                        fi
+
+                        if [ "${end_line}" != "" ]; then
+                            last_line_number=$(echo "${end_line}" | ${my_awk} -F ':' '{print $1}')
+                            last_line=$(echo "${end_line}" | ${my_sed} -e "s/^${last_line_number}://g")
+                        fi
+
+                        if [ "${first_line}" != "" -a "${last_line}" != "" ]; then
+
+                            # Change the last line to the proper sequence
+                            let delta=${last_line_number}-${first_line_number}
+                            ${my_sed} -i -e "${last_line_number}s?^${last_line}\$?${cbl_offset}CALL 'c1matchi' USING\\${NL}${cbl_offset}${cbl_offset}P9IN P9OUT P9AUDIT\.?g" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                            let delta_counter=1
+
+                            # Now delete the rest
+                            while [ ${delta_counter} -le ${delta} ]; do
+                                let this_line_number=${last_line_number}-${delta_counter}
+                                ${my_sed} -i -e "${this_line_number}d" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                                let delta_counter=${delta_counter}+1
+                            done
+
+                            start_line=""
+                            end_line=""
+                            first_line_number=""
+                            first_line=""
+                            last_line_number=""
+                            last_line=""
+                        fi
+
+                    done
+
+                    echo "DONE"
+
+                    ################################################################
+                    ####
+                    #### END C1MATCHI keyword translation
+                    ####
+                    ################################################################
+
+                    ################################################################
+                    ####
+                    #### BEGIN DUMP TRANSACTION keyword translation
+                    ####
+                    ################################################################
+
+                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for DUMP TRANSACTION keyword translation ... "
+                    dump_lines=$(${my_egrep} -n "DUMP" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_sed} -e 's?\ ?:ZZqC:?g')
+                    
+                    for dump_line in ${dump_lines} ; do
+                        let add_transaction=0
+                        dump_line=$(echo "${dump_line}" | ${my_sed} -e 's?:ZZqC:?\ ?g')
+                        let has_transaction_in_it=$(echo "${dump_line}" | ${my_egrep} -c "\bTRANSACTION\b")
+                    
+                        if [ ${has_transaction_in_it} -eq 0 ]; then
+                            let this_line=$(echo "${dump_line}" | ${my_awk} -F':' '{print $1}')
+                            let next_line=${this_line}+1
+                            let has_transaction_after_it=$(${my_egrep} -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${next_line}:.*\bTRANSACTION\b")
+                    
+                            if [ ${has_transaction_after_it} -eq 0 ]; then
+                                let has_cics_in_it=$(${my_egrep} -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${this_line}:.*\bCICS\b")
+                    
+                                if [ ${has_cics_in_it} -eq 0 ]; then
+                                    let previous_line=${this_line}-1
+                                    let has_cics_before_it=$(${my_egrep} -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bCICS\b")
+                    
+                                    if [ ${has_cics_before_it} -gt 0 ]; then
+                                        let has_exec_in_it=$(${my_egrep} -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bEXEC\b")
+                    
+                                        if [ ${has_exec_in_it} -eq 0 ]; then
+                                            let previous_previous_line=${previous_line}-1
+                                            let has_exec_before_it=$(${my_egrep} -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_previous_line}:.*\bEXEC\b")
+                    
+                                            if [ ${has_exec_before_it} -gt 0 ];then
+                                                let add_transaction=${add_transaction}+1
+                                            fi
+                    
+                                        else
+                                            let add_transaction=${add_transaction}+1
+                                        fi
+                    
+                                    fi
+                    
+                                else
+                                    let has_exec_in_it=$(${my_egrep} -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${this_line}:.*\bEXEC\b")
+                    
+                                    if [ ${has_exec_in_it} -eq 0 ]; then
+                                        let previous_line=${this_line}-1
+                                        let has_exec_before_it=$(${my_egrep} -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -c "^${previous_line}:.*\bEXEC\b")
+                    
+                                        if [ ${has_exec_before_it} -gt 0 ];then
+                                            let add_transaction=${add_transaction}+1
+                                        fi
+                    
+                                    else
+                                        let add_transaction=${add_transaction}+1
+                                    fi
+                    
+                                fi
+                    
+                            fi
+                    
+                        fi
+                    
+                        if [ ${add_transaction} -gt 0 ]; then
+                            real_line=$(echo "${dump_line}" | ${my_sed} -e 's?^[0-9]*:??g')
+                            ${my_sed} -i -e "${this_line}s?^\(${real_line}\)\$?\1\\${NL}${cbl_offset}TRANSACTION?g" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                        fi
+                    
+                    done
+
+                    echo "DONE"
+
+                    ################################################################
+                    ####
+                    #### END DUMP TRANSACTION keyword translation
+                    ####
+                    ################################################################
+
+                    ################################################################
+                    ####
+                    #### BEGIN P9COMM keyword translation
+                    ####
+                    ################################################################
+
+                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for P9COMM keyword translation ... "
+                    let has_p9comm=$(${my_egrep} -c "COPY\ *P9COMM\." "${prepare_dir}/${uc_target_dir}/${target_file}")
+
+                    if [ ${has_p9comm} -gt 0 ]; then
+                        ${my_sed} -i -e "s?COPY\ *P9COMM\.?COPY P9IN\.\\${NL}${cbl_offset}COPY P9OUT\.\\${NL}${cbl_offset}COPY P9AUDIT\.?g" "${prepare_dir}/${uc_target_dir}/${target_file}"
+                    fi
+
+                    echo "DONE"
+
+                    ################################################################
+                    ####
+                    #### BEGIN P9COMM keyword translation
+                    ####
+                    ################################################################
+
                 done
 
-                if [ "${target_dir}" = "cics" ]; then
-                    echo -ne "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target_dir} files for regular expression translation ... "
+                ####################################################################
+                ####
+                #### BEGIN PTFIX keyword translation
+                ####
+                ####################################################################
 
-                    files_to_touch=`${my_egrep} -H "15 CURSOR-ATTR-1     PIC S9\(9\) COMP VALUE \+16777152\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u`
+                if [ "${target_dir}" = "cics" ]; then
+                    echo -ne "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target_dir} files for PTFIX translation ... "
+
+                    files_to_touch=$(${my_egrep} -H "15 CURSOR-ATTR-1     PIC S9\(9\) COMP VALUE \+16777152\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ptfix *          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ a\ptfix            15 CURSOR-ATTR-1     PIC X(4) VALUE X'\''00FFFF20'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=`${my_egrep} -H "15 FILLER            PIC S9\(9\) COMP VALUE \+16777160\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u`
+                    files_to_touch=$(${my_egrep} -H "15 FILLER            PIC S9\(9\) COMP VALUE \+16777160\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 FILLER            PIC S9(9) COMP VALUE +16777160./ptfix *          15 FILLER            PIC S9(9) COMP VALUE +16777160./' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 FILLER            PIC S9(9) COMP VALUE +16777160./ a\ptfix            15 FILLER            PIC X(4) VALUE X'\''00FFFF48'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=`${my_egrep} -H "OK-ATTR-1         PIC S9\(9\) COMP VALUE \+4210880\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u`
+                    files_to_touch=$(${my_egrep} -H "OK-ATTR-1         PIC S9\(9\) COMP VALUE \+4210880\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /ptfix *          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. / a\ptfix            15 OK-ATTR-1         PIC X(4) VALUE X'\''00000020'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=`${my_egrep} -H "15 PROT-ATTR-1       PIC S9\(9\) COMP VALUE \+4210928\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u`
+                    files_to_touch=$(${my_egrep} -H "15 PROT-ATTR-1       PIC S9\(9\) COMP VALUE \+4210928\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /ptfix *          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. / a\ptfix            15 PROT-ATTR-1       PIC X(4) VALUE X'\''00000030'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=`${my_egrep} -H "15 BLANK-ATTR-1      PIC S9\(9\) COMP VALUE \+4210940\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u`
+                    files_to_touch=$(${my_egrep} -H "15 BLANK-ATTR-1      PIC S9\(9\) COMP VALUE \+4210940\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /ptfix *          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. / a\ptfix            15 BLANK-ATTR-1      PIC X(4) VALUE X'\''00000025'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=`${my_egrep} -H "15 CBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+16777164\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u`
+                    files_to_touch=$(${my_egrep} -H "15 CBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+16777164\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ptfix *          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ a\ptfix            15 CBLANK-ATTR-1     PIC X(4) VALUE X'\''00FFFF3C'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=`${my_egrep} -H "15 IBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+4210892\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u`
+                    files_to_touch=$(${my_egrep} -H "15 IBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+4210892\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /ptfix *          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. / a\ptfix            15 IBLANK-ATTR-1     PIC X(4) VALUE X'\''0000003C'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=`${my_egrep} -H "15 OHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210936\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u`
+                    files_to_touch=$(${my_egrep} -H "15 OHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210936\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /ptfix *          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
                         ${my_sed} -i '/ptfix \*          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. / a\ptfix            15 OHIGH-ATTR-1      PIC X(4) VALUE X'\''00000038'\''.' "${prepare_dir}/${uc_target_dir}"/*.${file_ext}
                     done
 
-                    files_to_touch=`${my_egrep} -H "15 IHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210888\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u`
+                    files_to_touch=$(${my_egrep} -H "15 IHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210888\." "${prepare_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                     for file_to_touch in ${files_to_touch} ; do
                         ${my_sed} -i 's/                 15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /ptfix *          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /' "${prepare_dir}/${uc_target_dir}"/*.${file_ext} &&
@@ -1010,22 +1264,35 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         echo "SUCCESS"
                     else
                         echo "FAILED"
-                        err_msg="Extra PracTrans sed munging failed on ${prepare_dir}/${uc_target_dir} Cobol files"
+                        err_msg="Extra PracTrans sed translation failed on ${prepare_dir}/${uc_target_dir} Cobol files"
                         exit_code=${ERROR}
                     fi
 
                 fi
 
+                ####################################################################
+                ####
+                #### END PTFIX keyword translation
+                ####
+                ####################################################################
+
             ;;
 
             jcl|proc)
+
+                ####################################################################
+                ####
+                #### BEGIN SUBSYS and INCLUDE keyword translation
+                ####
+                ####################################################################
+
                 comment_prefix='//*'
                 echo "    INFO:  Extra Pre-Processing ${prepare_dir}/${uc_target_dir} files for SUBSYS and INCLUDE translation:"
-                target_files=`cd "${prepare_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
+                target_files=$(cd "${prepare_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)
 
                 for target_file in ${target_files} ; do
-                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for SUBSYS keyword munging ... "
-                    this_line_count=`${my_wc} -l "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_awk} '{print $1}'`
+                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for SUBSYS keyword translation ... "
+                    this_line_count=$(${my_wc} -l "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_awk} '{print $1}')
                     subsys_lines=($(${my_egrep} -n "SUBSYS=" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_awk} -F':' '{print $1}'))
 
                     for subsys_line in ${subsys_lines[*]} ; do
@@ -1033,19 +1300,19 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     
                         # Get the original label
                         let orig_label_line=${subsys_line}
-                        orig_label=`${my_egrep} -n "SUBSYS=" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "^${subsys_line}:" | ${my_awk} '{print $1}' | ${my_awk} -F'/' '{print $NF}'`
-                        alt_label=`${my_egrep} -A${this_line_count} "//${orig_label}.*SUBSYS=" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "DDNAME=" | head -1 | ${my_awk} -F',' '{print $1}' | ${my_awk} -F'=' '{print $NF}'`
-                        let alt_label_line=`${my_egrep} -n "^//${alt_label}" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_awk} -F':' '{print $1}'`
+                        orig_label=$(${my_egrep} -n "SUBSYS=" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "^${subsys_line}:" | ${my_awk} '{print $1}' | ${my_awk} -F'/' '{print $NF}')
+                        alt_label=$(${my_egrep} -A${this_line_count} "//${orig_label}.*SUBSYS=" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "DDNAME=" | head -1 | ${my_awk} -F',' '{print $1}' | ${my_awk} -F'=' '{print $NF}')
+                        let alt_label_line=$(${my_egrep} -n "^//${alt_label}" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_awk} -F':' '{print $1}')
                     
                         # Munge the labels if we have enough pieces
-                        if [ "${orig_label}" != "" -a "${alt_label}" != ""  ]; then
+                        if [ "${orig_label}" != "" -a "${alt_label}" != "" ]; then
                             let label_line_counter=${orig_label_line}
                     
                             # Comment out all the lines between SUBSYS start and the line above "^//${alt_label}"
-                            while [ ${label_line_counter} -lt ${alt_label_line}  ]; do
-                                this_line=`${my_egrep} -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "^${label_line_counter}:" | ${my_sed} -e "s/^${label_line_counter}://g"`
-                                first3_chars=`echo "${this_line}" | ${my_cut} -b 1-3 | ${my_sed} -e 's/\*/\\\*/g'`
-                                line_remainder=`echo "${this_line}" | ${my_sed} -e "s?^${first3_chars}??g" -e 's/\*/\\\*/g'`
+                            while [ ${label_line_counter} -lt ${alt_label_line} ]; do
+                                this_line=$(${my_egrep} -n "^.*$" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} "^${label_line_counter}:" | ${my_sed} -e "s/^${label_line_counter}://g")
+                                first3_chars=$(echo "${this_line}" | ${my_cut} -b 1-3 | ${my_sed} -e 's/\*/\\\*/g')
+                                line_remainder=$(echo "${this_line}" | ${my_sed} -e "s?^${first3_chars}??g" -e 's/\*/\\\*/g')
                                 ${my_sed} -i -e "${label_line_counter}s?^${this_line}\$?${comment_prefix}${line_remainder}?g" "${prepare_dir}/${uc_target_dir}/${target_file}"
                                 let label_line_counter=${label_line_counter}+1
                             done
@@ -1060,7 +1327,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     echo "DONE"
 
-                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for INCLUDE keyword munging ... "
+                    echo -ne "            Processing file ${prepare_dir}/${uc_target_dir}/${target_file} for INCLUDE keyword translation ... "
                     target_lines=($(${my_egrep} -n "INCLUDE.*MEMBER=|//[^\*|\ ]" "${prepare_dir}/${uc_target_dir}/${target_file}" | ${my_egrep} -A1 "INCLUDE" | ${my_egrep} "^[0-9]*:" | ${my_sed} -e 's/\ /:ZZqC:/g'))
                     element_count=${#target_lines[@]}
 
@@ -1070,16 +1337,16 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     while [ ${line_counter} -lt ${element_count} ]; do
                 
                         # Get the start line number
-                        let start_line=`echo "${target_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' | ${my_awk} -F':' '{print $1}'`
+                        let start_line=$(echo "${target_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' | ${my_awk} -F':' '{print $1}')
                 
                         # Get the real line
-                        real_start_line=`echo "${target_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' -e "s/^${start_line}://g"`
+                        real_start_line=$(echo "${target_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' -e "s/^${start_line}://g")
                 
                         # Increment the counter to find the end_line
                         let line_counter=${line_counter}+1
                 
                         # Get the end line number
-                        let end_line=`echo "${target_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' | ${my_awk} -F':' '{print $1}'`
+                        let end_line=$(echo "${target_lines[$line_counter]}" | ${my_sed} -e 's/:ZZqC:/\ /g' | ${my_awk} -F':' '{print $1}')
                 
                         # Subtract 1 from ${end_line} to avoid inclusivity
                         let end_line=${end_line}-1
@@ -1092,9 +1359,9 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 
                         # Munge the lines in question
                         for real_target_line in ${real_target_lines[*]} ; do
-                            real_target_line=`echo "${real_target_line}" | ${my_sed} -e 's/:ZZqC:/\ /g'`
-                            first3_chars=`echo "${real_target_line}" | ${my_cut} -b 1-3 | ${my_sed} -e 's/\*/\\\*/g'`
-                            line_remainder=`echo "${real_target_line}" | ${my_sed} -e "s?^${first3_chars}??g"`
+                            real_target_line=$(echo "${real_target_line}" | ${my_sed} -e 's/:ZZqC:/\ /g')
+                            first3_chars=$(echo "${real_target_line}" | ${my_cut} -b 1-3 | ${my_sed} -e 's/\*/\\\*/g')
+                            line_remainder=$(echo "${real_target_line}" | ${my_sed} -e "s?^${first3_chars}??g")
 
                             if [ "${real_target_line}" != "${comment_prefix}${line_remainder}" ]; then
                                 eval "${my_sed} -i -e 's?^${real_target_line}\$?${comment_prefix}${line_remainder}?g' \"${prepare_dir}/${uc_target_dir}/${target_file}\""
@@ -1103,8 +1370,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         done
                 
                         # Munge the start line
-                        first3_chars=`echo "${real_start_line}" | ${my_cut} -b 1-3 | ${my_sed} -e 's/\*/\\\*/g'`
-                        line_remainder=`echo "${real_start_line}" | ${my_sed} -e "s?^${first3_chars}??g"`
+                        first3_chars=$(echo "${real_start_line}" | ${my_cut} -b 1-3 | ${my_sed} -e 's/\*/\\\*/g')
+                        line_remainder=$(echo "${real_start_line}" | ${my_sed} -e "s?^${first3_chars}??g")
                         eval "${my_sed} -i -e 's?^${real_start_line}\$?${comment_prefix}${line_remainder}?g' \"${prepare_dir}/${uc_target_dir}/${target_file}\""
                 
                         # Increment line_counter to start next pair
@@ -1114,9 +1381,21 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     echo "DONE"
                 done
 
+                ####################################################################
+                ####
+                #### END SUBSYS and INCLUDE keyword translation
+                ####
+                ####################################################################
+
             ;;
 
         esac
+
+        ########################################################################
+        ####
+        #### END Extra pre-processing by type
+        ####
+        ########################################################################
  
     done
     
@@ -1134,12 +1413,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Setup item lists for source
         for target_dir in ${TARGETS} ; do
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
+            uc_target_dir=$(echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]')
+            target_dir_var=$(echo "${target_dir}" | ${my_sed} -e 's/\./_/g')
             eval "file_ext=\$${target_dir_var}_ext"
 
             if [ -d "${prepare_dir}/${uc_target_dir}" ]; then
-                eval "raw_${target_dir_var}_list=\"`cd ${prepare_dir}/${uc_target_dir} 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`\""
+                eval "raw_${target_dir_var}_list=\"\$(cd ${prepare_dir}/${uc_target_dir} 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)\""
             else
                 echo "    WARNING:  Directory \"${prepare_dir}/${uc_target_dir}\" does not exist"
             fi
@@ -1148,34 +1427,39 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         # Try analyzing
         for list_name in ${TARGETS} ; do
-            list_name_var=`echo "${list_name}" | ${my_sed} -e 's/\./_/g'`
+            list_name_var=$(echo "${list_name}" | ${my_sed} -e 's/\./_/g')
             clean_list="${list_name_var}_list"
             eval "${clean_list}=\"\""
+            raw_list="raw_${list_name_var}_list"
         
-            for list_item in `eval "echo -ne \\"\\$raw_${list_name_var}_list\\""` ; do
+            for list_item in $(eval "echo \$${raw_list}") ; do
                 eval "add_to_list ${clean_list} \"${list_item}\""
             done
 
             eval "export ${clean_list}"
         done
 
-        for target_dir in ${TARGETS} ; do
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            echo "    INFO:  Refreshing ${processing_verb} directory \"${source_dir}/${uc_target_dir}\""
-            ${my_rm} -rf "${source_dir}/${uc_target_dir}"
-            ${my_mkdir} -p "${source_dir}/${uc_target_dir}"
-        done
+        if [ "${CLEAN_DIRS}" = "yes" ]; then
+
+            for target_dir in ${TARGETS} ; do
+                uc_target_dir=$(echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]')
+                echo "    INFO:  Refreshing ${processing_verb} directory \"${source_dir}/${uc_target_dir}\""
+                ${my_rm} -rf "${source_dir}/${uc_target_dir}"
+                ${my_mkdir} -p "${source_dir}/${uc_target_dir}"
+            done
+
+        fi
 
         this_makefile="${script_dir}/makefile.${processing_verb}"
 
-        export uc_copy_list=`echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g"`
-        export uc_sysin_list=`echo "${sysin_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g"`
-        export uc_batch_list=`echo "${batch_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_batch_ext}/\.${batch_ext}/g"`
-        export uc_cics_list=`echo "${cics_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_cics_ext}/\.${cics_ext}/g"`
-        export uc_ddl_list=`echo "${ddl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_ddl_ext}/\.${ddl_ext}/g"`
-        export uc_map_list=`echo "${map_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_map_ext}/\.${map_ext}/g"`
-        export uc_jcl_list=`echo "${jcl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_jcl_ext}/\.${jcl_ext}/g"`
-        export uc_proc_list=`echo "${proc_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_proc_ext}/\.${proc_ext}/g"`
+        export uc_copy_list=$(echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g")
+        export uc_sysin_list=$(echo "${sysin_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g")
+        export uc_batch_list=$(echo "${batch_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_batch_ext}/\.${batch_ext}/g")
+        export uc_cics_list=$(echo "${cics_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_cics_ext}/\.${cics_ext}/g")
+        export uc_ddl_list=$(echo "${ddl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_ddl_ext}/\.${ddl_ext}/g")
+        export uc_map_list=$(echo "${map_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_map_ext}/\.${map_ext}/g")
+        export uc_jcl_list=$(echo "${jcl_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_jcl_ext}/\.${jcl_ext}/g")
+        export uc_proc_list=$(echo "${proc_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_proc_ext}/\.${proc_ext}/g")
 
         if [ -e "${this_makefile}" ]; then
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} all\" ... "
@@ -1227,17 +1511,23 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         if [ -e "${this_makefile}" ]; then
 
             # Clean out pob subfolders
-            for target_dir in ${TARGETS} ; do
-                uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+            if [ "${CLEAN_DIRS}" = "yes" ]; then
 
-                if [ -d "${source_dir}/${uc_target_dir}/pob" ]; then
-                    ${my_rm} -rf "${source_dir}/${uc_target_dir}/pob"
-                fi
+                for target_dir in ${TARGETS} ; do
+                    uc_target_dir=$(echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]')
 
-            done
+                    if [ -d "${source_dir}/${uc_target_dir}/pob" ]; then
+                        ${my_rm} -rf "${source_dir}/${uc_target_dir}/pob"
+                    fi
+
+                done
+
+            fi
 
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
-            cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
+            #cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
+            cd "${source_dir}" && ${my_find} . -name "*.pob" -o -name "*.depends" -o -name "*.cdm" -o -name "*.shrec" -exec ${my_rm} -f {} \;
+            echo "DONE"
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
             cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
             exit_code=${?}
@@ -1277,10 +1567,33 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             let max_warnings=20
             let max_missing=1
 
-            let fatal_count=`${my_egrep} -c ";FATAL;" "${anomaly_report}"`
-            let error_count=`${my_egrep} -c ";ERROR;" "${anomaly_report}"`
-            let warning_count=`${my_egrep} -c ";WARNING;" "${anomaly_report}"`
-            let missing_count=`${my_egrep} -c ";MISSING;" "${anomaly_report}"`
+            # Set fatal check
+            if [ "${fatal_check}" = "no" -o "${fatal_check}" = "off" ]; then
+                let fatal_count=0
+            else
+                let fatal_count=$(${my_egrep} -c ";FATAL;" "${anomaly_report}")
+            fi
+
+            # Set error check
+            if [ "${error_check}" = "no" -o "${error_check}" = "off" ]; then
+                let error_count=0
+            else
+                let error_count=$(${my_egrep} -c ";ERROR;" "${anomaly_report}")
+            fi
+
+            # Set warning check
+            if [ "${warning_check}" = "no" -o "${warning_check}" = "off" ]; then
+                let warning_count=0
+            else
+                let warning_count=$(${my_egrep} -c ";WARNING;" "${anomaly_report}")
+            fi
+
+            # Set missing check
+            if [ "${missing_check}" = "no" -o "${missing_check}" = "off" ]; then
+                let missing_count=0
+            else
+                let missing_count=$(${my_egrep} -c ";MISSING;" "${anomaly_report}")
+            fi
 
             if [ ${fatal_count} -gt 0 -o ${error_count} -gt 0 -o ${warning_count} -ge ${max_warnings} -o ${missing_count} -ge ${max_missing} ]; then
                 echo "issues found [FAILED]"
@@ -1333,7 +1646,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     if [ -e "${cobol_copy_report}" ]; then
         echo -ne "    INFO:  Checking Cobol-Copy report for issues of concern ... "
-        let cobol_copy_missing_count=`${my_egrep} -c ";MISSING;" "${cobol_copy_report}"`
+        let cobol_copy_missing_count=$(${my_egrep} -c ";MISSING;" "${cobol_copy_report}")
 
         if [ ${cobol_copy_missing_count} -ge ${max_missing} ]; then
             echo "issues found [FAILED]"
@@ -1474,45 +1787,28 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     postconvert_dir="${WB_AUTOMATE}/param/regex/post_conversion"
     export postconvert_dir
 
-    for target_dir in ${TARGETS} ; do
-        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
-        eval "file_ext=\$${target_dir_var}_ext"
-        uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
+    for file_extension in ${file_extensions} ; do
+        file_ext="${file_extension}"
+        target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f | ${my_egrep} "\.${file_ext}$")
+        comment_prefix="      *"
 
-        # Here we set the default source_code_dir
-        source_code_dir="${pcTarget_dir}/${uc_target_dir}"
+#=====
+        # Redefine target_files?
+        case ${file_ext} in 
 
-        # Here we set the exceptions for source_code_dir
-        case ${target_dir} in 
-
-            sysin)
-                source_code_dir="${pcTarget_dir}/Master-${uc_target_dir}/${uc_target_dir}"
-            ;;
-
-            copy)
-                source_code_dir="${pcTarget_dir}/Master-${target_dir}/${uc_target_dir}"
-            ;;
-
-        esac
-
-        # Here we grab the target files from source_code_dir
-        case ${target_dir} in
-
-            batch|cics)
-                target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null ; ${my_ls} *.pco 2> /dev/null`
+            cbl)
+                target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f | ${my_egrep} "\.${file_ext}$|\.pco$")
             ;;
 
             jcl)
-                file_ext="ksh"
-                target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
                 comment_prefix="#"
-            ;;
-
-            *)
-                target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
+                file_ext="ksh"
+                target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f | ${my_egrep} "\.${file_ext}$")
             ;;
 
         esac
+         
+#=====
 
         tmp_dir="/tmp/${USER}/$$"
 
@@ -1520,7 +1816,17 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             ${my_mkdir} -p "${tmp_dir}"
         fi
 
-        for target_file in ${target_files} ; do
+        ########################################################################
+        ####
+        #### BEGIN Regular expression translation via PERL program processor.pl
+        ####
+        ########################################################################
+
+        for this_target_file in ${target_files} ; do
+            source_code_dir=$(${my_dirname} "${this_target_file}")
+            target_file=$(${my_basename} "${this_target_file}")
+            uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
+            target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
             # Read in regex lines from "${postconvert_dir}/${uc_target_dir}"
             if [ -e "${postconvert_dir}/${uc_target_dir}" -a -s "${postconvert_dir}/${uc_target_dir}" ]; then
@@ -1553,93 +1859,221 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         done
 
-    done
+        ########################################################################
+        ####
+        #### END Regular expression translation via PERL program processor.pl
+        ####
+        ########################################################################
 
-fi
+        echo "POST-PROCESSING - SQL timestamp conversion"
 
+        if [ "${file_extension}" = "cbl" -o "${file_extension}" = "cpy" ]; then
 
-# WHAT: Munge SQL statements in Cobol programs
-# WHY:  Aked to
-#
-if [ ${exit_code} -eq ${SUCCESS} ]; then
-    echo "POST-PROCESSING - SQL timestamp conversion"
+            ########################################################################
+            ####
+            #### BEGIN SQL timestamp conversion
+            ####
+            ########################################################################
 
-    for target_dir in ${TARGETS} ; do
-        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
-        eval "file_ext=\$${target_dir_var}_ext"
-
-        if [ "${target_dir}" = "cics" -o "${target_dir}" = "batch" -o "${target_dir}" = "copy" ]; then
-            comment_prefix='      *'
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            source_code_dir="${pcTarget_dir}/${uc_target_dir}"
-
-            # Here we set the exceptions for source_code_dir
-            case ${target_dir} in 
-
-                copy)
-                    source_code_dir="${pcTarget_dir}/Master-${target_dir}/${uc_target_dir}"
-                ;;
-
-            esac
-
-            # Here we grab the target files from source_code_dir
-            case ${target_dir} in
-
-                batch|cics)
-                    target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null ; ${my_ls} *.pco 2> /dev/null`
-                ;;
-
-                *)
-                    target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
-                ;;
-
-            esac
-
-            for target_file in ${target_files} ; do
+            for this_target_file in ${target_files} ; do
                 echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" SQL timestamp conversion ... "
 
-                # Rule #1: MWDB2ORA.MAKE_TIME change to use SYSTIMESTAMP
-                ${my_sed} -i -e "s?MWDB2ORA.MAKE_TIME(.*)?MNTC_LST_TM = SYSTIMESTAMP?g" "${source_code_dir}/${target_file}"
+                source_code_dir=$(${my_dirname} "${this_target_file}")
+                target_file=$(${my_basename} "${this_target_file}")
+                uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
+                target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-                # Rule #2: MWDB2ORA.TIME2HOST change to TO_CHAR
-                ${my_sed} -i -e "s?MWDB2ORA.TIME2HOST(\(.*\))?TO_CHAR(\1,'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                # egrep -n "^.*$" /tmp/junk | pcregrep -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | sort -rn
 
-                # Rule #3: MWDB2ORA.STR2TIME change to use TO_TIMESTAMP
-                ${my_sed} -i -e "s?MWDB2ORA.STR2TIME(\(.*\))?TO_TIMESTAMP(\1,'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                #for pattern in "MWDB2ORA\.MAKE_TIME" "MWDB2ORA\.TIME2HOST" "MWDB2ORA\.STR2TIME" "MWDB2ORA\.STR2TMS" "MWDB2ORA\.STR2DATE" ; do
+                #    echo -ne "            Processing file ${source_code_dir}/${target_file} for ${pattern} keyword translation ... "
+                #    matched_lines=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_pcregrep} -M -e "\b${pattern}\b\([[:space:]|\n\d+:]*.*[[:space:]|\n\d+:]*\)" | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
+                #    let matched_line_count=$(echo -ne "${matched_lines}\n" | ${my_wc} -l | ${my_awk} '{print $1}')
 
-                # Rule #4: MWDB2ORA.STR2TMS remove
-                ${my_sed} -i -e "s?MWDB2ORA.STR2TMS(\(.*\))?\1?g" "${source_code_dir}/${target_file}"
+                #    start_line_keyword="${pattern}\("
+                #    start_line_keyword_ignore=""
+                #    end_line_keyword="\)"
+                #    end_line_keyword_ignore=""
 
-                # Rule #5: MWDB2ORA.STR2DATE change to use TO_CHAR
-                ${my_sed} -i -e "s?BETWEEN MWDB2ORA.STR2DATE(\(.*\) AND \(.*\))?BETWEEN TO_DATE(\1, 'MM/DD/YYYY') AND TO_DATE(\2, 'MM/DD/YYYY')?g" "${source_code_dir}/${target_file}"
-                ${my_sed} -i -e "s?EXEC SQL SELECT MWDB2ORA.STR2DATE(\(.*\), \(.*\), .*)?EXEC SQL SELECT TO_CHAR(\1, \2, 'MM-DD-YYYY')?g" "${source_code_dir}/${target_file}"
+#====
+                #    case ${pattern} in
 
-                echo "DONE"
+                #        # Rule #1: MWDB2ORA.MAKE_TIME change to use SYSTIMESTAMP
+                #        #${my_sed} -i -e "s?MWDB2ORA.MAKE_TIME(.*)?MNTC_LST_TM = SYSTIMESTAMP?g" "${source_code_dir}/${target_file}"
+                #        "MWDB2ORA\.MAKE_TIME")
+
+                #            if [ ${matched_line_count} -gt 1 ]; then
+
+                #                for matched_line in ${matched_lines} ; do
+                #                    this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
+                #                    this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
+                #                    let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
+                #                    let has_pattern=$(echo "${this_real_line}" | ${my_egrep} -c ":\b${pattern}\b\)")
+
+                #                    if [ ${has_pattern} -gt 0 ]; then
+                #                        ${my_sed} -i -e "${this_line_number}s?^\(.*\)${pattern}(\$?\1MNTC_LST_TM = ?g" "${source_code_dir}/${target_file}"
+                #                    fi
+
+                #                    if [ ${has_keyword} -gt 0 ]; then
+                #                        ${my_sed} -i -e "${this_line_number}s?^\(.*\):.*)\(.*\)\$?$\1SYSTIMESTAMP\2?g" "${source_code_dir}/${target_file}"
+                #                    else
+                #                        first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
+                #                        ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
+                #                    fi
+                #                                        
+                #                done
+
+                #            elif [ ${matched_line_count} -eq 1 ]; then
+                #                ${my_sed} -i -e "s?${pattern}(.*)?MNTC_LST_TM = SYSTIMESTAMP?g" "${source_code_dir}/${target_file}"
+                #            fi
+
+                #        ;;    
+
+                #        # Rule #2: MWDB2ORA.TIME2HOST change to TO_CHAR
+                #        #${my_sed} -i -e "s?MWDB2ORA.TIME2HOST(\(.*\))?TO_CHAR(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                #        "MWDB2ORA\.TIME2HOST")
+
+                #            if [ ${matched_line_count} -gt 1 ]; then
+
+                #                for matched_line in ${matched_lines} ; do
+                #                    this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
+                #                    this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
+                #                    let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
+                #                    let has_pattern=$(echo "${this_real_line}" | ${my_egrep} -c ":\b${pattern}\b\)")
+
+                #                    if [ ${has_pattern} -gt 0 ]; then
+                #                        ${my_sed} -i -e "${this_line_number}s?^\(.*\)${pattern}\(.*)\)\$?\1TO_CHAR\2?g" "${source_code_dir}/${target_file}"
+                #                    fi
+
+                #                    if [ ${has_keyword} -gt 0 ]; then
+                #                        ${my_sed} -i -e "${this_line_number}s?^.*\(:.*)\)\$?${cbl_offset}\1,\\${NL}${cbl_offset}'HH24.MI.SS'?g" "${source_code_dir}/${target_file}"
+                #                    else
+                #                        first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
+                #                        ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
+                #                    fi
+                #                                        
+                #                done
+
+                #            elif [ ${matched_line_count} -eq 1 ]; then
+                #                ${my_sed} -i -e "s?${pattern}(\(.*\))?TO_CHAR(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                #            fi
+
+                #        ;;
+
+                #        # Rule #3: MWDB2ORA.STR2TIME change to use TO_TIMESTAMP
+                #        #${my_sed} -i -e "s?MWDB2ORA.STR2TIME(\(.*\))?TO_TIMESTAMP(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                #        "MWDB2ORA\.STR2TIME")
+
+                #            if [ ${matched_line_count} -gt 1 ]; then
+
+                #                for matched_line in ${matched_lines} ; do
+                #                    this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
+                #                    this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
+                #                    let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
+                #                    let has_pattern=$(echo "${this_real_line}" | ${my_egrep} -c ":\b${pattern}\b\)")
+
+                #                    if [ ${has_pattern} -gt 0 ]; then
+                #                        ${my_sed} -i -e "${this_line_number}s?^\(.*\)${pattern}\(.*)\)\$?\1TO_TIMESTAMP\2?g" "${source_code_dir}/${target_file}"
+                #                    fi
+
+                #                    if [ ${has_keyword} -gt 0 ]; then
+                #                        ${my_sed} -i -e "${this_line_number}s?^.*\(:.*)\)\$?${cbl_offset}\1,\\${NL}${cbl_offset}'HH24.MI.SS'?g" "${source_code_dir}/${target_file}"
+                #                    else
+                #                        first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
+                #                        ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
+                #                    fi
+                #                                        
+                #                done
+
+                #            elif [ ${matched_line_count} -eq 1 ]; then
+                #                ${my_sed} -i -e "s?${pattern}(\(.*\))?TO_TIMESTAMP(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                #            fi
+
+                #        ;;
+
+                #        # Rule #4: MWDB2ORA.STR2TMS remove
+                #        #${my_sed} -i -e "s?MWDB2ORA.STR2TMS(\(.*\))?\1?g" "${source_code_dir}/${target_file}"
+                #        "MWDB2ORA\.STR2TMS")
+                #            let matched_line_count=$(echo -ne "${matched_lines}\n" | ${my_wc} -l | ${my_awk} '{print $1}')
+
+                #            if [ ${matched_line_count} -gt 1 ]; then
+
+                #                for matched_line in ${matched_lines} ; do
+                #                    this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
+                #                    this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
+                #                    let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
+
+                #                    if [ ${has_keyword} -gt 0 ]; then
+                #                        ${my_sed} -i -e "${this_line_number}s?^.*\(:.*\))\$?${cbl_offset}\1?g" "${source_code_dir}/${target_file}"
+                #                    else
+                #                        first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
+                #                        ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
+                #                    fi
+                #                                        
+                #                done
+
+                #            elif [ ${matched_line_count} -eq 1 ]; then
+                #                ${my_sed} -i -e "s?${pattern}(\(.*\))?\1?g" "${source_code_dir}/${target_file}"
+                #            fi
+
+                #        ;;
+
+                #        # Rule #5: MWDB2ORA.STR2DATE change to use TO_CHAR
+                #        #${my_sed} -i -e "s?BETWEEN MWDB2ORA.STR2DATE(\(.*\) AND \(.*\))?BETWEEN TO_DATE(\1, 'MM/DD/YYYY')\\${NL}${cbl_offset} AND TO_DATE(\2, 'MM/DD/YYYY')?g" "${source_code_dir}/${target_file}"
+                #        #${my_sed} -i -e "s?EXEC SQL SELECT MWDB2ORA.STR2DATE(\(.*\), \(.*\), .*)?EXEC SQL SELECT TO_CHAR(\1, \2,\\${NL}${cbl_offset} 'MM-DD-YYYY')?g" "${source_code_dir}/${target_file}"
+                #        "MWDB2ORA\.STR2DATE")
+
+                #            if [ ${matched_line_count} -gt 1 ]; then
+
+                #                for matched_line in ${matched_lines} ; do
+                #                    this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
+                #                    this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
+                #                    let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
+
+                #                    if [ ${has_keyword} -gt 0 ]; then
+                #                        ${my_sed} -i -e "${this_line_number}s?^.*\(:.*\))\$?${cbl_offset}\1?g" "${source_code_dir}/${target_file}"
+                #                    else
+                #                        first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
+                #                        ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
+                #                    fi
+                #                                        
+                #                done
+
+                #            elif [ ${matched_line_count} -eq 1 ]; then
+                #                ${my_sed} -i -e "s?BETWEEN ${pattern}(\(.*\) AND \(.*\))?BETWEEN TO_DATE(\1, 'MM/DD/YYYY')\\${NL}${cbl_offset} AND TO_DATE(\2, 'MM/DD/YYYY')?g" "${source_code_dir}/${target_file}"
+                #                ${my_sed} -i -e "s?EXEC SQL SELECT ${pattern}(\(.*\), \(.*\), .*)?EXEC SQL SELECT TO_CHAR(\1, \2,\\${NL}${cbl_offset} 'MM-DD-YYYY')?g" "${source_code_dir}/${target_file}"
+                #            fi
+
+                #        ;;
+
+                #    esac
+#====
+
+                #done
+
+                #echo "DONE"
             done
 
-         fi
+            ########################################################################
+            ####
+            #### END SQL timestamp conversion
+            ####
+            ########################################################################
 
-    done
+        fi
 
-fi
+        echo "POST-PROCESSING - IEFBR14 file deletion optimization"
 
-# WHAT: Munge for IEFBR14 file deletion optimization
-# WHY:  Asked to
-#
-if [ ${exit_code} -eq ${SUCCESS} ]; then
-    echo "POST-PROCESSING - IEFBR14 file deletion optimization"
+        if [ "${file_extension}" = "jcl" ]; then
 
-    for target_dir in ${TARGETS} ; do
-
-        if [ "${target_dir}" = "jcl" ]; then
-            file_ext="ksh"
-            comment_prefix='#'
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            source_code_dir="${pcTarget_dir}/${uc_target_dir}"
-            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
-
-            for target_file in ${target_files} ; do
+            for this_target_file in ${target_files} ; do
                 echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for MOD,DELETE,DELETE optimization ... "
+
+                source_code_dir=$(${my_dirname} "${this_target_file}")
+                target_file=$(${my_basename} "${this_target_file}")
+                uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
+                target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
+
                 iefbr14_lines=($(${my_egrep} -n "^\(|IEFBR14" "${source_code_dir}/${target_file}" | ${my_egrep} -B1 "IEFBR14" | ${my_egrep} "^[0-9]*:" | ${my_awk} -F':' '{print $1}'))
 
                 # Blocks of code can be detected as line number pairs
@@ -1653,7 +2087,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     let line_counter=${line_counter}-1
 
                     # Comment out ending_line_number
-                    ending_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${ending_line_number}:" | ${my_sed} -e "s/^${ending_line_number}://g"`
+                    ending_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${ending_line_number}:" | ${my_sed} -e "s/^${ending_line_number}://g")
                     ${my_sed} -i -e "${ending_line_number}s?^${ending_line}\$?#${ending_line}?g" "${source_code_dir}/${target_file}"
 
                     # Move up one element in the array
@@ -1663,11 +2097,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     while [ ${next_line_up} -gt ${starting_line_number} ]; do
 
                         # Capture this line
-                        line_to_munge=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${next_line_up}:" | ${my_sed} -e "s/^${next_line_up}://g"`
-                        let mod_del_del_check=`echo "${line_to_munge}" | ${my_egrep} -c "m_FileAssign.*MOD,DELETE,DELETE"`
+                        line_to_munge=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${next_line_up}:" | ${my_sed} -e "s/^${next_line_up}://g")
+                        let mod_del_del_check=$(echo "${line_to_munge}" | ${my_egrep} -c "m_FileAssign.*MOD,DELETE,DELETE")
 
                         if [ ${mod_del_del_check} -gt 0 ]; then
-                            data_file=`echo "${line_to_munge}" | ${my_awk} -F'/' '{print "${DATA}/" $NF}'`
+                            data_file=$(echo "${line_to_munge}" | ${my_awk} -F'/' '{print "${DATA}/" $NF}')
 
                             if [ "${data_file}" != "" ]; then
                                 ${my_sed} -i -e "${next_line_up}s?^${line_to_munge}\$?${ksh_offset}m_FileExist -r DELSW1 ${data_file}\\${NL}${ksh_offset}if [[ \${DELSW1} = true ]]; then\\${NL}${ksh_offset}   m_FileDelete ${data_file}\\${NL}${ksh_offset}fi?g" "${source_code_dir}/${target_file}"
@@ -1685,73 +2119,61 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         fi
 
-    done
+        echo "POST-PROCESSING - FTPBATCH conversion"
 
-fi
+        if [ "${file_extension}" = "jcl" ]; then
 
-# WHAT: Munge for FTP get commands in ksh JCL conversion 
-# WHY:  Asked to
-#
-if [ ${exit_code} -eq ${SUCCESS} ]; then
-    echo "POST-PROCESSING - FTPBATCH conversion"
+            for this_target_file in ${target_files} ; do
+                source_code_dir=$(${my_dirname} "${this_target_file}")
+                target_file=$(${my_basename} "${this_target_file}")
+                uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
+                target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-    for target_dir in ${TARGETS} ; do
-        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
-        eval "file_ext=\$${target_dir_var}_ext"
-
-        if [ "${target_dir}" = "jcl" ]; then
-            file_ext="ksh"
-            comment_prefix='#'
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            source_code_dir="${pcTarget_dir}/${uc_target_dir}"
-            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
-
-            for target_file in ${target_files} ; do
-                let has_ftpbatch=`${my_egrep} -c "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}"`
+                let has_ftpbatch=$(${my_egrep} -c "m_ProcInclude.*FTPBATCH" "${source_code_dir}/${target_file}")
 
                 # Make sure we have an FTPBATCH section upon which to operate
-                if [ ${has_ftpbatch} -gt 0  ]; then
+                if [ ${has_ftpbatch} -gt 0 ]; then
                     echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for FTPBATCH conversion ... "
                     # FTPBATCH put or get?
-                    let put_block=`${my_egrep} -c "^put " "${source_code_dir}/${target_file}"`
-                    let get_block=`${my_egrep} -c "^get " "${source_code_dir}/${target_file}"`
+                    let put_block=$(${my_egrep} -c "^put " "${source_code_dir}/${target_file}")
+                    let get_block=$(${my_egrep} -c "^get " "${source_code_dir}/${target_file}")
 
-                    if [ ${put_block} -gt 0  ]; then
+                    if [ ${put_block} -gt 0 ]; then
                         echo -ne "Found put block ... "
-                        line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
-                        let has_cnvtls=`${my_egrep} -c "^\(CNVTLS[0-9]*\)" "${source_code_dir}/${target_file}"`
+                        line_count=$(${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}')
+                        let has_cnvtls=$(${my_egrep} -c "^\(CNVTLS[0-9]*\)" "${source_code_dir}/${target_file}")
 
                         # Make sure the file hasn't already been converted for FTPBATCH put operations
-                        if [ ${has_cnvtls} -eq 0  ]; then
+                        if [ ${has_cnvtls} -eq 0 ]; then
                             let cnvtls_data_counter=0
                             put_batch_lines=($(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:put " | ${my_egrep} "^[0-9]*:.*m_ProcInclude.*\ FTPBATCH" | tail -1 | ${my_awk} -F':' '{print $1}'))
                             let put_batch_line_count=${#put_batch_lines[@]}-1
 
                             # Start operating on the last FTPBATCH line, so as to not disturb line positions after processing
-                            while [ ${put_batch_line_count} -ge 0  ]; do
-                                function_start_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1`
-                                function_start_line_number=`echo "${function_start_line}" | ${my_awk} -F':' '{print $1}'`
-                                function_start_line=`echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g"`
+                            while [ ${put_batch_line_count} -ge 0 ]; do
+                                function_start_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1)
+                                function_start_line_number=$(echo "${function_start_line}" | ${my_awk} -F':' '{print $1}')
+                                function_start_line=$(echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g")
 
-                                function_end_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1`
-                                function_end_line_number=`echo "${function_end_line}" | ${my_awk} -F':' '{print $1}'`
-                                function_end_line=`echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g"`
+                                function_end_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${put_batch_lines[$put_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1)
+                                function_end_line_number=$(echo "${function_end_line}" | ${my_awk} -F':' '{print $1}')
+                                function_end_line=$(echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g")
 
-                                jump_label=`echo "${function_start_line}" | ${my_sed} -e 's/[\(|\)]//g'`
-                                jump_label_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:\(${jump_label}\)$" | ${my_egrep} "^[0-9]*:.*JUMP_LABEL=${jump_label}$" | tail -1`
-                                jump_label_line_number=`echo "${jump_label_line}" | ${my_awk} -F':' '{print $1}'`
-                                jump_label_line=`echo "${jump_label_line}" | ${my_sed} -e "s/^${jump_label_line_number}://g"`
+                                jump_label=$(echo "${function_start_line}" | ${my_sed} -e 's/[\(|\)]//g')
+                                jump_label_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:\(${jump_label}\)$" | ${my_egrep} "^[0-9]*:.*JUMP_LABEL=${jump_label}$" | tail -1)
+                                jump_label_line_number=$(echo "${jump_label_line}" | ${my_awk} -F':' '{print $1}')
+                                jump_label_line=$(echo "${jump_label_line}" | ${my_sed} -e "s/^${jump_label_line_number}://g")
 
                                 let function_line_counter=${function_start_line_number}+1
                                 let ftp_put_counter=0
 
                                 # Figure out all the lines containing DATA file names
-                                while [ ${function_line_counter} -lt ${function_end_line_number}  ]; do
-                                    next_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g"`
-                                    let is_data_line=`echo "${next_line}" | ${my_egrep} -c "m_FileOverride.*\ FTP\ .*{DATA}/"`
+                                while [ ${function_line_counter} -lt ${function_end_line_number} ]; do
+                                    next_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g")
+                                    let is_data_line=$(echo "${next_line}" | ${my_egrep} -c "m_FileOverride.*\ FTP\ .*{DATA}/")
 
-                                    if [ ${is_data_line} -gt 0   ]; then
-                                        data_file[${ftp_put_counter}]=`echo "${next_line}" | ${my_awk} '{print $NF}'`
+                                    if [ ${is_data_line} -gt 0  ]; then
+                                        data_file[${ftp_put_counter}]=$(echo "${next_line}" | ${my_awk} '{print $NF}')
 
                                         # Rename the ${}data_file[]} to ${data_file[]}.ftp
                                         ${my_sed} -i -e "${function_line_counter}s?${data_file[$ftp_put_counter]}\$?${data_file[$ftp_put_counter]}.ftp?g" "${source_code_dir}/${target_file}"
@@ -1765,9 +2187,9 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                                 cnvtls_line=""
                                 let data_line_counter=0
 
-                                while [ ${data_line_counter} -lt ${ftp_put_counter}  ]; do
+                                while [ ${data_line_counter} -lt ${ftp_put_counter} ]; do
 
-                                    if [ "${cnvtls_line}" = ""  ]; then
+                                    if [ "${cnvtls_line}" = "" ]; then
                                         cnvtls_line="###### CONVERT FILE TO LINE SEQUENTIAL ######\\${NL}"
                                         cnvtls_line="${cnvtls_line}${ksh_offset}JUMP_LABEL=CNVTLS${cnvtls_data_counter}\\${NL}"
                                         cnvtls_line="${cnvtls_line}${ksh_offset};;\\${NL}"
@@ -1809,38 +2231,38 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     fi
 
-                    if [ ${get_block} -gt 0  ]; then
-                        line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
+                    if [ ${get_block} -gt 0 ]; then
+                        line_count=$(${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}')
                         echo -ne "Found get block ... "
-                        let has_cnvtrs=`${my_egrep} -c "^\(CNVTRS\)" "${source_code_dir}/${target_file}"`
+                        let has_cnvtrs=$(${my_egrep} -c "^\(CNVTRS\)" "${source_code_dir}/${target_file}")
 
                         # Make sure the file hasn't already been converted for FTPBATCH get operations
-                        if [ ${has_cnvtrs} -eq 0  ]; then
+                        if [ ${has_cnvtrs} -eq 0 ]; then
                             let cnvtrs_data_counter=0
                             get_batch_lines=($(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:get " | ${my_egrep} "^[0-9]*:.*m_ProcInclude.*\ FTPBATCH" | tail -1 | ${my_awk} -F':' '{print $1}'))
                             let get_batch_line_count=${#get_batch_lines[@]}-1
 
                             # Start operating on the last FTPBATCH line, so as to not disturb line positions after processing
-                            while [ ${get_batch_line_count} -ge 0  ]; do
-                                function_start_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1`
-                                function_start_line_number=`echo "${function_start_line}" | ${my_awk} -F':' '{print $1}'`
-                                function_start_line=`echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g"`
+                            while [ ${get_batch_line_count} -ge 0 ]; do
+                                function_start_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:\(" | tail -1)
+                                function_start_line_number=$(echo "${function_start_line}" | ${my_awk} -F':' '{print $1}')
+                                function_start_line=$(echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g")
 
-                                function_end_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1`
-                                function_end_line_number=`echo "${function_end_line}" | ${my_awk} -F':' '{print $1}'`
-                                function_end_line=`echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g"`
+                                function_end_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${get_batch_lines[$get_batch_line_count]}:.*m_ProcInclude.*\ FTPBATCH" | ${my_egrep} "^[0-9]*:_end" | head -1)
+                                function_end_line_number=$(echo "${function_end_line}" | ${my_awk} -F':' '{print $1}')
+                                function_end_line=$(echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g")
 
                                 let function_line_counter=${function_start_line_number}+1
                                 let ftp_get_counter=0
 
                                 # Figure out all the lines containing DATA file names
-                                while [ ${function_line_counter} -lt ${function_end_line_number}  ]; do
-                                    next_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g"`
-                                    let is_data_line=`echo "${next_line}" | ${my_egrep} -c "m_FileOverride.*\ FTP\ .*{DATA}/"`
-                                    let is_get_line=`echo "${next_line}" | ${my_egrep} -c "^get"`
+                                while [ ${function_line_counter} -lt ${function_end_line_number} ]; do
+                                    next_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g")
+                                    let is_data_line=$(echo "${next_line}" | ${my_egrep} -c "m_FileOverride.*\ FTP\ .*{DATA}/")
+                                    let is_get_line=$(echo "${next_line}" | ${my_egrep} -c "^get")
 
-                                    if [ ${is_data_line} -gt 0   ]; then
-                                        data_file[${ftp_get_counter}]=`echo "${next_line}" | ${my_awk} '{print $NF}'`
+                                    if [ ${is_data_line} -gt 0  ]; then
+                                        data_file[${ftp_get_counter}]=$(echo "${next_line}" | ${my_awk} '{print $NF}')
 
                                         # Rename the ${}data_file[]} to ${data_file[]}.ftp
                                         ${my_sed} -i -e "${function_line_counter}s?${data_file[$ftp_get_counter]}\$?${data_file[$ftp_get_counter]}.ftp?g" "${source_code_dir}/${target_file}"
@@ -1848,7 +2270,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                                         let ftp_get_counter=${ftp_get_counter}+1
                                     fi
 
-                                    if [ ${is_get_line} -gt 0   ]; then
+                                    if [ ${is_get_line} -gt 0  ]; then
                                         ${my_sed} -i -e "${function_line_counter}s?^get.*\$?${next_line} \[REPLACE\]?g" "${source_code_dir}/${target_file}"
                                     fi
 
@@ -1858,9 +2280,9 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                                 cnvtrs_line=""
                                 let data_line_counter=0
 
-                                while [ ${data_line_counter} -lt ${ftp_get_counter}  ]; do
+                                while [ ${data_line_counter} -lt ${ftp_get_counter} ]; do
 
-                                    if [ "${cnvtrs_line}" = ""  ]; then
+                                    if [ "${cnvtrs_line}" = "" ]; then
                                         cnvtrs_line="${function_end_line}\\${NL}"
                                         cnvtrs_line="${cnvtrs_line}${comment_prefix}\\${NL}"
                                         cnvtrs_line="${cnvtrs_line}${ksh_offset}JUMP_LABEL=CNVTRS${cnvtrs_data_counter}\\${NL}"
@@ -1899,6 +2321,15 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     fi
 
+                    # Comment out locsite lines
+                    locsite_lines=$(${my_egrep} -n "^.*locsite" "${source_code_dir}/${target_file}" | egrep -v "#.*locsite")
+
+                    for locsite_line in ${locsite_lines} ; do
+                        this_line_number=$(echo "${locsite_line}" | ${my_awk} -F':' '{print $1}')
+                        echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for LOCSITE removal ... "
+                        ${my_sed} -i -e "${this_line_number}s?^\(.*locsite.*\)\$?#\1?g" "${source_code_dir}/${target_file}"
+                    done
+
                     echo "DONE"
                 fi
 
@@ -1906,32 +2337,20 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         fi
 
-    done
+        echo "POST-PROCESSING - DFDSS conversion"
 
-fi
-    
-# WHAT: Munge DFDSS tar backup conversion
-# WHY:  Asked to
-#
-if [ ${exit_code} -eq ${SUCCESS} ]; then
-    echo "POST-PROCESSING - DFDSS conversion"
+        if [ "${file_extension}" = "jcl" ]; then
 
-    for target_dir in ${TARGETS} ; do
-        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
-        eval "file_ext=\$${target_dir_var}_ext"
+            for this_target_file in ${target_files} ; do
+                source_code_dir=$(${my_dirname} "${this_target_file}")
+                target_file=$(${my_basename} "${this_target_file}")
+                uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
+                target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-        if [ "${target_dir}" = "jcl" ]; then
-            file_ext="ksh"
-            comment_prefix='#'
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            source_code_dir="${pcTarget_dir}/${uc_target_dir}"
-            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
-
-            for target_file in ${target_files} ; do
-                let has_dfdss=`${my_egrep} -c "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}"`
+                let has_dfdss=$(${my_egrep} -c "m_ProcInclude.*DFDSS\ " "${source_code_dir}/${target_file}")
 
                 # Make sure we have an DFDSS section upon which to operate
-                if [ ${has_dfdss} -gt 0   ]; then
+                if [ ${has_dfdss} -gt 0  ]; then
                     echo "TAR Conversion ... coming soon"
                 fi
 
@@ -1939,60 +2358,48 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         fi
 
-    done
+        echo "POST-PROCESSING - SMTP conversion"
 
-fi
+        if [ "${file_extension}" = "jcl" ]; then
 
-# WHAT: Munge SMTP tasks
-# WHY:  Asked to
-#
-if [ ${exit_code} -eq ${SUCCESS} ]; then
-    echo "POST-PROCESSING - SMTP conversion"
+            for this_target_file in ${target_files} ; do
+                source_code_dir=$(${my_dirname} "${this_target_file}")
+                target_file=$(${my_basename} "${this_target_file}")
+                uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
+                target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-    for target_dir in ${TARGETS} ; do
-        target_dir_var=`echo "${target_dir}" | ${my_sed} -e 's/\./_/g'`
-        eval "file_ext=\$${target_dir_var}_ext"
-
-        if [ "${target_dir}" = "jcl" ]; then
-            file_ext="ksh"
-            comment_prefix='#'
-            uc_target_dir=`echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]'`
-            source_code_dir="${pcTarget_dir}/${uc_target_dir}"
-            target_files=`cd "${source_code_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null`
-
-            for target_file in ${target_files} ; do
-                let has_smtp=`${my_egrep} -c "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}"`
+                let has_smtp=$(${my_egrep} -c "m_OutputAssign.*\ SMTP2\ " "${source_code_dir}/${target_file}")
 
                 # Make sure we have an SMTP section upon which to operate
-                if [ ${has_smtp} -gt 0   ]; then
+                if [ ${has_smtp} -gt 0  ]; then
                     echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for SMTP conversion ... "
-                    line_count=`${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}'`
-                    let has_cnvsmtp=`${my_egrep} -c "^\(CNVSMTP[0-9]*\)" "${source_code_dir}/${target_file}"`
+                    line_count=$(${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}')
+                    let has_cnvsmtp=$(${my_egrep} -c "^\(CNVSMTP[0-9]*\)" "${source_code_dir}/${target_file}")
 
                     # Make sure the file hasn't already been converted for SMTP operations
-                    if [ ${has_cnvsmtp} -eq 0  ]; then
+                    if [ ${has_cnvsmtp} -eq 0 ]; then
                         let cnvsmtp_data_counter=0
                         smtp2_lines=($(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^[0-9]*:.*m_OutputAssign.*\ SMTP2\ " | ${my_awk} -F':' '{print $1}'))
                         let smtp2_line_count=${#smtp2_lines[@]}-1
 
                         # Start operating on the last SMTP2 line, so as to not disturb line positions during processing
-                        while [ ${smtp2_line_count} -ge 0  ]; do
-                            function_start_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\(" | tail -1`
-                            function_start_line_number=`echo "${function_start_line}" | ${my_awk} -F':' '{print $1}'`
-                            function_start_line=`echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g"`
+                        while [ ${smtp2_line_count} -ge 0 ]; do
+                            function_start_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\(" | tail -1)
+                            function_start_line_number=$(echo "${function_start_line}" | ${my_awk} -F':' '{print $1}')
+                            function_start_line=$(echo "${function_start_line}" | ${my_sed} -e "s/^${function_start_line_number}://g")
 
-                            function_end_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\ *;;$" | head -1`
-                            function_end_line_number=`echo "${function_end_line}" | ${my_awk} -F':' '{print $1}'`
-                            function_end_line=`echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g"`
+                            function_end_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:\ *;;$" | head -1)
+                            function_end_line_number=$(echo "${function_end_line}" | ${my_awk} -F':' '{print $1}')
+                            function_end_line=$(echo "${function_end_line}" | ${my_sed} -e "s/^${function_end_line_number}://g")
 
-                            jump_label=`echo "${function_start_line}" | ${my_sed} -e 's/[\(|\)]//g'`
-                            jump_label_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:\(${jump_label}\)$" | ${my_egrep} "^[0-9]*:.*JUMP_LABEL=${jump_label}$" | tail -1`
-                            jump_label_line_number=`echo "${jump_label_line}" | ${my_awk} -F':' '{print $1}'`
-                            jump_label_line=`echo "${jump_label_line}" | ${my_sed} -e "s/^${jump_label_line_number}://g"`
+                            jump_label=$(echo "${function_start_line}" | ${my_sed} -e 's/[\(|\)]//g')
+                            jump_label_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -B${line_count} "^[0-9]*:\(${jump_label}\)$" | ${my_egrep} "^[0-9]*:.*JUMP_LABEL=${jump_label}$" | tail -1)
+                            jump_label_line_number=$(echo "${jump_label_line}" | ${my_awk} -F':' '{print $1}')
+                            jump_label_line=$(echo "${jump_label_line}" | ${my_sed} -e "s/^${jump_label_line_number}://g")
 
-                            filerepro_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:.*m_FileRepro" | head -1`
-                            filerepro_line_number=`echo "${filerepro_line}" | ${my_awk} -F':' '{print $1}'`
-                            filerepro_line=`echo "${filerepro_line}" | ${my_sed} -e "s/^${filerepro_line_number}://g"`
+                            filerepro_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} -A${line_count} "^${smtp2_lines[$smtp2_line_count]}:.*m_OutputAssign.*\ SMTP2\ " | ${my_egrep} "^[0-9]*:.*m_FileRepro" | head -1)
+                            filerepro_line_number=$(echo "${filerepro_line}" | ${my_awk} -F':' '{print $1}')
+                            filerepro_line=$(echo "${filerepro_line}" | ${my_sed} -e "s/^${filerepro_line_number}://g")
 
                             # Now we munge the filepro line
                             ${my_sed} -i -e "${filerepro_line_number}s?^${filerepro_line}\$?${ksh_offset}m_Smtp -i SYSUT1?g" "${source_code_dir}/${target_file}"
@@ -2004,12 +2411,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                             let smtp_counter=0
 
                             # Figure out all the lines containing DATA file names
-                            while [ ${function_line_counter} -lt ${function_end_line_number}  ]; do
-                                next_line=`${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g"`
-                                let is_data_line=`echo "${next_line}" | ${my_egrep} -c "m_FileAssign.*\ *[{DATA}{TMP}]/"`
+                            while [ ${function_line_counter} -lt ${function_end_line_number} ]; do
+                                next_line=$(${my_egrep} -n "^.*$" "${source_code_dir}/${target_file}" | ${my_egrep} "^${function_line_counter}:" | ${my_sed} -e "s/^${function_line_counter}://g")
+                                let is_data_line=$(echo "${next_line}" | ${my_egrep} -c "m_FileAssign.*\ *[{DATA}{TMP}]/")
 
-                                if [ ${is_data_line} -gt 0   ]; then
-                                    data_file[${smtp_counter}]=`echo "${next_line}" | ${my_awk} '{print $NF}'`
+                                if [ ${is_data_line} -gt 0  ]; then
+                                    data_file[${smtp_counter}]=$(echo "${next_line}" | ${my_awk} '{print $NF}')
 
                                     # Rename the ${}data_file[]} to ${data_file[]}.ls
                                     ${my_sed} -i -e "${function_line_counter}s?${data_file[$smtp_counter]}\$?${data_file[$smtp_counter]}.ls?g" "${source_code_dir}/${target_file}"
@@ -2023,9 +2430,9 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                             cnvsmtp_line=""
                             let data_line_counter=0
 
-                            while [ ${data_line_counter} -lt ${smtp_counter}  ]; do
+                            while [ ${data_line_counter} -lt ${smtp_counter} ]; do
 
-                                if [ "${cnvsmtp_line}" = ""  ]; then
+                                if [ "${cnvsmtp_line}" = "" ]; then
                                     cnvsmtp_line="###### CONVERT FILE TO LINE SEQUENTIAL ######\\${NL}"
                                     cnvsmtp_line="${cnvsmtp_line}${ksh_offset}JUMP_LABEL=CNVSMTP${cnvsmtp_data_counter}\\${NL}"
                                     cnvsmtp_line="${cnvsmtp_line}${ksh_offset};;\\${NL}"
