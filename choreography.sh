@@ -257,8 +257,8 @@ fi
 if [ ${exit_code} -eq ${SUCCESS} ]; then
 
     while (( "${#}"  )); do
-        key=$(echo "${1}" | ${my_sed} -e 's?\)??g')
-        value=$(echo "${2}" | ${my_sed} -e 's?\)??g')
+        key=$(echo "${1}" | ${my_sed} -e 's?\`??g')
+        value=$(echo "${2}" | ${my_sed} -e 's?\`??g')
 
         case "${key}" in
 
@@ -281,7 +281,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 key=$(echo "${key}" | ${my_sed} -e 's?^--??g')
 
                 if [ "${value}" != "" ]; then
-                    value=$(echo "${value}" | ${my_sed} 's/,/\ /g')
+                    value=$(echo "${value}" | ${my_sed} -e 's/,/\ /g')
                     eval "${key}=\"${value}\""
                     shift
                     shift
