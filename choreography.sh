@@ -1334,13 +1334,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         # Get the original label
                         let orig_label_line=${subsys_line}
                         orig_label=$(${my_egrep} -n -a "SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} "^${subsys_line}:" | ${my_awk} '{print $1}' | ${my_awk} -F'/' '{print $NF}')
-                        alt_label=$(${my_egrep} -A${this_line_count} -a "//${orig_label}.*SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} "DDNAME=" | head -1 | ${my_awk} -F',' '{print $1}' | ${my_awk} -F'=' '{print $NF}')
                     
                         # Munge the labels if we have enough pieces
                         if [ "${orig_label}" != "" -a "${alt_label}" != "" ]; then
-#===
-                            echo -ne "\n ... ALT LABEL is ${alt_label} ... "
-#===
+                            alt_label=$(${my_egrep} -A${this_line_count} -a "//${orig_label}.*SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_egrep} "DDNAME=" | head -1 | ${my_awk} -F',' '{print $1}' | ${my_awk} -F'=' '{print $NF}')
                             let alt_label_line=$(${my_egrep} -n -a "^//${alt_label}" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_awk} -F':' '{print $1}')
                             let label_line_counter=${orig_label_line}
                     
