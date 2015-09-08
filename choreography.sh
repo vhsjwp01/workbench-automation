@@ -62,7 +62,9 @@
 # 20150908     Jason W. Plummer          Added option to disable directory
 #                                        refresh.  Added code for cleanpob
 #                                        rather than call makefile directive for
-#                                        same
+#                                        same.  Added support run being run
+#                                        as user "tuxedo" ONLY
+
 
 ################################################################################
 # DESCRIPTION
@@ -234,7 +236,7 @@ add_to_list() {
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-    for command in awk basename cp cut diff dirname egrep find ls make mkdir pcregrep pwd rm rsync sed sort tr uname wc ; do
+    for command in awk basename cp cut diff dirname egrep find id ls make mkdir pcregrep pwd rm rsync sed sort tr uname wc ; do
         unalias ${command} > /dev/null 2>&1
         f__check_command "${command}"
 
@@ -248,6 +250,37 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         fi
 
     done
+
+fi
+
+# WHAT: Make sure we are the proper user
+# WHY:  Cannot continue otherwise
+#
+if [ ${exit_code} -eq ${SUCCESS} ]; then
+    exit_code=${ERROR}
+
+    this_username=$(${my_id} -un)
+
+    case ${this_username} in
+
+        tuxedo)
+            exit_code=${SUCCESS}
+        ;;
+
+        *)
+            let in_tuxedo_group=$(${my_id} | ${my_egrep} -ci "\(\btuxedo\b\)")
+
+            if [ ${in_tuxedo_group} -eq 0 ]; then
+                exit_code=${SUCCESS}
+            fi
+        
+        ;;
+
+    esac
+
+    if [ ${exit_code} -ne ${SUCCESS} ]; then
+        err_msg="This account does not have enough privilege to run this script"
+    fi
 
 fi
 
