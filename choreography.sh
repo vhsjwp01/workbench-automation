@@ -532,15 +532,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             eval "echo ${attrib}=\"\$${attrib}\" >> \"${script_dir}/project.txt\""
         done
 
-        #echo "ParallelNum=${ParallelNum}"                 >> "${script_dir}/project.txt"
-        #echo "WorkbenchPath=${WorkbenchPath}"             >> "${script_dir}/project.txt"
-        #echo "LocationOfAssets=${LocationOfAssets}"       >> "${script_dir}/project.txt"
-        #echo "WBLOGLEVEL=${WBLOGLEVEL}"                   >> "${script_dir}/project.txt"
-        #echo "WBEXITONERROR=${WBEXITONERROR}"             >> "${script_dir}/project.txt"
-        #echo "OnlyParsingPhase=${OnlyParsingPhase}"       >> "${script_dir}/project.txt"
-        #echo "TargetCOBOLCompiler=${TargetCOBOLCompiler}" >> "${script_dir}/project.txt"
-        #echo "TargetDataBase=${TargetDataBase}"           >> "${script_dir}/project.txt"
-
         # Create ${param_dir}/system.desc from template
         if [ -e "${param_dir}/system.desc.template" ]; then
 
