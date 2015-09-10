@@ -240,7 +240,7 @@ add_to_list() {
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-    for command in awk basename cp cut diff dirname egrep find id ls make mkdir pcregrep pwd rm rsync sed sort strings tr uname wc ; do
+    for command in awk basename cp cut diff dirname egrep find id ls make mkdir pcregrep pwd rm rsync sed sort strings tee tr uname wc ; do
         unalias ${command} > /dev/null 2>&1
         f__check_command "${command}"
 
@@ -751,16 +751,17 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         fi
 
         this_makefile="${script_dir}/makefile.${processing_verb}"
+        log_file="${LOGS}/makefile.${processing_verb}.log"
 
         # Try importing
         if [ -e "${this_makefile}" ]; then
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} all\" ... "
-            cd "${script_dir}" && ${my_make} -f "${this_makefile}" all > /dev/null 2>&1
+            cd "${script_dir}" && ${my_make} -f "${this_makefile}" all > "${log_file}" 2>&1
             exit_code=${?}
 
             if [ ${exit_code} -ne ${SUCCESS} ]; then
                 echo "FAILED"
-                err_msg="${processing_verb} processing of targets failed"
+                err_msg="${processing_verb} processing of targets failed.  See \${log_file}\" for details"
             else
                 echo "SUCCESS"
             fi
@@ -850,6 +851,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         fi
 
         this_makefile="${script_dir}/makefile.${processing_verb}"
+        log_file="${LOGS}/makefile.${processing_verb}.log"
 
         # Explcitly export the uppercase filenames (with lowercase extensions) file lists
         # if defined
@@ -915,12 +917,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         if [ -e "${this_makefile}" ]; then
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} all\" ... "
-            cd "${script_dir}" && ${my_make} -f "${this_makefile}" all > /dev/null 2>&1
+            cd "${script_dir}" && ${my_make} -f "${this_makefile}" all > "${log_file}" 2>&1
             exit_code=${?}
 
             if [ ${exit_code} -ne ${SUCCESS} ]; then
                 echo "FAILED"
-                err_msg="${processing_verb} processing of targets failed"
+                err_msg="${processing_verb} processing of targets failed.  See \"${log_file}\" for details"
             else
                 echo "SUCCESS"
             fi
@@ -1525,6 +1527,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         fi
 
         this_makefile="${script_dir}/makefile.${processing_verb}"
+        log_file="${LOGS}/makefile.${processing_verb}.log"
 
         export uc_copy_list=$(echo "${copy_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_copy_ext}/\.${copy_ext}/g")
         export uc_sysin_list=$(echo "${sysin_list}" | ${my_tr} '[a-z]' '[A-Z]' | ${my_sed} -e "s/\.${uc_sysin_ext}/\.${sysin_ext}/g")
@@ -1537,12 +1540,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         if [ -e "${this_makefile}" ]; then
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} all\" ... "
-            cd "${script_dir}" && ${my_make} -f "${this_makefile}" all > /dev/null 2>&1
+            cd "${script_dir}" && ${my_make} -f "${this_makefile}" all > "${log_file}" 2>&1
             exit_code=${?}
 
             if [ ${exit_code} -ne ${SUCCESS} ]; then
                 echo "FAILED"
-                err_msg="${processing_verb} processing of targets failed"
+                err_msg="${processing_verb} processing of targets failed.  See \"${log_file}\" for details"
             else
                 echo "SUCCESS"
             fi
@@ -1581,6 +1584,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         ${my_mkdir} -p "${report_dir}"
 
         this_makefile="${source_dir}/makefile.${processing_verb}"
+        log_file="${LOGS}/makefile.${processing_verb}.log"
 
         if [ -e "${this_makefile}" ]; then
 
@@ -1603,12 +1607,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             cd "${source_dir}" && ${my_find} . -name "*.pob" -o -name "*.depends" -o -name "*.cdm" -o -name "*.shrec" -exec ${my_rm} -f {} \;
             echo "DONE"
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-            cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+            cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > "${log_file}" 2>&1
             exit_code=${?}
 
             if [ ${exit_code} -ne ${SUCCESS} ]; then
                 echo "FAILED"
-                err_msg="${processing_verb} processing of targets failed"
+                err_msg="${processing_verb} processing of targets failed.  See \"${log_file}\" for details"
             else
                 echo "SUCCESS"
             fi
@@ -1748,15 +1752,16 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "FILECONVERT"
     processing_verb="FileConvert"
     this_makefile="${source_dir}/makefile.${processing_verb}"
+    log_file="${LOGS}/makefile.${processing_verb}.log"
 
     if [ -e "${this_makefile}" ]; then
         echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > "${log_file}" 2>&1
         exit_code=${?}
 
         if [ ${exit_code} -ne ${SUCCESS} ]; then
             echo "FAILED"
-            err_msg="${processing_verb} processing of targets failed"
+            err_msg="${processing_verb} processing of targets failed.  See \"${log_file}\" for details"
         else
             echo "SUCCESS"
         fi
@@ -1775,15 +1780,16 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "RDBMSCONVERT"
     processing_verb="RdbmsConvert"
     this_makefile="${source_dir}/makefile.${processing_verb}"
+    log_file="${LOGS}/makefile.${processing_verb}.log"
 
     if [ -e "${this_makefile}" ]; then
         echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > "${log_file}" 2>&1
         exit_code=${?}
 
         if [ ${exit_code} -ne ${SUCCESS} ]; then
             echo "FAILED"
-            err_msg="${processing_verb} processing of targets failed"
+            err_msg="${processing_verb} processing of targets failed.  See \"${log_file}\" for details"
         else
             echo "SUCCESS"
         fi
@@ -1802,15 +1808,16 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "COBOLCONVERT"
     processing_verb="cobolConvert"
     this_makefile="${source_dir}/makefile.${processing_verb}"
+    log_file="${LOGS}/makefile.${processing_verb}.log"
 
     if [ -e "${this_makefile}" ]; then
         echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > "${log_file}" 2>&1
         exit_code=${?}
 
         if [ ${exit_code} -ne ${SUCCESS} ]; then
             echo "FAILED"
-            err_msg="${processing_verb} processing of targets failed"
+            err_msg="${processing_verb} processing of targets failed.  See \"${log_file}\" for details"
         else
             echo "SUCCESS"
         fi
@@ -1829,15 +1836,16 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "TRAD_JCL"
     processing_verb="trad_jcl"
     this_makefile="${source_dir}/makefile.${processing_verb}"
+    log_file="${LOGS}/makefile.${processing_verb}.log"
 
     if [ -e "${this_makefile}" ]; then
         echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
-        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > /dev/null 2>&1
+        cd "${source_dir}" && ${my_make} -f "${this_makefile}" ${processing_verb} > "${log_file}" 2>&1
         exit_code=${?}
 
         if [ ${exit_code} -ne ${SUCCESS} ]; then
             echo "FAILED"
-            err_msg="${processing_verb} processing of targets failed"
+            err_msg="${processing_verb} processing of targets failed.  See \"${log_file}\" for details"
         else
             echo "SUCCESS"
         fi
