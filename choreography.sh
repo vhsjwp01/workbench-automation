@@ -1087,7 +1087,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                         if [ ${has_cpy_suffix} -eq 0 ]; then
                             this_line=$(echo "${ibcabend_line}" | ${my_awk} -F':' '{print $1}')
-                            ${my_sed} -i -e "${this_line}s?^\(.*COPY\) *\(IBCABEND\)\.\(.*\)?\1\\${NL}${offset}\2\.cpy\.\3?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
+                            ${my_sed} -i -e "${this_line}s?^\(.*COPY\) *\(IBCABEND\)\.\(.*\)?\1\\${NL}${cbl_offset}\2\.cpy\.\3?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
                         fi
 
                     done
