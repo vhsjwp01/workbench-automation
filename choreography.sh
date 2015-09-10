@@ -63,8 +63,9 @@
 #                                        refresh.  Added code for cleanpob
 #                                        rather than call makefile directive for
 #                                        same.  Added support run being run
-#                                        as user "tuxedo" ONLY
-
+#                                        as user/group "tuxedo" ONLY
+# 20150910     Jason W. Plummer          Added support for Find_<var> detection
+#                                        and config in ${param}/version.mk
 
 ################################################################################
 # DESCRIPTION
@@ -92,13 +93,6 @@
 # --missing_check         - An on/off toggle for MISSING report checking (OPTIONAL)
 # --clean_dirs            - An on/off toggle for expunging target dirs (OPTIONAL)
 # --target_DB             - Target DataBase to use       (Default: ORACLE)
-
-USAGE="${USAGE}[ --fatal_check           <on/off toggle for FATAL report checking)         *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --error_check           <on/off toggle for ERROR report checking)         *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --warning_check         <on/off toggle for WARNING report checking)       *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --missing_check         <on/off toggle for MISSING report checking)       *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --clean_dirs            <on/off toggle for expunging target dirs)         *OPTIONAL*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --target_DB             <Target DataBase to use (Default: ORACLE)         *OPTIONAL*> ]"
 
 ################################################################################
 # CONSTANTS
@@ -166,20 +160,27 @@ real_targets=""
 f__check_command() {
     return_code=${SUCCESS}
     my_command="${1}"
+    this_sed=$(unalias sed > /dev/null 2>&1 ; which sed 2> /dev/null)
 
-    if [ "${my_command}" != "" ]; then
-        my_command_check=$(unalias "${my_command}" 2> /dev/null ; which "${my_command}" 2> /dev/null)
+    if [ "${this_sed}" = ""  ]; then
+        echo "${STDOUT_OFFSET}ERROR:  The command \"sed\" cannot be found"
+        return_code=${ERROR}
+    else
+        if [ "${my_command}" != ""  ]; then
+            my_command_check=$(unalias "${my_command}" 2> /dev/null ; which "${my_command}" 2> /dev/null)
 
-        if [ "${my_command_check}" = "" ]; then
-            return_code=${ERROR}
+            if [ "${my_command_check}" = ""  ]; then
+                return_code=${ERROR}
+            else
+                my_command=$(echo "${my_command}" | ${this_sed} -e 's/[^a-zA-Z0-9]/_/g')
+                eval "my_${my_command}=\"${my_command_check}\""
+            fi
+
         else
-            my_command=$(echo "${my_command}" | sed -e 's/[^a-zA-Z0-9]/_/g')
-            eval "my_${my_command}=\"${my_command_check}\""
+            echo "${STDOUT_OFFSET}ERROR:  No command was specified"
+            return_code=${ERROR}
         fi
 
-    else
-        echo "${STDOUT_OFFSET}ERROR:  No command was specified"
-        return_code=${ERROR}
     fi
 
     return ${return_code}
@@ -192,11 +193,12 @@ f__check_command() {
 add_to_array() {
     return_code=${SUCCESS}
 
-    if [ "${1}" != "" -a "${2}" != "" ]; then
+    if [ "${1}" != "" -a "${2}" != ""  ]; then
         eval "let element_count=\${#${1}[@]}"
         eval "${1}[$element_count]=${2}"
     else
-        /bin/false
+        echo "${STDOUT_OFFSET}ERROR:  Not enough arguments specified to add to an array"
+        return_code=${ERROR}
     fi
 
     return ${return_code}
@@ -209,17 +211,18 @@ add_to_array() {
 add_to_list() {
     return_code=${SUCCESS}
 
-    if [ "${1}" != "" -a "${2}" != "" ]; then
+    if [ "${1}" != "" -a "${2}" != ""  ]; then
         eval "is_empty=\$${1}"
 
-        if [ "${is_empty}" = "" ]; then
+        if [ "${is_empty}" = ""  ]; then
             eval "${1}=\"${2}\""
         else
             eval "${1}=\"\$${1} ${2}\""
         fi
 
     else
-        /bin/false
+        echo "${STDOUT_OFFSET}ERROR:  Not enough arguments specified to add to a list"
+        return_code=${ERROR}
     fi
 
     return ${return_code}
@@ -615,6 +618,51 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ${my_sed} -i -e 's/^\(FILE_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
                 fi
 
+                # Enable extensions based on TARGETS present
+                # Find_Jcl = JCL 
+                # Find_Prg = BATCH 
+                # Find_Tpr = CICS 
+                # Find_Map = MAP 
+                version_mk_find_extensions="Find_Jcl Find_Prg Find_Tpr Find_Map"
+
+                # First, disable all of them
+                for i in ${version_mk_find_extensions} ; do
+                    ${my_sed} -i -e "s?^${i} =.*\$?${i} =?g" "${param_dir}/version.mk"
+                done
+
+                # Now, enable them by TARGET
+                for target in ${TARGETS}; do
+                    find_var=""
+                    uc_target=$(echo "${target}" | ${my_tr} '[a-z]' '[A-Z]')
+
+                    case ${target} in
+
+                        jcl)
+                            find_var="Find_Jcl"
+                        ;;
+
+                        batch)
+                            find_var="Find_Prg"
+
+                        ;;
+
+                        cics)
+                            find_var="Find_Tpr"
+
+                        ;;
+
+                        map)
+                            find_var="Find_Map"
+                        ;;
+
+                    esac
+
+                    if [ "${find_var}" != "" ]; then
+                        ${my_sed} -i -e "s?^\(${find_var} =\).*\$?\1 ${uc_target}?g" "${param_dir}/version.mk"
+                    fi
+
+                done
+
             else
                 err_msg="Could not locate \"${param_dir}/version.mk\""
                 exit_code=${ERROR}
@@ -708,6 +756,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 ${my_rm} -rf "${import_dir}/${uc_target_dir}"
                 ${my_mkdir} -p "${import_dir}/${uc_target_dir}"
             done
+
         fi
 
         this_makefile="${script_dir}/makefile.${processing_verb}"
@@ -1901,202 +1950,181 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         #echo "POST-PROCESSING - SQL timestamp conversion"
 
-        #if [ "${file_extension}" = "cbl" -o "${file_extension}" = "cpy" ]; then
+        if [ "${file_extension}" = "cbl" -o "${file_extension}" = "cpy" ]; then
 
-        #    ########################################################################
-        #    ####
-        #    #### BEGIN SQL timestamp conversion
-        #    ####
-        #    ########################################################################
+            ########################################################################
+            ####
+            #### BEGIN SQL timestamp conversion
+            ####
+            ########################################################################
 
-        #    for this_target_file in ${target_files} ; do
-        #        echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" SQL timestamp conversion ... "
+            for this_target_file in ${target_files} ; do
+                echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" SQL timestamp conversion ... "
 
-        #        source_code_dir=$(${my_dirname} "${this_target_file}")
-        #        target_file=$(${my_basename} "${this_target_file}")
-        #        uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
-        #        target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
+                source_code_dir=$(${my_dirname} "${this_target_file}")
+                target_file=$(${my_basename} "${this_target_file}")
+                uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
+                target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
-        #        # egrep -n -a "^.*$" /tmp/junk | strings | pcregrep -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | sort -rn
+                # egrep -n -a "^.*$" /tmp/junk | strings | pcregrep -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | sort -rn
 
-        #        for pattern in "MWDB2ORA\.MAKE_TIME" "MWDB2ORA\.TIME2HOST" "MWDB2ORA\.STR2TIME" "MWDB2ORA\.STR2TMS" "MWDB2ORA\.STR2DATE" ; do
-        #            echo -ne "            Processing file ${source_code_dir}/${target_file} for ${pattern} keyword translation ... "
-        #            matched_lines=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_pcregrep} -M -e "\b${pattern}\b\([[:space:]|\n\d+:]*.*[[:space:]|\n\d+:]*\)" | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
-        #            let matched_line_count=$(echo -ne "${matched_lines}\n" | ${my_wc} -l | ${my_awk} '{print $1}')
+                for pattern in "MWDB2ORA\.MAKE_TIME" "MWDB2ORA\.TIME2HOST" "MWDB2ORA\.STR2TIME" "MWDB2ORA\.STR2TMS" "MWDB2ORA\.STR2DATE" ; do
+                    echo -ne "            Processing file ${source_code_dir}/${target_file} for ${pattern} keyword translation ... "
+                    matched_lines=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_pcregrep} -M -e "\b${pattern}\b\([[:space:]|\n\d+:]*.*[[:space:]|\n\d+:]*\)" | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
+                    let matched_line_count=$(echo -ne "${matched_lines}\n" | ${my_wc} -l | ${my_awk} '{print $1}')
 
-        #            start_line_keyword="${pattern}\("
-        #            start_line_keyword_ignore=""
-        #            end_line_keyword="\)"
-        #            end_line_keyword_ignore=""
+                    start_line_keyword="${pattern}\("
+                    start_line_keyword_ignore=""
+                    end_line_keyword="\)"
+                    end_line_keyword_ignore=""
 
 #====
-        #            case ${pattern} in
+                    case ${pattern} in
 
-        #                # Rule #1: MWDB2ORA.MAKE_TIME change to use SYSTIMESTAMP
-        #                #${my_sed} -i -e "s?MWDB2ORA.MAKE_TIME(.*)?MNTC_LST_TM = SYSTIMESTAMP?g" "${source_code_dir}/${target_file}"
-        #                "MWDB2ORA\.MAKE_TIME")
+                        # Rule #1: MWDB2ORA.MAKE_TIME change to use SYSTIMESTAMP
+                        #${my_sed} -i -e "s?MWDB2ORA.MAKE_TIME(.*)?MNTC_LST_TM = SYSTIMESTAMP?g" "${source_code_dir}/${target_file}"
+                        "MWDB2ORA\.MAKE_TIME")
 
-        #                    if [ ${matched_line_count} -gt 1 ]; then
+                            if [ ${matched_line_count} -gt 1 ]; then
 
-        #                        for matched_line in ${matched_lines} ; do
-        #                            this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
-        #                            this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
-        #                            let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
-        #                            let has_pattern=$(echo "${this_real_line}" | ${my_egrep} -c ":\b${pattern}\b\)")
+                                for matched_line in ${matched_lines} ; do
+                                    this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
+                                    this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
+                                    let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
+                                    let has_pattern=$(echo "${this_real_line}" | ${my_egrep} -c ":\b${pattern}\b\)")
 
-        #                            if [ ${has_pattern} -gt 0 ]; then
-        #                                ${my_sed} -i -e "${this_line_number}s?^\(.*\)${pattern}(\$?\1MNTC_LST_TM = ?g" "${source_code_dir}/${target_file}"
-        #                            fi
+                                    if [ ${has_pattern} -gt 0 ]; then
+                                        ${my_sed} -i -e "${this_line_number}s?^\(.*\)${pattern}(\$?\1MNTC_LST_TM = ?g" "${source_code_dir}/${target_file}"
+                                    fi
 
-        #                            if [ ${has_keyword} -gt 0 ]; then
-        #                                ${my_sed} -i -e "${this_line_number}s?^\(.*\):.*)\(.*\)\$?$\1SYSTIMESTAMP\2?g" "${source_code_dir}/${target_file}"
-        #                            else
-        #                                first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
-        #                                ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
-        #                            fi
-        #                                                
-        #                        done
+                                    if [ ${has_keyword} -gt 0 ]; then
+                                        ${my_sed} -i -e "${this_line_number}s?^\(.*\):.*)\(.*\)\$?$\1SYSTIMESTAMP\2?g" "${source_code_dir}/${target_file}"
+                                    else
+                                        first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
+                                        ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
+                                    fi
+                                                        
+                                done
 
-        #                    elif [ ${matched_line_count} -eq 1 ]; then
-        #                        ${my_sed} -i -e "s?${pattern}(.*)?MNTC_LST_TM = SYSTIMESTAMP?g" "${source_code_dir}/${target_file}"
-        #                    fi
+                            elif [ ${is_one_line} -eq 1 ]; then
+                                ${my_sed} -i -e "s?${pattern}(.*)?MNTC_LST_TM = SYSTIMESTAMP?g" "${source_code_dir}/${target_file}"
+                            fi
 
-        #                ;;    
+                        ;;    
 
-        #                # Rule #2: MWDB2ORA.TIME2HOST change to TO_CHAR
-        #                #${my_sed} -i -e "s?MWDB2ORA.TIME2HOST(\(.*\))?TO_CHAR(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
-        #                "MWDB2ORA\.TIME2HOST")
+                        # Rule #2: MWDB2ORA.TIME2HOST change to TO_CHAR
+                        #${my_sed} -i -e "s?MWDB2ORA.TIME2HOST(\(.*\))?TO_CHAR(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                        "MWDB2ORA\.TIME2HOST")
 
-        #                    if [ ${matched_line_count} -gt 1 ]; then
+                            if [ ${matched_line_count} -gt 1 ]; then
 
-        #                        for matched_line in ${matched_lines} ; do
-        #                            this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
-        #                            this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
-        #                            let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
-        #                            let has_pattern=$(echo "${this_real_line}" | ${my_egrep} -c ":\b${pattern}\b\)")
+                                for matched_line in ${matched_lines} ; do
+                                    this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
+                                    this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
+                                    let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
+                                    let has_pattern=$(echo "${this_real_line}" | ${my_egrep} -c ":\b${pattern}\b\)")
 
-        #                            if [ ${has_pattern} -gt 0 ]; then
-        #                                ${my_sed} -i -e "${this_line_number}s?^\(.*\)${pattern}\(.*)\)\$?\1TO_CHAR\2?g" "${source_code_dir}/${target_file}"
-        #                            fi
+                                    if [ ${has_pattern} -gt 0 ]; then
+                                        ${my_sed} -i -e "${this_line_number}s?^\(.*\)${pattern}\(.*)\)\$?\1TO_CHAR\2?g" "${source_code_dir}/${target_file}"
+                                    fi
 
-        #                            if [ ${has_keyword} -gt 0 ]; then
-        #                                ${my_sed} -i -e "${this_line_number}s?^.*\(:.*)\)\$?${cbl_offset}\1,\\${NL}${cbl_offset}'HH24.MI.SS'?g" "${source_code_dir}/${target_file}"
-        #                            else
-        #                                first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
-        #                                ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
-        #                            fi
-        #                                                
-        #                        done
+                                    if [ ${has_keyword} -gt 0 ]; then
+                                        ${my_sed} -i -e "${this_line_number}s?^.*\(:.*)\)\$?${cbl_offset}\1,\\${NL}${cbl_offset}'HH24.MI.SS'?g" "${source_code_dir}/${target_file}"
+                                    else
+                                        first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
+                                        ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
+                                    fi
+                                                        
+                                done
 
-        #                    elif [ ${matched_line_count} -eq 1 ]; then
-        #                        ${my_sed} -i -e "s?${pattern}(\(.*\))?TO_CHAR(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
-        #                    fi
+                            elif [ ${is_one_line} -eq 1 ]; then
+                                ${my_sed} -i -e "s?${pattern}(\(.*\))?TO_CHAR(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                            fi
 
-        #                ;;
+                        ;;
 
-        #                # Rule #3: MWDB2ORA.STR2TIME change to use TO_TIMESTAMP
-        #                #${my_sed} -i -e "s?MWDB2ORA.STR2TIME(\(.*\))?TO_TIMESTAMP(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
-        #                "MWDB2ORA\.STR2TIME")
+                        # Rule #3: MWDB2ORA.STR2TIME change to use TO_TIMESTAMP
+                        #${my_sed} -i -e "s?MWDB2ORA.STR2TIME(\(.*\))?TO_TIMESTAMP(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                        "MWDB2ORA\.STR2TIME")
 
-        #                    if [ ${matched_line_count} -gt 1 ]; then
+                            if [ ${matched_line_count} -gt 1 ]; then
 
-        #                        for matched_line in ${matched_lines} ; do
-        #                            this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
-        #                            this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
-        #                            let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
-        #                            let has_pattern=$(echo "${this_real_line}" | ${my_egrep} -c ":\b${pattern}\b\)")
+                                for matched_line in ${matched_lines} ; do
+                                    this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
+                                    this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
+                                    let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
+                                    let has_pattern=$(echo "${this_real_line}" | ${my_egrep} -c ":\b${pattern}\b\)")
 
-        #                            if [ ${has_pattern} -gt 0 ]; then
-        #                                ${my_sed} -i -e "${this_line_number}s?^\(.*\)${pattern}\(.*)\)\$?\1TO_TIMESTAMP\2?g" "${source_code_dir}/${target_file}"
-        #                            fi
+                                    if [ ${has_pattern} -gt 0 ]; then
+                                        ${my_sed} -i -e "${this_line_number}s?^\(.*\)${pattern}\(.*)\)\$?\1TO_TIMESTAMP\2?g" "${source_code_dir}/${target_file}"
+                                    fi
 
-        #                            if [ ${has_keyword} -gt 0 ]; then
-        #                                ${my_sed} -i -e "${this_line_number}s?^.*\(:.*)\)\$?${cbl_offset}\1,\\${NL}${cbl_offset}'HH24.MI.SS'?g" "${source_code_dir}/${target_file}"
-        #                            else
-        #                                first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
-        #                                ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
-        #                            fi
-        #                                                
-        #                        done
+                                    if [ ${has_keyword} -gt 0 ]; then
+                                        ${my_sed} -i -e "${this_line_number}s?^.*\(:.*)\)\$?${cbl_offset}\1,\\${NL}${cbl_offset}'HH24.MI.SS'?g" "${source_code_dir}/${target_file}"
+                                    else
+                                        first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
+                                        ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
+                                    fi
+                                                        
+                                done
 
-        #                    elif [ ${matched_line_count} -eq 1 ]; then
-        #                        ${my_sed} -i -e "s?${pattern}(\(.*\))?TO_TIMESTAMP(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
-        #                    fi
+                            elif [ ${is_one_line} -eq 1 ]; then
+                                ${my_sed} -i -e "s?${pattern}(\(.*\))?TO_TIMESTAMP(\1,\\${NL}${cbl_offset}'HH24.MI.SS')?g" "${source_code_dir}/${target_file}"
+                            fi
 
-        #                ;;
+                        ;;
 
-        #                # Rule #4: MWDB2ORA.STR2TMS remove
-        #                #${my_sed} -i -e "s?MWDB2ORA.STR2TMS(\(.*\))?\1?g" "${source_code_dir}/${target_file}"
-        #                "MWDB2ORA\.STR2TMS")
-        #                    let matched_line_count=$(echo -ne "${matched_lines}\n" | ${my_wc} -l | ${my_awk} '{print $1}')
+                        # Rule #4: MWDB2ORA.STR2TMS remove
+                        #${my_sed} -i -e "s?MWDB2ORA.STR2TMS(\(.*\))?\1?g" "${source_code_dir}/${target_file}"
+                        "MWDB2ORA\.STR2TMS")
+                            let matched_line_count=$(echo -ne "${matched_lines}\n" | ${my_wc} -l | ${my_awk} '{print $1}')
 
-        #                    if [ ${matched_line_count} -gt 1 ]; then
+                            if [ ${matched_line_count} -gt 1 ]; then
 
-        #                        for matched_line in ${matched_lines} ; do
-        #                            this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
-        #                            this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
-        #                            let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
+                                for matched_line in ${matched_lines} ; do
+                                    this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
+                                    this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
+                                    let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
 
-        #                            if [ ${has_keyword} -gt 0 ]; then
-        #                                ${my_sed} -i -e "${this_line_number}s?^.*\(:.*\))\$?${cbl_offset}\1?g" "${source_code_dir}/${target_file}"
-        #                            else
-        #                                first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
-        #                                ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
-        #                            fi
-        #                                                
-        #                        done
+                                    if [ ${has_keyword} -gt 0 ]; then
+                                        ${my_sed} -i -e "${this_line_number}s?^.*\(:.*\))\$?${cbl_offset}\1?g" "${source_code_dir}/${target_file}"
+                                    else
+                                        first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
+                                        ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
+                                    fi
+                                                        
+                                done
 
-        #                    elif [ ${matched_line_count} -eq 1 ]; then
-        #                        ${my_sed} -i -e "s?${pattern}(\(.*\))?\1?g" "${source_code_dir}/${target_file}"
-        #                    fi
+                            elif [ ${is_one_line} -eq 1 ]; then
+                                ${my_sed} -i -e "s?${pattern}(\(.*\))?\1?g" "${source_code_dir}/${target_file}"
+                            fi
 
-        #                ;;
+                        ;;
 
-        #                # Rule #5: MWDB2ORA.STR2DATE change to use TO_CHAR
-        #                #${my_sed} -i -e "s?BETWEEN MWDB2ORA.STR2DATE(\(.*\) AND \(.*\))?BETWEEN TO_DATE(\1, 'MM/DD/YYYY')\\${NL}${cbl_offset} AND TO_DATE(\2, 'MM/DD/YYYY')?g" "${source_code_dir}/${target_file}"
-        #                #${my_sed} -i -e "s?EXEC SQL SELECT MWDB2ORA.STR2DATE(\(.*\), \(.*\), .*)?EXEC SQL SELECT TO_CHAR(\1, \2,\\${NL}${cbl_offset} 'MM-DD-YYYY')?g" "${source_code_dir}/${target_file}"
-        #                "MWDB2ORA\.STR2DATE")
-        #                    single_param_matched_lines=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_pcregrep} -M -e "MWDB2ORA\.STR2DATE\([^,\)]+\)" | ${my_sed} -e 's?\ ?:ZZqC:?g')
-        #                    multi_param_matched_lines=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_pcregrep} -M -e "MWDB2ORA\.STR2DATE\([^,\)]+,\s*-1\s*,\s*'DAY'\s*\)" | ${my_sed} -e 's?\ ?:ZZqC:?g')
+                        # Rule #5: MWDB2ORA.STR2DATE change to use TO_CHAR
+                        #${my_sed} -i -e "s?BETWEEN MWDB2ORA.STR2DATE(\(.*\) AND \(.*\))?BETWEEN TO_DATE(\1, 'MM/DD/YYYY')\\${NL}${cbl_offset} AND TO_DATE(\2, 'MM/DD/YYYY')?g" "${source_code_dir}/${target_file}"
+                        #${my_sed} -i -e "s?EXEC SQL SELECT MWDB2ORA.STR2DATE(\(.*\), \(.*\), .*)?EXEC SQL SELECT TO_CHAR(\1, \2,\\${NL}${cbl_offset} 'MM-DD-YYYY')?g" "${source_code_dir}/${target_file}"
+                        "MWDB2ORA\.STR2DATE")
+                            single_param_matched_lines=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_pcregrep} -M -e "\b${pattern}\b\([^,\)]+\)" | ${my_sed} -e 's?\ ?:ZZqC:?g')
+                            multi_param_matched_lines=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_pcregrep} -M -e "\b${pattern}\b\([^,\)]+,[^,\)]+,[^,\)]+\)" | ${my_sed} -e 's?\ ?:ZZqC:?g')
 
-        #                    if [ ${matched_line_count} -gt 1 ]; then
+                        ;;
 
-        #                        for matched_line in ${matched_lines} ; do
-        #                            this_line_number=$(echo "${matched_line}" | ${my_awk} -F':' '{print $1}')
-        #                            this_real_line=$(echo "${matched_line}" | ${my_sed} -e "s/^${this_line_number}://g")
-        #                            let has_keyword=$(echo "${this_real_line}" | ${my_egrep} -c ":\b.*\b\)")
-
-        #                            if [ ${has_keyword} -gt 0 ]; then
-        #                                ${my_sed} -i -e "${this_line_number}s?^.*\(:.*\))\$?${cbl_offset}\1?g" "${source_code_dir}/${target_file}"
-        #                            else
-        #                                first_seven_chars=$(echo "${this_real_line} | ${my_cut} -b 1-7")
-        #                                ${my_sed} -i -e "${this_line_number}s?^${first_seven_chars}\(.*\)\$?${comment_prefix}\1?g" "${source_code_dir}/${target_file}"
-        #                            fi
-        #                                                
-        #                        done
-
-        #                    elif [ ${matched_line_count} -eq 1 ]; then
-        #                        ${my_sed} -i -e "s?BETWEEN ${pattern}(\(.*\) AND \(.*\))?BETWEEN TO_DATE(\1, 'MM/DD/YYYY')\\${NL}${cbl_offset} AND TO_DATE(\2, 'MM/DD/YYYY')?g" "${source_code_dir}/${target_file}"
-        #                        ${my_sed} -i -e "s?EXEC SQL SELECT ${pattern}(\(.*\), \(.*\), .*)?EXEC SQL SELECT TO_CHAR(\1, \2,\\${NL}${cbl_offset} 'MM-DD-YYYY')?g" "${source_code_dir}/${target_file}"
-        #                    fi
-
-        #                ;;
-
-        #            esac
+                    esac
 #====
 
-        #        done
+                done
 
-        #        echo "DONE"
-        #    done
+                echo "DONE"
+            done
 
-        #    ########################################################################
-        #    ####
-        #    #### END SQL timestamp conversion
-        #    ####
-        #    ########################################################################
+            ########################################################################
+            ####
+            #### END SQL timestamp conversion
+            ####
+            ########################################################################
 
-        #fi
+        fi
 
         echo "POST-PROCESSING - IEFBR14 file deletion optimization"
 
