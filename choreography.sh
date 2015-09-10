@@ -1354,7 +1354,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             ;;
 
-            jcl|proc)
+            jcl|proc|sysin)
 
                 ####################################################################
                 ####
@@ -1363,10 +1363,18 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 ####################################################################
 
                 comment_prefix='//*'
-                echo "    INFO:  Extra Pre-Processing ${prepared_dir}/${uc_target_dir} files for SUBSYS and INCLUDE translation:"
+                echo "    INFO:  Extra Pre-Processing ${prepared_dir}/${uc_target_dir} files for %%, SUBSYS and INCLUDE translation:"
                 target_files=$(cd "${prepared_dir}/${uc_target_dir}" 2> /dev/null && ${my_ls} *.${file_ext} 2> /dev/null)
 
                 for target_file in ${target_files} ; do
+                    let has_percent_percent=$(${my_egrep} -c "%%" "${prepared_dir}/${uc_target_dir}/${target_file}")
+
+                    if [ ${has_percent_percent} -gt 0 ]; then
+                        echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for %% keyword translation ... "
+                        ${my_sed} -i 's/%%\([A-Z]*[0-9]*\)/${\1}/g' "${prepared_dir}/${uc_target_dir}/${target_file}"
+                        echo "DONE"
+                    fi
+
                     echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for SUBSYS keyword translation ... "
                     this_line_count=$(${my_wc} -l "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_awk} '{print $1}')
                     subsys_lines=($(${my_egrep} -n -a "SUBSYS=" "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_awk} -F':' '{print $1}'))
