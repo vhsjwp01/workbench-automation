@@ -1915,7 +1915,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         for this_target_file in ${target_files} ; do
             source_code_dir=$(${my_dirname} "${this_target_file}")
             target_file=$(${my_basename} "${this_target_file}")
-            uc_target_dir=$(echo "${source_code_dir} | ${my_awk} -F'/' '{print $1}'")
+            uc_target_dir=$(echo "${source_code_dir}" | ${my_awk} -F'/' '{print $1}')
             target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
             # Read in regex lines from "${postconvert_dir}/${uc_target_dir}"
