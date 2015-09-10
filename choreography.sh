@@ -1913,7 +1913,9 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         ########################################################################
 
         for this_target_file in ${target_files} ; do
+            this_target_file=$(echo "${this_target_file}" | ${my_sed} -e 's?^\./??g')
             source_code_dir=$(${my_dirname} "${this_target_file}")
+            source_code_dir="${pcTarget_dir}/${source_code_dir}"
             target_file=$(${my_basename} "${this_target_file}")
             uc_target_dir=$(echo "${source_code_dir}" | ${my_awk} -F'/' '{print $1}')
             target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
