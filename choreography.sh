@@ -1853,6 +1853,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     find_exclude=$(echo "${post_dirs_to_ignore}" | ${my_sed} 's?\([a-zA-Z0-9]*\)?! -path "*/\1/*"?g')
 
     for file_extension in ${file_extensions} ; do
+        echo "POST-PROCESSING - ${file_extension} files"
         file_ext="${file_extension}"
         target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f ${find_exclude} | ${my_egrep} "\.${file_ext}$")
         comment_prefix="      *"
@@ -1879,31 +1880,24 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         fi
 
         for this_target_file in ${target_files} ; do
-            #echo "This target file is: ${this_target_file}"
 
             # Break out the file name
             target_file=$(${my_basename} "${this_target_file}")
-            #echo "    Real target file is: ${target_file}"
 
             # Break out the relative parent directory
             source_code_dir=$(${my_dirname} "${this_target_file}")
-            #echo "    Relative source code dir is: ${source_code_dir}"
 
             # Get rid of the leading ./
             source_code_dir=$(echo "${source_code_dir}" | ${my_sed} -e 's?^\./??g')
-            #echo "    Sanitized relative source code dir is: ${source_code_dir}"
 
             # Add in the full directory path
             source_code_dir="${pcTarget_dir}/${source_code_dir}"
-            #echo "    Aboslute source code dir is: ${source_code_dir}"
 
             # Figure out the uc_target
             uc_target_dir=$(echo "${source_code_dir}" | ${my_awk} -F'/' '{print $NF}')
-            #echo "    UC Target dir is: ${uc_target_dir}"
 
             # Define the target from uc_target
             target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
-            #echo "    Target dir is: ${target_dir}"
 
             ########################################################################
             ####
@@ -1947,7 +1941,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             ########################################################################
 
             if [ "${file_extension}" = "cbl" -o "${file_extension}" = "cpy" ]; then
-                echo "POST-PROCESSING - IBCABEND keyword translation - ${file_extension} files"
 
                 ################################################################
                 ####
@@ -1955,7 +1948,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 ####
                 ################################################################
 
-                echo -ne "        Processing file ${source_code_dir}/${target_file} for IBCABEND filename translation ... "
+                echo -ne "    INFO:  Processing file ${source_code_dir}/${target_file} for IBCABEND filename translation ... "
                 ibcabend_lines=$(${my_egrep} -n -a "\bCOPY\ *IBCABEND\." "${source_code_dir}/${target_file}" | ${my_strings} | ${my_sed} -e 's?\ ?:ZZqC:?g')
 
                 for ibcabend_line in ${ibcabend_lines} ; do
@@ -1986,12 +1979,10 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                # ####
                # ########################################################################
 
-               # echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" SQL timestamp conversion ... "
-
                # # egrep -n -a "^.*$" /tmp/junk | strings | pcregrep -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | sort -rn
 
                # for pattern in "MWDB2ORA\.MAKE_TIME" "MWDB2ORA\.TIME2HOST" "MWDB2ORA\.STR2TIME" "MWDB2ORA\.STR2TMS" "MWDB2ORA\.STR2DATE" ; do
-               #     echo -ne "            Processing file ${source_code_dir}/${target_file} for ${pattern} keyword translation ... "
+               #     echo -ne "    INFO:  Processing file ${source_code_dir}/${target_file} for ${pattern} SQL timestamp conversion ... "
                #     matched_lines=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_pcregrep} -M -e "\b${pattern}\b\([[:space:]|\n\d+:]*.*[[:space:]|\n\d+:]*\)" | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
                #     let matched_line_count=$(echo -ne "${matched_lines}\n" | ${my_wc} -l | ${my_awk} '{print $1}')
 
@@ -2147,8 +2138,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             fi
 
-            echo "POST-PROCESSING - IEFBR14 file deletion optimization - ${file_extension} files"
-
             if [ "${file_extension}" = "jcl" ]; then
 
                 ########################################################################
@@ -2206,8 +2195,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 #### END IEFBR14 MOD,DELETE,DELTE optimization
                 ####
                 ########################################################################
-
-                echo "POST-PROCESSING - FTPBATCH conversion - ${file_extension} files"
 
                 ########################################################################
                 ####
@@ -2425,8 +2412,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 ####
                 ########################################################################
 
-                echo "POST-PROCESSING - DFDSS conversion - ${file_extension} files"
-
                 ########################################################################
                 ####
                 #### BEGIN DFDSS conversion
@@ -2445,8 +2430,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 #### END DFDSS conversion
                 ####
                 ########################################################################
-
-                echo "POST-PROCESSING - SMTP conversion - ${file_extension} files"
 
                 ########################################################################
                 ####
