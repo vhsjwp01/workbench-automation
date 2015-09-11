@@ -1073,35 +1073,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     ####
                     ################################################################
 
-                   # ################################################################
-                   # ####
-                   # #### BEGIN IBCABEND keyword translation
-                   # ####
-                   # ################################################################
-
-                   # echo -ne "            Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for IBCABEND filename translation ... "
-                   # ibcabend_lines=$(${my_egrep} -n -a "\bCOPY\ *IBCABEND\." "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_sed} -e 's?\ ?:ZZqC:?g')
-
-                   # for ibcabend_line in ${ibcabend_lines} ; do
-                   #     ibcabend_line=$(echo "${ibcabend_line}" | ${my_sed} -e 's?:ZZqC:?\ ?g')
-
-                   #     let has_cpy_suffix=$(echo "${ibcabend_line}" | ${my_egrep} -c "IBCABEND\.cpy\.")
-
-                   #     if [ ${has_cpy_suffix} -eq 0 ]; then
-                   #         this_line=$(echo "${ibcabend_line}" | ${my_awk} -F':' '{print $1}')
-                   #         ${my_sed} -i -e "${this_line}s?^\(.*\)\(COPY\) *\(IBCABEND\)\.\(.*\)?\1\\${NL}${cbl_offset}${cbl_offset}\2\ \3.cpy\.\4?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
-                   #     fi
-
-                   # done
-
-                   # echo "DONE"
-
-                   # ################################################################
-                   # ####
-                   # #### END IBCABEND keyword translation
-                   # ####
-                   # ################################################################
-
                     ################################################################
                     ####
                     #### BEGIN C1MATCHI keyword translation
@@ -1979,8 +1950,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 ####
                 ################################################################
 
-                echo -ne "        Processing file ${prepared_dir}/${uc_target_dir}/${target_file} for IBCABEND filename translation ... "
-                ibcabend_lines=$(${my_egrep} -n -a "\bCOPY\ *IBCABEND\." "${prepared_dir}/${uc_target_dir}/${target_file}" | ${my_strings} | ${my_sed} -e 's?\ ?:ZZqC:?g')
+                echo -ne "        Processing file ${source_code_dir}/${target_file} for IBCABEND filename translation ... "
+                ibcabend_lines=$(${my_egrep} -n -a "\bCOPY\ *IBCABEND\." "${source_code_dir}/${target_file}" | ${my_strings} | ${my_sed} -e 's?\ ?:ZZqC:?g')
 
                 for ibcabend_line in ${ibcabend_lines} ; do
                     ibcabend_line=$(echo "${ibcabend_line}" | ${my_sed} -e 's?:ZZqC:?\ ?g')
@@ -1989,7 +1960,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     if [ ${has_cpy_suffix} -eq 0 ]; then
                         this_line=$(echo "${ibcabend_line}" | ${my_awk} -F':' '{print $1}')
-                        ${my_sed} -i -e "${this_line}s?^\(.*\)\(COPY\) *\(IBCABEND\)\.\(.*\)?\1\\${NL}${cbl_offset}${cbl_offset}\2\ \3.cpy\.\4?g" "${prepared_dir}/${uc_target_dir}/${target_file}"
+                        ${my_sed} -i -e "${this_line}s?^\(.*\)\(COPY\) *\(IBCABEND\)\.\(.*\)?\1\\${NL}${cbl_offset}${cbl_offset}\2\ \3.cpy\.\4?g" "${source_code_dir}/${target_file}"
                     fi
 
                 done
