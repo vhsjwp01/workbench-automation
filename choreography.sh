@@ -1869,10 +1869,6 @@ fi
 # WHY:  Needed for proper compilation
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
-    echo "POST-PROCESSING - Regular Expression Pattern Matching"
-
-    # Look for any regex files located in <folder>
-    # where filename indicates the prepared folder in which to operate
     pcTarget_dir="${WB_AUTOMATE}/target"
     postconvert_dir="${WB_AUTOMATE}/param/regex/post_conversion"
     export postconvert_dir
@@ -1880,6 +1876,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     find_exclude=$(echo "${post_dirs_to_ignore}" | ${my_sed} 's?\([a-zA-Z0-9]*\)?! -path "*/\1/*"?g')
 
     for file_extension in ${file_extensions} ; do
+        echo "POST-PROCESSING - Regular Expression Pattern Matching - ${file_extension} files"
         file_ext="${file_extension}"
         target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f ${find_exclude} | ${my_egrep} "\.${file_ext}$")
         comment_prefix="      *"
@@ -1908,11 +1905,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             ${my_mkdir} -p "${tmp_dir}"
         fi
 
-        ########################################################################
-        ####
-        #### BEGIN Regular expression translation via PERL program processor.pl
-        ####
-        ########################################################################
 
         for this_target_file in ${target_files} ; do
             #This target file is: ./Master-copy/COPY/IBBIWCPD.cpy
@@ -1941,6 +1933,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             # Define the target from uc_target
             target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
             echo "    Target dir is: ${target_dir}"
+
+            ########################################################################
+            ####
+            #### BEGIN Regular expression translation via PERL program processor.pl
+            ####
+            ########################################################################
 
             # Read in regex lines from "${postconvert_dir}/${uc_target_dir}"
             if [ -e "${postconvert_dir}/${uc_target_dir}" -a -s "${postconvert_dir}/${uc_target_dir}" ]; then
@@ -1971,17 +1969,16 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             fi
 
+            ########################################################################
+            ####
+            #### END Regular expression translation via PERL program processor.pl
+            ####
+            ########################################################################
+
         done
 
-        ########################################################################
-        ####
-        #### END Regular expression translation via PERL program processor.pl
-        ####
-        ########################################################################
-
-        #echo "POST-PROCESSING - SQL timestamp conversion"
-
         if [ "${file_extension}" = "cbl" -o "${file_extension}" = "cpy" ]; then
+            echo "POST-PROCESSING - IBCABEND keyword translation - ${file_extension} files"
 
             ################################################################
             ####
@@ -2012,11 +2009,13 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             ####
             ################################################################
 
-            ########################################################################
-            ####
-            #### BEGIN SQL timestamp conversion
-            ####
-            ########################################################################
+           # echo "POST-PROCESSING - SQL timestamp conversion - ${file_extension} files"
+
+           # ########################################################################
+           # ####
+           # #### BEGIN SQL timestamp conversion
+           # ####
+           # ########################################################################
 
            # for this_target_file in ${target_files} ; do
            #     echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" SQL timestamp conversion ... "
@@ -2186,9 +2185,15 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         fi
 
-        echo "POST-PROCESSING - IEFBR14 file deletion optimization"
-
         if [ "${file_extension}" = "jcl" ]; then
+
+            ########################################################################
+            ####
+            #### BEGIN IEFBR14 MOD,DELETE,DELTE optimization
+            ####
+            ########################################################################
+
+            echo "POST-PROCESSING - IEFBR14 file deletion optimization - ${file_extension} files"
 
             for this_target_file in ${target_files} ; do
                 echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for MOD,DELETE,DELETE optimization ... "
@@ -2241,11 +2246,24 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 echo "DONE"
             done
 
+            ########################################################################
+            ####
+            #### END IEFBR14 MOD,DELETE,DELTE optimization
+            ####
+            ########################################################################
+
         fi
 
-        echo "POST-PROCESSING - FTPBATCH conversion"
 
         if [ "${file_extension}" = "jcl" ]; then
+
+            ########################################################################
+            ####
+            #### BEGIN FTPBATCH conversion
+            ####
+            ########################################################################
+
+            echo "POST-PROCESSING - FTPBATCH conversion - ${file_extension} files"
 
             for this_target_file in ${target_files} ; do
                 source_code_dir=$(${my_dirname} "${this_target_file}")
@@ -2459,11 +2477,24 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             done
 
+            ########################################################################
+            ####
+            #### END FTPBATCH conversion
+            ####
+            ########################################################################
+
         fi
 
-        echo "POST-PROCESSING - DFDSS conversion"
 
         if [ "${file_extension}" = "jcl" ]; then
+
+            ########################################################################
+            ####
+            #### BEGIN DFDSS conversion
+            ####
+            ########################################################################
+
+            echo "POST-PROCESSING - DFDSS conversion - ${file_extension} files"
 
             for this_target_file in ${target_files} ; do
                 source_code_dir=$(${my_dirname} "${this_target_file}")
@@ -2480,11 +2511,23 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             done
 
+            ########################################################################
+            ####
+            #### END DFDSS conversion
+            ####
+            ########################################################################
+
         fi
 
-        echo "POST-PROCESSING - SMTP conversion"
-
         if [ "${file_extension}" = "jcl" ]; then
+
+            ########################################################################
+            ####
+            #### BEGIN SMTP conversion
+            ####
+            ########################################################################
+
+            echo "POST-PROCESSING - SMTP conversion - ${file_extension} files"
 
             for this_target_file in ${target_files} ; do
                 source_code_dir=$(${my_dirname} "${this_target_file}")
@@ -2600,6 +2643,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 fi
 
             done
+
+            ########################################################################
+            ####
+            #### END SMTP conversion
+            ####
+            ########################################################################
 
         fi
 
