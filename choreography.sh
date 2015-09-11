@@ -1876,10 +1876,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     pcTarget_dir="${WB_AUTOMATE}/target"
     postconvert_dir="${WB_AUTOMATE}/param/regex/post_conversion"
     export postconvert_dir
+    post_dirs_to_ignore="config data SQL DSNUTILS reload unload"
+    find_exclude=$(echo "${post_dirs_to_ignore}" | ${my_sed} 's?\([a-zA-Z0-9]*\)?! -path "*/\1/*"?g')
 
     for file_extension in ${file_extensions} ; do
         file_ext="${file_extension}"
-        target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f | ${my_egrep} "\.${file_ext}$")
+        target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f ${find_exclude} | ${my_egrep} "\.${file_ext}$")
         comment_prefix="      *"
 
 #=====
@@ -1913,10 +1915,25 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         ########################################################################
 
         for this_target_file in ${target_files} ; do
+            #This target file is: ./Master-copy/COPY/IBBIWCPD.cpy
             echo "This target file is: ${this_target_file}"
-            source_code_dir=$(${my_dirname} "${this_target_file}")
+
+            # Break out the file name
             target_file=$(${my_basename} "${this_target_file}")
-            uc_target_dir=$(echo "${source_code_dir}" | ${my_awk} -F'/' '{print $1}')
+
+            # Break out the relative parent directory
+            source_code_dir=$(${my_dirname} "${this_target_file}")
+
+            # Get rid of the leading ./
+            source_code_dir=$(echo "${source_code_dir} | ${my_sed} -e 's?^\./??g'")
+
+            # Add in the full directory path
+            source_code_dir="${pcTarget_dir}/${source_code_dir}"
+
+            # Figure out the uc_target
+            uc_target_dir=$(echo "${source_code_dir}" | ${my_awk} -F'/' '{print $NF}')
+
+            # Define the target from uc_target
             target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
 
             # Read in regex lines from "${postconvert_dir}/${uc_target_dir}"
