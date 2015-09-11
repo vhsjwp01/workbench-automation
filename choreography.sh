@@ -541,6 +541,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             fi
 
             ${my_cp} -p "${param_dir}/system.desc.template" "${param_dir}/system.desc"
+            echo "        Settings Project Name to ${ProjectName} in \"${param_dir}/system.desc\""
             ${my_sed} -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
 
             # Enable targets based on whether or not files exist in those targets
@@ -557,6 +558,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     if [ ${is_commented_out} -gt 0 ]; then
                         begin_text="% BEGIN: ${uc_target_dir}-DIRECTORY-TARGETS"
                         end_text="% END: ${uc_target_dir}-DIRECTORY-TARGETS"
+                        echo "        Initializing ${uc_target_dir} directory resources in \"${param_dir}/system.desc\""
                         ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
 
                         # Find any Library dependencies
@@ -570,6 +572,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                             if [ ${dep_file_count} -gt 0 ]; then
                                 begin_text="% BEGIN: ${library_dependency}-DIRECTORY-TARGETS"
                                 end_text="% END: ${library_dependency}-DIRECTORY-TARGETS"
+                                echo "        Initializing ${uc_target_dir} directory resource dependencies in \"${param_dir}/system.desc\""
                                 ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
 
                                 # Now add to TARGETS if absent
@@ -597,6 +600,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 
                 # If found, set value, otherwise comment out
                 if [ "${rdbms_schemas}" != "" ]; then
+                    echo "        Initializing RDBMS_SCHEMAS definition in \"${param_dir}/version.mk\""
                     ${my_sed} -i -e "s/^\(RDBMS_SCHEMAS =\).*\$/\1 ${rdbms_schemas}/g" "${param_dir}/version.mk"
                 else
                     ${my_sed} -i -e 's/^\(RDBMS_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
@@ -604,6 +608,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                 # If found, set value, otherwise comment out
                 if [ "${file_schemas}" != "" ]; then
+                    echo "        Initializing FILE_SCHEMAS definition in \"${param_dir}/version.mk\""
                     ${my_sed} -i -e "s/^\(FILE_SCHEMAS =\).*\$/\1 ${file_schemas}/g" "${param_dir}/version.mk"
                 else
                     ${my_sed} -i -e 's/^\(FILE_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
@@ -649,6 +654,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     esac
 
                     if [ "${find_var}" != "" ]; then
+                        echo "        Initializing ${find_var} definition in \"${param_dir}/version.mk\""
                         ${my_sed} -i -e "s?^\(${find_var} =\).*\$?\1 ${uc_target}?g" "${param_dir}/version.mk"
                     fi
 
@@ -1847,7 +1853,6 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     find_exclude=$(echo "${post_dirs_to_ignore}" | ${my_sed} 's?\([a-zA-Z0-9]*\)?! -path "*/\1/*"?g')
 
     for file_extension in ${file_extensions} ; do
-        echo "POST-PROCESSING - ${file_extension} files"
         file_ext="${file_extension}"
         target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f ${find_exclude} | ${my_egrep} "\.${file_ext}$")
         comment_prefix="      *"
