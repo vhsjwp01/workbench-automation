@@ -447,22 +447,22 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # This directory houses eclipse/ART WB harvested script assets
         WB_AUTOMATE="${wb_workdir}"
 
-        # Set the default project name
-        ProjectName="AUTOMATE"
-
         # Override ProjectName is ${project_name} has been set
         if [ "${project_name}" != "" ]; then
             ProjectName="${project_name}"
+        else
+            # Set the default project name
+            ProjectName="AUTOMATE"
         fi
 
         ucProjectName=$(echo "${ProjectName}" | ${my_tr} '[a-z]' '[A-Z]')
 
-        # Set the default Work Bench tool path
-        WorkbenchPath="/opt/tuxedo/art_wb12.1.3.0.0"
-
         # Override WorkbenchPath is ${wb_toolpath} has been set
         if [ "${wb_toolpath}" != "" ]; then
             WorkbenchPath="${wb_toolpath}"
+        else
+            # Set the default Work Bench tool path
+            WorkbenchPath="/opt/tuxedo/art_wb12.1.3.0.0"
         fi
         
         PROJECT="${WB_AUTOMATE}"
@@ -476,20 +476,20 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         WBEXITONERROR="YES"
         OnlyParsingPhase=""
 
-        # Set default TargetCOBOLCompiler
-        TargetCOBOLCompiler="COBOL-IT"
-
         # Override TargetCOBOLCompiler is ${target_COBOL_compiler} has been set
         if [ "${target_COBOL_compiler}" != "" ]; then
             TargetCOBOLCompiler="${target_COBOL_compiler}"
+        else
+            # Set default TargetCOBOLCompiler
+            TargetCOBOLCompiler="COBOL-IT"
         fi
-
-        # Set default TargetDataBase
-        TargetDataBase="ORACLE"
 
         # Override TargetDataBase is ${target_DB} has been set
         if [ "${target_DB}" != "" ]; then
             TargetDataBase="${target_DB}"
+        else
+            # Set default TargetDataBase
+            TargetDataBase="ORACLE"
         fi
 
         DB_TYPE="${TargetDataBase}"
@@ -499,12 +499,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         ksh_offset="       "
         cbl_offset="       "
 
-        # Default targets
-        TARGETS=$(cd "${LocationOfAssets}" 2> /dev/null && ${my_ls} -d * 2> /dev/null | ${my_tr} '[A-Z]' '[a-z]')
-
         # Override TARGETS if ${input_targets} has been set
         if [ "${input_targets}" != "" ]; then
             TARGETS="${input_targets}"
+        else
+            # Default targets
+            TARGETS=$(cd "${LocationOfAssets}" 2> /dev/null && ${my_ls} -d * 2> /dev/null | ${my_tr} '[A-Z]' '[a-z]')
         fi
 
         export PROJECT TRAVAIL LOGS TMPPROJECT WorkbenchPath LocationOfAssets PARAM REFINEDISTRIB DB_TYPE
