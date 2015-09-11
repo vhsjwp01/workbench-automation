@@ -8,22 +8,22 @@ $exit_code = $SUCCESS;
 # WHAT; Gather arguments
 # WHY;  Connot proceed without them
 #
-if ( $exit_code == $SUCCESS  ) {
+if ( $exit_code == $SUCCESS ) {
 
-    while ( $ARGV[0]  ) {
-        chomp( $ARGV[0]  );
+    while ( $ARGV[0] ) {
+        chomp( $ARGV[0] );
         $key = $ARGV[0];
         $value = $ARGV[1];
 
-        if (( $key eq "\-\-input_file" || $key eq "\-if"  )) {
+        if (( $key eq "\-\-input_file" || $key eq "\-if" )) {
             $input_file = $value;
-        } elsif (( $key eq "\-\-output_file"  ) || ( $key eq "\-of"  )) {
+        } elsif (( $key eq "\-\-output_file" ) || ( $key eq "\-of" )) {
             $output_file = $value;
-        } elsif (( $key eq "\-\-regex_file"  ) || ( $key eq "\-rf"  )) { 
+        } elsif (( $key eq "\-\-regex_file" ) || ( $key eq "\-rf" )) { 
             $regex_file = $value;
-        } elsif (( $key eq "\-\-mode"  ) || ( $key eq "\-m"  )) { 
+        } elsif (( $key eq "\-\-mode" ) || ( $key eq "\-m" )) { 
             $mode = $value;
-        } elsif (( $key eq "\-\-data_type"  ) || ( $key eq "\-dt"  )) { 
+        } elsif (( $key eq "\-\-data_type" ) || ( $key eq "\-dt" )) { 
             $data_type = $value;
         } else { 
             $err_msg = "Invalid argument \"$ARGV[0]\"";
@@ -69,7 +69,7 @@ if ( $exit_code == $SUCCESS ) {
         $is_comment = 0;
         $comment_prefix = "#";
 
-        if (( $data_type eq "batch"  ) || ( $data_type eq "copy"  ) || ( $data_type eq "cics" )) {
+        if (( $data_type eq "batch" ) || ( $data_type eq "copy" ) || ( $data_type eq "cics" )) {
             $comment_prefix = "      *";
             $this_line_length = length( $input_line );
 

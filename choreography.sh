@@ -1855,7 +1855,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     for file_extension in ${file_extensions} ; do
         echo "POST-PROCESSING - ${file_extension} files"
         file_ext="${file_extension}"
-        target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f ${find_exclude} | ${my_egrep} "\.${file_ext}$")
+        eval "target_files=\$(cd \"${pcTarget_dir}\" && ${my_find} . -depth -type f ${find_exclude} | ${my_egrep} \"\.${file_ext}\$\" 2> /dev/null)"
         comment_prefix="      *"
 
         # Redefine target_files?
