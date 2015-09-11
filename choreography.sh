@@ -541,7 +541,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             fi
 
             ${my_cp} -p "${param_dir}/system.desc.template" "${param_dir}/system.desc"
-            echo "        Settings Project Name to ${ProjectName} in \"${param_dir}/system.desc\""
+            echo "        Setting Project Name to ${ProjectName} in \"${param_dir}/system.desc\""
             ${my_sed} -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
 
             # Enable targets based on whether or not files exist in those targets
@@ -1948,7 +1948,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                 ####
                 ################################################################
 
-                echo -ne "    INFO:  Processing file ${source_code_dir}/${target_file} for IBCABEND filename translation ... "
+                echo -ne "    INFO:  Post-Processing file ${source_code_dir}/${target_file} for IBCABEND filename translation ... "
                 ibcabend_lines=$(${my_egrep} -n -a "\bCOPY\ *IBCABEND\." "${source_code_dir}/${target_file}" | ${my_strings} | ${my_sed} -e 's?\ ?:ZZqC:?g')
 
                 for ibcabend_line in ${ibcabend_lines} ; do
@@ -1982,7 +1982,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                # # egrep -n -a "^.*$" /tmp/junk | strings | pcregrep -M -e "\bEXEC\b[[:space:]|\n\d+:]*\bCICS\b[[:space:]|\n\d+:]*\bLINK\b[[:space:]|\n\d+:]*\bPROGRAM\b[[:space:]|\n\d+:]*\(C1MATCHI\)[[:space:]|\n\d+:]*\bCOMMAREA\b[[:space:]|\n\d+:]*\(CODE1\-LINKAGE\-IO\)[[:space:]|\n\d+:]*LENGTH[[:space:]|\n\d+:]*\(LINKAGE\-LENGTH\)[[:space:]|\n\d+:]*\bEND\-EXEC\b\." | sort -rn
 
                # for pattern in "MWDB2ORA\.MAKE_TIME" "MWDB2ORA\.TIME2HOST" "MWDB2ORA\.STR2TIME" "MWDB2ORA\.STR2TMS" "MWDB2ORA\.STR2DATE" ; do
-               #     echo -ne "    INFO:  Processing file ${source_code_dir}/${target_file} for ${pattern} SQL timestamp conversion ... "
+               #     echo -ne "    INFO:  Post-Processing file ${source_code_dir}/${target_file} for ${pattern} SQL timestamp conversion ... "
                #     matched_lines=$(${my_egrep} -n -a "^.*$" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_pcregrep} -M -e "\b${pattern}\b\([[:space:]|\n\d+:]*.*[[:space:]|\n\d+:]*\)" | ${my_sed} -e 's?\ ?:ZZqC:?g' | ${my_sort} -rn)
                #     let matched_line_count=$(echo -ne "${matched_lines}\n" | ${my_wc} -l | ${my_awk} '{print $1}')
 
