@@ -1850,7 +1850,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     postconvert_dir="${WB_AUTOMATE}/param/regex/post_conversion"
     export postconvert_dir
     post_dirs_to_ignore="config data SQL DSNUTILS reload unload"
-    find_exclude=$(echo "${post_dirs_to_ignore}" | ${my_sed} 's?\([a-zA-Z0-9]*\)?! -path "*/\1/*"?g')
+    find_exclude=$(echo "${post_dirs_to_ignore}" | ${my_sed} -e 's?\([a-zA-Z0-9]*\)?! -path "*/\1/*"?g')
 
     for file_extension in ${file_extensions} ; do
         echo "POST-PROCESSING - ${file_extension} files"
