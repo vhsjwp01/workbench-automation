@@ -1889,13 +1889,13 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         case ${file_ext} in 
 
             cbl)
-                target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f | ${my_egrep} "\.${file_ext}$|\.pco$")
+                target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f ${find_exclude} | ${my_egrep} "\.${file_ext}$|\.pco$")
             ;;
 
             jcl)
                 comment_prefix="#"
                 file_ext="ksh"
-                target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f | ${my_egrep} "\.${file_ext}$")
+                target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f ${find_exclude} | ${my_egrep} "\.${file_ext}$")
             ;;
 
         esac
