@@ -1920,21 +1920,27 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             # Break out the file name
             target_file=$(${my_basename} "${this_target_file}")
+            echo "    Real target file is: ${target_file}"
 
             # Break out the relative parent directory
             source_code_dir=$(${my_dirname} "${this_target_file}")
+            echo "    Relative source code dir is: ${target_file}"
 
             # Get rid of the leading ./
-            source_code_dir=$(echo "${source_code_dir} | ${my_sed} -e 's?^\./??g'")
+            source_code_dir=$(echo "${source_code_dir}" | ${my_sed} -e 's?^\./??g')
+            echo "    Sanitized relative source code dir is: ${target_file}"
 
             # Add in the full directory path
             source_code_dir="${pcTarget_dir}/${source_code_dir}"
+            echo "    Aboslute source code dir is: ${target_file}"
 
             # Figure out the uc_target
             uc_target_dir=$(echo "${source_code_dir}" | ${my_awk} -F'/' '{print $NF}')
+            echo "    UC Target dir is: ${target_file}"
 
             # Define the target from uc_target
             target_dir=$(echo "${uc_target_dir}" | ${my_tr} '[A-Z]' '[a-z]')
+            echo "    Target dir is: ${target_file}"
 
             # Read in regex lines from "${postconvert_dir}/${uc_target_dir}"
             if [ -e "${postconvert_dir}/${uc_target_dir}" -a -s "${postconvert_dir}/${uc_target_dir}" ]; then
