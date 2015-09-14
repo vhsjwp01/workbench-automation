@@ -1850,12 +1850,14 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     postconvert_dir="${WB_AUTOMATE}/param/regex/post_conversion"
     export postconvert_dir
     post_dirs_to_ignore="config data SQL DSNUTILS reload unload"
-    find_exclude=$(echo "${post_dirs_to_ignore}" | ${my_sed} -e 's?\([a-zA-Z0-9]*\)?! -path "*/\1/*"?g')
+    #find_exclude=$(echo "${post_dirs_to_ignore}" | ${my_sed} -e 's?\([a-zA-Z0-9]*\)?! -path "*/\1/*"?g')
+    find_exclude=$(echo "${post_dirs_to_ignore}" | ${my_sed} -e 's?\([a-zA-Z0-9]*\)?/\1/|?g' -e 's?\ ??g' -e 's?|$??g')
 
     for file_extension in ${file_extensions} ; do
         echo "POST-PROCESSING - ${file_extension} files"
         file_ext="${file_extension}"
-        eval "target_files=\$(cd \"${pcTarget_dir}\" && ${my_find} . -depth -type f ${find_exclude} | ${my_egrep} \"\.${file_ext}\$\" 2> /dev/null)"
+        #eval "target_files=\$(cd \"${pcTarget_dir}\" && ${my_find} . -depth -type f ${find_exclude} | ${my_egrep} \"\.${file_ext}\$\" 2> /dev/null)"
+        eval "target_files=\$(cd \"${pcTarget_dir}\" && ${my_find} . -depth -type f 2> /dev/null | ${my_egrep} \"\.${file_ext}\$\" | ${my_egrep} -v \"${find_exclude}\""
         comment_prefix="      *"
 
         # Redefine target_files?
