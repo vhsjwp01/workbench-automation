@@ -2206,12 +2206,13 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                 # Make sure we have an FTPBATCH section upon which to operate
                 if [ ${has_ftpbatch} -gt 0 ]; then
-                    echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for FTPBATCH conversion ... "
+                    echo "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for FTPBATCH conversion"
                     # FTPBATCH put or get?
                     let put_block=$(${my_egrep} -c -a "^put " "${source_code_dir}/${target_file}")
                     let get_block=$(${my_egrep} -c -a "^get " "${source_code_dir}/${target_file}")
 
                     if [ ${put_block} -gt 0 ]; then
+                        echo -ne "        Processing of \"${source_code_dir}/${target_file}\" for FTPBATCH PUT conversion ... "
                         #echo -ne "Found put block ... "
                         line_count=$(${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}')
                         let has_cnvtls=$(${my_egrep} -c -a "^\(CNVTLS[0-9]*\)" "${source_code_dir}/${target_file}")
@@ -2302,9 +2303,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                         fi
 
+                        echo "DONE"
                     fi
 
                     if [ ${get_block} -gt 0 ]; then
+                        echo -ne "        Processing of \"${source_code_dir}/${target_file}\" for FTPBATCH GET conversion ... "
                         #echo -ne "Found get block ... "
                         line_count=$(${my_wc} -l "${source_code_dir}/${target_file}" | ${my_awk} '{print $1}')
                         let has_cnvtrs=$(${my_egrep} -c -a "^\(CNVTRS\)" "${source_code_dir}/${target_file}")
@@ -2392,6 +2395,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                         fi
 
+                        echo "DONE"
                     fi
 
                     # Comment out locsite lines
@@ -2399,11 +2403,11 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                     for locsite_line in ${locsite_lines} ; do
                         this_line_number=$(echo "${locsite_line}" | ${my_awk} -F':' '{print $1}')
-                        echo -ne "    INFO:  Extra Post-Processing of \"${source_code_dir}/${target_file}\" for LOCSITE removal ... "
+                        echo -ne "        Processing of \"${source_code_dir}/${target_file}\" for LOCSITE removal ... "
                         ${my_sed} -i -e "${this_line_number}s?^\(.*locsite.*\)\$?#\1?g" "${source_code_dir}/${target_file}"
+                        echo "DONE"
                     done
 
-                    echo "DONE"
                 fi
 
                 ########################################################################
