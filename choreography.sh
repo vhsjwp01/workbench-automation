@@ -1857,7 +1857,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         echo "POST-PROCESSING - ${file_extension} files"
         file_ext="${file_extension}"
         #eval "target_files=\$(cd \"${pcTarget_dir}\" && ${my_find} . -depth -type f ${find_exclude} | ${my_egrep} \"\.${file_ext}\$\" 2> /dev/null)"
-        eval "target_files=\$(cd \"${pcTarget_dir}\" && ${my_find} . -depth -type f 2> /dev/null | ${my_egrep} \"\.${file_ext}\$\" | ${my_egrep} -v \"${find_exclude}\""
+        eval "target_files=\$(cd \"${pcTarget_dir}\" && ${my_find} . -depth -type f 2> /dev/null | ${my_egrep} \"\.${file_ext}\$\" | ${my_egrep} -v \"${find_exclude}\")"
         comment_prefix="      *"
 
         # Redefine target_files?
