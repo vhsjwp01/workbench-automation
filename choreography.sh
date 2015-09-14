@@ -66,6 +66,8 @@
 #                                        as user/group "tuxedo" ONLY
 # 20150910     Jason W. Plummer          Added support for Find_<var> detection
 #                                        and config in ${param}/version.mk
+# 20150914     Jason W. Plummer          Fixed issues with ignore paths during
+#                                        POST ops
 
 ################################################################################
 # DESCRIPTION
@@ -447,7 +449,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         # This directory houses eclipse/ART WB harvested script assets
         WB_AUTOMATE="${wb_workdir}"
 
-        # Override ProjectName is ${project_name} has been set
+        # Override ProjectName if ${project_name} has been set
         if [ "${project_name}" != "" ]; then
             ProjectName="${project_name}"
         else
@@ -457,7 +459,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
         ucProjectName=$(echo "${ProjectName}" | ${my_tr} '[a-z]' '[A-Z]')
 
-        # Override WorkbenchPath is ${wb_toolpath} has been set
+        # Override WorkbenchPath if ${wb_toolpath} has been set
         if [ "${wb_toolpath}" != "" ]; then
             WorkbenchPath="${wb_toolpath}"
         else
@@ -476,7 +478,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         WBEXITONERROR="YES"
         OnlyParsingPhase=""
 
-        # Override TargetCOBOLCompiler is ${target_COBOL_compiler} has been set
+        # Override TargetCOBOLCompiler if ${target_COBOL_compiler} has been set
         if [ "${target_COBOL_compiler}" != "" ]; then
             TargetCOBOLCompiler="${target_COBOL_compiler}"
         else
@@ -484,7 +486,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             TargetCOBOLCompiler="COBOL-IT"
         fi
 
-        # Override TargetDataBase is ${target_DB} has been set
+        # Override TargetDataBase if ${target_DB} has been set
         if [ "${target_DB}" != "" ]; then
             TargetDataBase="${target_DB}"
         else
@@ -504,7 +506,8 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             TARGETS="${input_targets}"
         else
             # Default targets
-            TARGETS=$(cd "${LocationOfAssets}" 2> /dev/null && ${my_ls} -d * 2> /dev/null | ${my_tr} '[A-Z]' '[a-z]')
+            #TARGETS=$(cd "${LocationOfAssets}" 2> /dev/null && ${my_ls} -d * 2> /dev/null | ${my_tr} '[A-Z]' '[a-z]')
+            TARGETS=$(cd "${LocationOfAssets}" 2> /dev/null && for i in $(${my_find} . -depth -maxdepth 2 -type f) ; do ${my_dirname} "${i}" ; done | ${my_sort} -u | ${my_sed} -e 's?\./??g' | ${my_tr} '[A-Z]' '[a-z]')
         fi
 
         export PROJECT TRAVAIL LOGS TMPPROJECT WorkbenchPath LocationOfAssets PARAM REFINEDISTRIB DB_TYPE
@@ -544,90 +547,73 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             echo "        Setting Project Name to ${ProjectName} in \"${param_dir}/system.desc\""
             ${my_sed} -i -e "s?::PROJECT_NAME::?${ProjectName}?g" -e "s?::SOURCE_DIR::?${source_dir}?g" "${param_dir}/system.desc"
 
+            # Define version.mk extensions based on TARGETS present
+            # Find_Jcl = JCL 
+            # Find_Prg = BATCH 
+            # Find_Tpr = CICS 
+            # Find_Map = MAP 
+            version_mk_find_extensions="Find_Jcl Find_Prg Find_Tpr Find_Map"
+
+            # To start, disable all of them in version.mk
+            for i in ${version_mk_find_extensions} ; do
+
+                if [ -e "${param_dir}/version.mk" ] ; then
+                    ${my_sed} -i -e "s?^${i} =.*\$?${i} =?g" "${param_dir}/version.mk"
+                fi
+
+            done
+
             # Enable targets based on whether or not files exist in those targets
             for target_dir in ${TARGETS} ; do
                 uc_target_dir=$(echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]')
                 target_dir_var=$(echo "${target_dir}" | ${my_sed} -e 's/\./_/g')
                 eval "file_ext=\$${target_dir_var}_ext"
 
-                let file_count=$(${my_find} "${source_dir}/${uc_target_dir}"/*.${file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}')
+                let is_commented_out=$(${my_egrep} -c -a "^%directory \"${uc_target_dir}\" type" "${param_dir}/system.desc")
 
-                if [ ${file_count} -gt 0 ]; then
-                    let is_commented_out=$(${my_egrep} -c -a "^%directory \"${uc_target_dir}\" type" "${param_dir}/system.desc")
+                if [ ${is_commented_out} -gt 0 ]; then
+                    begin_text="% BEGIN: ${uc_target_dir}-DIRECTORY-TARGETS"
+                    end_text="% END: ${uc_target_dir}-DIRECTORY-TARGETS"
+                    echo "        Initializing ${uc_target_dir} directory resources in \"${param_dir}/system.desc\""
+                    ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
 
-                    if [ ${is_commented_out} -gt 0 ]; then
-                        begin_text="% BEGIN: ${uc_target_dir}-DIRECTORY-TARGETS"
-                        end_text="% END: ${uc_target_dir}-DIRECTORY-TARGETS"
-                        echo "        Initializing ${uc_target_dir} directory resources in \"${param_dir}/system.desc\""
-                        ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
+                    # Find any Library dependencies
+                    library_dependencies=$(${my_egrep} -A1 -a "directory.*\"${uc_target_dir}\"" "${param_dir}/system.desc" | ${my_strings} | ${my_egrep} "libraries" | ${my_sed} -e 's/[^A-Z,]//g' -e 's/,/\ /g')
 
-                        # Find any Library dependencies
-                        library_dependencies=$(${my_egrep} -A1 -a "directory.*\"${uc_target_dir}\"" "${param_dir}/system.desc" | ${my_strings} | ${my_egrep} "libraries" | ${my_sed} -e 's/[^A-Z,]//g' -e 's/,/\ /g')
+                    for library_dependency in ${library_dependencies} ; do
+                        library_dependency_var=$(echo "${library_dependency}" | ${my_sed} -e 's/\./_/g' | ${my_tr} '[A-Z]' '[a-z]')
+                        eval "dep_file_ext=\$${library_dependency_var}_ext"
+                        let dep_file_count=$(${my_find} "${source_dir}/${library_dependency}"/*.${dep_file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}')
 
-                        for library_dependency in ${library_dependencies} ; do
-                            library_dependency_var=$(echo "${library_dependency}" | ${my_sed} -e 's/\./_/g' | ${my_tr} '[A-Z]' '[a-z]')
-                            eval "dep_file_ext=\$${library_dependency_var}_ext"
-                            let dep_file_count=$(${my_find} "${source_dir}/${library_dependency}"/*.${dep_file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}')
+                        if [ ${dep_file_count} -gt 0 ]; then
+                            begin_text="% BEGIN: ${library_dependency}-DIRECTORY-TARGETS"
+                            end_text="% END: ${library_dependency}-DIRECTORY-TARGETS"
+                            echo "        Initializing ${uc_target_dir} directory resource dependencies in \"${param_dir}/system.desc\""
+                            ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
 
-                            if [ ${dep_file_count} -gt 0 ]; then
-                                begin_text="% BEGIN: ${library_dependency}-DIRECTORY-TARGETS"
-                                end_text="% END: ${library_dependency}-DIRECTORY-TARGETS"
-                                echo "        Initializing ${uc_target_dir} directory resource dependencies in \"${param_dir}/system.desc\""
-                                ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
+                            # Now add to TARGETS if absent
+                            lc_library_dependency=$(echo "${library_dependency} | ${my_tr} '[A-Z]' '[a-z]'")
+                            let is_a_target=$(echo "${TARGETS}" | ${my_sed} -e 's/\./_/g' | ${my_egrep} -c "\b${lc_library_dependency}\b")
 
-                                # Now add to TARGETS if absent
-                                let is_a_target=$(echo "${TARGETS}" | ${my_sed} -e 's/\./_/g' | ${my_egrep} -c '\bcopy\b')
-
-                                if [ ${is_a_target} -eq 0 ]; then
-                                    add_to_list TARGETS library_dependency
-                                fi
-
+                            if [ ${is_a_target} -eq 0 ]; then
+                                add_to_list TARGETS "${lc_library_dependency}"
                             fi
 
-                        done
+                        fi
 
-                    fi
+                    done
 
                 fi
 
             done
 
-            if [ -e "${param_dir}/version.mk" ]; then
+            # Uniquely shuffle TARGETS
+            TARGETS=$(for i in ${TARGETS} ; do echo "${i}" ; done | ${my_sort} -u)
 
-                # Prep SCHEMA* variables for detection
-                ${my_sed} -i -e 's/^#\(RDBMS_SCHEMAS =\).*$/\1/g' "${param_dir}/version.mk"
-                ${my_sed} -i -e "s/^#\(FILE_SCHEMAS =\).*\$/\1/g" "${param_dir}/version.mk"
-                
-                # If found, set value, otherwise comment out
-                if [ "${rdbms_schemas}" != "" ]; then
-                    echo "        Initializing RDBMS_SCHEMAS definition in \"${param_dir}/version.mk\""
-                    ${my_sed} -i -e "s/^\(RDBMS_SCHEMAS =\).*\$/\1 ${rdbms_schemas}/g" "${param_dir}/version.mk"
-                else
-                    ${my_sed} -i -e 's/^\(RDBMS_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
-                fi
+            # Enable version.mk extensions based on TARGETS present
+            if [ -e "${param_dir}/version.mk" ] ; then
 
-                # If found, set value, otherwise comment out
-                if [ "${file_schemas}" != "" ]; then
-                    echo "        Initializing FILE_SCHEMAS definition in \"${param_dir}/version.mk\""
-                    ${my_sed} -i -e "s/^\(FILE_SCHEMAS =\).*\$/\1 ${file_schemas}/g" "${param_dir}/version.mk"
-                else
-                    ${my_sed} -i -e 's/^\(FILE_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
-                fi
-
-                # Enable extensions based on TARGETS present
-                # Find_Jcl = JCL 
-                # Find_Prg = BATCH 
-                # Find_Tpr = CICS 
-                # Find_Map = MAP 
-                version_mk_find_extensions="Find_Jcl Find_Prg Find_Tpr Find_Map"
-
-                # First, disable all of them
-                for i in ${version_mk_find_extensions} ; do
-                    ${my_sed} -i -e "s?^${i} =.*\$?${i} =?g" "${param_dir}/version.mk"
-                done
-
-                # Now, enable them by TARGET
-                for target in ${TARGETS}; do
+                for target in ${TARGETS} ; do
                     find_var=""
                     uc_target=$(echo "${target}" | ${my_tr} '[a-z]' '[A-Z]')
 
@@ -660,12 +646,34 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
                 done
 
+            fi
+
+            if [ -e "${param_dir}/version.mk" ]; then
+
+                # Prep SCHEMA* variables for detection
+                ${my_sed} -i -e 's/^#\(RDBMS_SCHEMAS =\).*$/\1/g' "${param_dir}/version.mk"
+                ${my_sed} -i -e "s/^#\(FILE_SCHEMAS =\).*\$/\1/g" "${param_dir}/version.mk"
+                
+                # If found, set value, otherwise comment out
+                if [ "${rdbms_schemas}" != "" ]; then
+                    echo "        Initializing RDBMS_SCHEMAS definition in \"${param_dir}/version.mk\""
+                    ${my_sed} -i -e "s/^\(RDBMS_SCHEMAS =\).*\$/\1 ${rdbms_schemas}/g" "${param_dir}/version.mk"
+                else
+                    ${my_sed} -i -e 's/^\(RDBMS_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
+                fi
+
+                # If found, set value, otherwise comment out
+                if [ "${file_schemas}" != "" ]; then
+                    echo "        Initializing FILE_SCHEMAS definition in \"${param_dir}/version.mk\""
+                    ${my_sed} -i -e "s/^\(FILE_SCHEMAS =\).*\$/\1 ${file_schemas}/g" "${param_dir}/version.mk"
+                else
+                    ${my_sed} -i -e 's/^\(FILE_SCHEMAS =.*$\)/#\1/g' "${param_dir}/version.mk"
+                fi
+
             else
                 err_msg="Could not locate \"${param_dir}/version.mk\""
                 exit_code=${ERROR}
             fi
-
-            # Clean out 
 
         else
             err_msg="Could not locate system description template file \"${param_dir}/system.desc.template\""
@@ -1863,10 +1871,12 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
         case ${file_ext} in 
 
             cbl)
+                # Don't forget ${find_exclude}
                 target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f 2> /dev/null | ${my_egrep} "\.${file_ext}$|\.pco$" | ${my_egrep} -v "${find_exclude}")
             ;;
 
             jcl)
+                # Don't forget ${find_exclude}
                 comment_prefix="#"
                 file_ext="ksh"
                 target_files=$(cd "${pcTarget_dir}" && ${my_find} . -depth -type f 2> /dev/null | ${my_egrep} "\.${file_ext}$" | ${my_egrep} -v "${find_exclude}")
