@@ -1587,8 +1587,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
 
             fi
 
-            echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} cleanpob\" ... "
-            #cd "${source_dir}" && ${my_make} -f "${this_makefile}" cleanpob 
+            echo -ne "    INFO:  Cleaning out *.pob, *.depends, *.cdm, and *.shrec files from directory \"${source_dir}\" ... "
             cd "${source_dir}" && ${my_find} . -name "*.pob" -o -name "*.depends" -o -name "*.cdm" -o -name "*.shrec" -exec ${my_rm} -f {} \;
             echo "DONE"
             echo -ne "    INFO:  Running \"${my_make} -f ${this_makefile} ${processing_verb}\" ... "
@@ -2401,7 +2400,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                     fi
 
                     # Comment out locsite lines
-                    locsite_lines=$(${my_egrep} -n -a "^.*locsite" "${source_code_dir}/${target_file}" | ${my_strings} | ${my_egrep} -v "#.*locsite")
+                    locsite_lines=$(${my_egrep} -n -a "^.*locsite" "${source_code_dir}/${target_file}" 2> /dev/null | ${my_strings} | ${my_egrep} -v "#.*locsite" | ${my_sed} -e 's?\ ?:ZZqC:?g')
 
                     for locsite_line in ${locsite_lines} ; do
                         this_line_number=$(echo "${locsite_line}" | ${my_awk} -F':' '{print $1}')
