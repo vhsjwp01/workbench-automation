@@ -120,6 +120,9 @@ if ( $exit_code == $SUCCESS ) {
             foreach $regex ( @regex ) {
                 $regex =~ s/[\n\r\t]//g;
 
+                # Escape $
+                $regex =~ s/\$/\\\$/g;
+
                 # Valid regex lines start with '("'
                 if ( $regex =~ /^\(\"/ ) {
                     ( $src_regex , $dst_regex ) = split( / . /, $regex );
@@ -245,6 +248,8 @@ if ( $exit_code == $SUCCESS ) {
 
         }
 
+        # Put $ back in
+        $output_line =~ s/\\\$/\$/g;
         print OUTPUT "$output_line\n";
     }
 
