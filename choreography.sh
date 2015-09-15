@@ -242,7 +242,7 @@ add_to_list() {
 #
 if [ ${exit_code} -eq ${SUCCESS} ]; then
 
-    for command in awk basename cp cut diff dirname egrep find id ls make mkdir pcregrep pwd rm rsync sed sort strings tee tr uname wc ; do
+    for command in awk basename cp cut diff dirname egrep find head id ls make mkdir pcregrep pwd rm rsync sed sort strings tee tr uname wc ; do
         unalias ${command} > /dev/null 2>&1
         f__check_command "${command}"
 
@@ -522,6 +522,7 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
     echo "CONFIG"
     processing_verb="config"
     param_dir="${PARAM}"
+    input_dir="${WB_AUTOMATE}/input"
     source_dir="${WB_AUTOMATE}/source"
     script_dir="${WB_AUTOMATE}/scripts"
 
@@ -564,45 +565,60 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
             done
 
             # Enable targets based on whether or not files exist in those targets
-            for target_dir in ${TARGETS} ; do
-                uc_target_dir=$(echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]')
-                target_dir_var=$(echo "${target_dir}" | ${my_sed} -e 's/\./_/g')
-                eval "file_ext=\$${target_dir_var}_ext"
+            TARGET_DIRS="${TARGETS}"
 
-                let is_commented_out=$(${my_egrep} -c -a "^%directory \"${uc_target_dir}\" type" "${param_dir}/system.desc")
+            while [ "${TARGET_DIRS}" != "" ]; do
+                target_dir=$(echo ${TARGET_DIRS} | ${my_awk} '{print $1}' | ${my_sed} -e 's?\ ??g')
 
-                if [ ${is_commented_out} -gt 0 ]; then
-                    begin_text="% BEGIN: ${uc_target_dir}-DIRECTORY-TARGETS"
-                    end_text="% END: ${uc_target_dir}-DIRECTORY-TARGETS"
-                    echo "        Initializing ${uc_target_dir} directory resources in \"${param_dir}/system.desc\""
-                    ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
+                if [ "${target_dir}" != "" ]; then
+                    TARGET_DIRS=$(echo ${TARGET_DIRS} | ${my_sed} -e "s?${target_dir}??g")
+                    uc_target_dir=$(echo "${target_dir}" | ${my_tr} '[a-z]' '[A-Z]')
+                    target_dir_var=$(echo "${target_dir}" | ${my_sed} -e 's/\./_/g')
+                    eval "file_ext=\$${target_dir_var}_ext"
 
-                    # Find any Library dependencies
-                    library_dependencies=$(${my_egrep} -A1 -a "directory.*\"${uc_target_dir}\"" "${param_dir}/system.desc" | ${my_strings} | ${my_egrep} "libraries" | ${my_sed} -e 's/[^A-Z,]//g' -e 's/,/\ /g')
+                    is_commented_out=$(${my_egrep} -n -a "^%directory \"${uc_target_dir}\" type" "${param_dir}/system.desc" | ${my_awk} -F':' '{print $1}')
 
-                    for library_dependency in ${library_dependencies} ; do
-                        library_dependency_var=$(echo "${library_dependency}" | ${my_sed} -e 's/\./_/g' | ${my_tr} '[A-Z]' '[a-z]')
-                        eval "dep_file_ext=\$${library_dependency_var}_ext"
-                        let dep_file_count=$(${my_find} "${source_dir}/${library_dependency}"/*.${dep_file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}')
+                    if [ "${is_commented_out}" != ""  ]; then
+                        echo "        Initializing ${uc_target_dir} directory resources in \"${param_dir}/system.desc\""
+                        ${my_sed} -i -e "${is_commented_out}s?^%\(.*\)\$?\1?g" "${param_dir}/system.desc"
 
-                        if [ ${dep_file_count} -gt 0 ]; then
-                            begin_text="% BEGIN: ${library_dependency}-DIRECTORY-TARGETS"
-                            end_text="% END: ${library_dependency}-DIRECTORY-TARGETS"
-                            echo "        Initializing ${uc_target_dir} directory resource dependencies in \"${param_dir}/system.desc\""
-                            ${my_sed} -i "/${begin_text}/,/${end_text}/{/${begin_text}/n;/${end_text}/!{s/^%\(.*\)$/\1/g}}" "${param_dir}/system.desc"
+                        # Find any Library dependencies
+                        library_dependency_line=""
+                        library_dependencies=$(${my_egrep} -n -a "^.*$" "${param_dir}/system.desc" 2> /dev/null | ${my_egrep} -A1 "directory \"${uc_target_dir}\" type" | ${my_egrep} "libraries")
+                        library_dependency_line_number=$(echo "${library_dependencies}" | ${my_awk} -F':' '{print $1}')
+                        library_dependencies=$(echo "${library_dependencies}" | ${my_sed} -e 's?^[0-9]*:??g' -e 's/[^A-Z,]//g' -e 's/,/\ /g')
 
-                            # Now add to TARGETS if absent
-                            lc_library_dependency=$(echo "${library_dependency} | ${my_tr} '[A-Z]' '[a-z]'")
-                            let is_a_target=$(echo "${TARGETS}" | ${my_sed} -e 's/\./_/g' | ${my_egrep} -c "\b${lc_library_dependency}\b")
+                        for library_dependency in ${library_dependencies} ; do
+                            library_dependency_var=$(echo "${library_dependency}" | ${my_sed} -e 's/\./_/g' | ${my_tr} '[A-Z]' '[a-z]')
+                            eval "dep_file_ext=\$${library_dependency_var}_ext"
+                            let dep_file_count=$(${my_find} "${input_dir}/${library_dependency}"/*.${dep_file_ext} -maxdepth 1 2> /dev/null | ${my_wc} -l | ${my_awk} '{print $1}')
 
-                            if [ ${is_a_target} -eq 0 ]; then
+                            if [ ${dep_file_count} -gt 0  ]; then
+
+                                # Now add to TARGETS 
+                                lc_library_dependency=$(echo "${library_dependency}" | ${my_tr} '[A-Z]' '[a-z]')
                                 add_to_list TARGETS "${lc_library_dependency}"
+                                TARGET_DIRS="${TARGET_DIRS} ${lc_library_dependency}"
+
+                                if [ "${library_dependency_line}" = ""  ]; then
+                                    library_dependency_line="libraries \"${library_dependency}\""
+                                else
+                                    library_dependency_line="${library_dependency_line} , \"${library_dependency}\""
+                                fi
+
                             fi
 
+                        done
+
+                        if [ "${library_dependency_line}" != ""  ];then
+                            echo "            Initializing ${uc_target_dir} directory resource dependencies in \"${param_dir}/system.desc\""
+                            ${my_sed} -i -e "${library_dependency_line_number}s?^%\(.*\)\(libraries.*\)\$?\1${library_dependency_line} \.?g" "${param_dir}/system.desc"
                         fi
 
-                    done
+                    fi
 
+                else
+                    break
                 fi
 
             done
