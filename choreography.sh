@@ -73,6 +73,9 @@
 #                                        Also added steps command line arg.
 #                                        Also added start_step command line arg.
 # 20150916     Jason W. Plummer          Added zero file size checking
+# 20150924     Jason W. Plummer          Fixed error in PFIX sed logic where
+#                                        all files in a directory were being
+#                                        operated on, rather than relevant ones
 
 ################################################################################
 # DESCRIPTION
@@ -1389,64 +1392,64 @@ if [ ${exit_code} -eq ${SUCCESS} ]; then
                         files_to_touch=$(${my_egrep} -H -a "15 CURSOR-ATTR-1     PIC S9\(9\) COMP VALUE \+16777152\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                         for file_to_touch in ${files_to_touch} ; do
-                            ${my_sed} -i 's/                 15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ptfix *          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
-                            ${my_sed} -i '/ptfix \*          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ a\ptfix            15 CURSOR-ATTR-1     PIC X(4) VALUE X'\''00FFFF20'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
+                            ${my_sed} -i 's/                 15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ptfix *          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./' "${file_to_touch}" &&
+                            ${my_sed} -i '/ptfix \*          15 CURSOR-ATTR-1     PIC S9(9) COMP VALUE +16777152./ a\ptfix            15 CURSOR-ATTR-1     PIC X(4) VALUE X'\''00FFFF20'\''.' "${file_to_touch}"
                         done
 
                         files_to_touch=$(${my_egrep} -H -a "15 FILLER            PIC S9\(9\) COMP VALUE \+16777160\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                         for file_to_touch in ${files_to_touch} ; do
-                            ${my_sed} -i 's/                 15 FILLER            PIC S9(9) COMP VALUE +16777160./ptfix *          15 FILLER            PIC S9(9) COMP VALUE +16777160./' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
-                            ${my_sed} -i '/ptfix \*          15 FILLER            PIC S9(9) COMP VALUE +16777160./ a\ptfix            15 FILLER            PIC X(4) VALUE X'\''00FFFF48'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
+                            ${my_sed} -i 's/                 15 FILLER            PIC S9(9) COMP VALUE +16777160./ptfix *          15 FILLER            PIC S9(9) COMP VALUE +16777160./' "${file_to_touch}" &&
+                            ${my_sed} -i '/ptfix \*          15 FILLER            PIC S9(9) COMP VALUE +16777160./ a\ptfix            15 FILLER            PIC X(4) VALUE X'\''00FFFF48'\''.' "${file_to_touch}"
                         done
 
                         files_to_touch=$(${my_egrep} -H -a "OK-ATTR-1         PIC S9\(9\) COMP VALUE \+4210880\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                         for file_to_touch in ${files_to_touch} ; do
-                            ${my_sed} -i 's/                 15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /ptfix *          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
-                            ${my_sed} -i '/ptfix \*          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. / a\ptfix            15 OK-ATTR-1         PIC X(4) VALUE X'\''00000020'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
+                            ${my_sed} -i 's/                 15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /ptfix *          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. /' "${file_to_touch}" &&
+                            ${my_sed} -i '/ptfix \*          15 OK-ATTR-1         PIC S9(9) COMP VALUE +4210880. / a\ptfix            15 OK-ATTR-1         PIC X(4) VALUE X'\''00000020'\''.' "${file_to_touch}"
                         done
 
                         files_to_touch=$(${my_egrep} -H -a "15 PROT-ATTR-1       PIC S9\(9\) COMP VALUE \+4210928\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                         for file_to_touch in ${files_to_touch} ; do
-                            ${my_sed} -i 's/                 15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /ptfix *          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
-                            ${my_sed} -i '/ptfix \*          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. / a\ptfix            15 PROT-ATTR-1       PIC X(4) VALUE X'\''00000030'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
+                            ${my_sed} -i 's/                 15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /ptfix *          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. /' "${file_to_touch}" &&
+                            ${my_sed} -i '/ptfix \*          15 PROT-ATTR-1       PIC S9(9) COMP VALUE +4210928. / a\ptfix            15 PROT-ATTR-1       PIC X(4) VALUE X'\''00000030'\''.' "${file_to_touch}"
                         done
 
                         files_to_touch=$(${my_egrep} -H -a "15 BLANK-ATTR-1      PIC S9\(9\) COMP VALUE \+4210940\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                         for file_to_touch in ${files_to_touch} ; do
-                            ${my_sed} -i 's/                 15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /ptfix *          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
-                            ${my_sed} -i '/ptfix \*          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. / a\ptfix            15 BLANK-ATTR-1      PIC X(4) VALUE X'\''00000025'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
+                            ${my_sed} -i 's/                 15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /ptfix *          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. /' "${file_to_touch}" &&
+                            ${my_sed} -i '/ptfix \*          15 BLANK-ATTR-1      PIC S9(9) COMP VALUE +4210940. / a\ptfix            15 BLANK-ATTR-1      PIC X(4) VALUE X'\''00000025'\''.' "${file_to_touch}"
                         done
 
                         files_to_touch=$(${my_egrep} -H -a "15 CBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+16777164\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                         for file_to_touch in ${files_to_touch} ; do
-                            ${my_sed} -i 's/                 15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ptfix *          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
-                            ${my_sed} -i '/ptfix \*          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ a\ptfix            15 CBLANK-ATTR-1     PIC X(4) VALUE X'\''00FFFF3C'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
+                            ${my_sed} -i 's/                 15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ptfix *          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./' "${file_to_touch}" &&
+                            ${my_sed} -i '/ptfix \*          15 CBLANK-ATTR-1     PIC S9(9) COMP VALUE +16777164./ a\ptfix            15 CBLANK-ATTR-1     PIC X(4) VALUE X'\''00FFFF3C'\''.' "${file_to_touch}"
                         done
 
                         files_to_touch=$(${my_egrep} -H -a "15 IBLANK-ATTR-1     PIC S9\(9\) COMP VALUE \+4210892\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                         for file_to_touch in ${files_to_touch} ; do
-                            ${my_sed} -i 's/                 15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /ptfix *          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
-                            ${my_sed} -i '/ptfix \*          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. / a\ptfix            15 IBLANK-ATTR-1     PIC X(4) VALUE X'\''0000003C'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
+                            ${my_sed} -i 's/                 15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /ptfix *          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. /' "${file_to_touch}" &&
+                            ${my_sed} -i '/ptfix \*          15 IBLANK-ATTR-1     PIC S9(9) COMP VALUE +4210892. / a\ptfix            15 IBLANK-ATTR-1     PIC X(4) VALUE X'\''0000003C'\''.' "${file_to_touch}"
                         done
 
                         files_to_touch=$(${my_egrep} -H -a "15 OHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210936\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                         for file_to_touch in ${files_to_touch} ; do
-                            ${my_sed} -i 's/                 15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /ptfix *          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
-                            ${my_sed} -i '/ptfix \*          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. / a\ptfix            15 OHIGH-ATTR-1      PIC X(4) VALUE X'\''00000038'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
+                            ${my_sed} -i 's/                 15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /ptfix *          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. /' "${file_to_touch}" &&
+                            ${my_sed} -i '/ptfix \*          15 OHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210936. / a\ptfix            15 OHIGH-ATTR-1      PIC X(4) VALUE X'\''00000038'\''.' "${file_to_touch}"
                         done
 
                         files_to_touch=$(${my_egrep} -H -a "15 IHIGH-ATTR-1      PIC S9\(9\) COMP VALUE \+4210888\." "${prepared_dir}/${uc_target_dir}"/*.${file_ext} 2> /dev/null | ${my_strings} | ${my_awk} -F':' '{print $1}' | ${my_sort} -u)
 
                         for file_to_touch in ${files_to_touch} ; do
-                            ${my_sed} -i 's/                 15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /ptfix *          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /' "${prepared_dir}/${uc_target_dir}"/*.${file_ext} &&
-                            ${my_sed} -i '/ptfix \*          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. / a\ptfix            15 IHIGH-ATTR-1      PIC X(4) VALUE X'\''00000048'\''.' "${prepared_dir}/${uc_target_dir}"/*.${file_ext}
+                            ${my_sed} -i 's/                 15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /ptfix *          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. /' "${file_to_touch}" &&
+                            ${my_sed} -i '/ptfix \*          15 IHIGH-ATTR-1      PIC S9(9) COMP VALUE +4210888. / a\ptfix            15 IHIGH-ATTR-1      PIC X(4) VALUE X'\''00000048'\''.' "${file_to_touch}"
                         done
 
                         if [ ${?} -eq ${SUCCESS} ]; then
