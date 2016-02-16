@@ -76,6 +76,7 @@
 # 20150924     Jason W. Plummer          Fixed error in PFIX sed logic where
 #                                        all files in a directory were being
 #                                        operated on, rather than relevant ones
+# 20160216     Jason W. Plummer          Made --file_schemas optional
 
 ################################################################################
 # DESCRIPTION
@@ -94,9 +95,9 @@
 #                           (OPTIONAL)
 # --wb_toolpath           - The ART Work Bench tool path (Default: ART 13)
 # --target_COBOL_compiler - The COBOL compiler to use    (Default: COBOL-IT)
-# --file_schemas          - The Project Name to use in reporting (OPTIONAL)
 # --rdbms_schemas         - A space or comma separated list of RDBMS schemas
 # --file_schemas          - A space or comma separated list of file schemas
+#                           (OPTIONAL)
 # --fatal_check           - An on/off toggle for FATAL report checking (OPTIONAL)
 # --error_check           - An on/off toggle for ERROR report checking (OPTIONAL)
 # --warning_check         - An on/off toggle for WARNING report checking (OPTIONAL)
@@ -131,7 +132,7 @@ SCRIPT_NAME="${0}"
 USAGE_ENDLINE="\n${STDOUT_OFFSET}${STDOUT_OFFSET}${STDOUT_OFFSET}${STDOUT_OFFSET}"
 USAGE="${SCRIPT_NAME}${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --wb_workdir            <Path to Work Bench base directory                *REQUIRED*> ]${USAGE_ENDLINE}"
-USAGE="${USAGE}[ --file_schemas          <A space or comma separated list of file schemas  *REQUIRED*> ]${USAGE_ENDLINE}"
+USAGE="${USAGE}[ --file_schemas          <A space or comma separated list of file schemas  *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --project_name          <The Project Name to use in reporting             *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --input_targets         <A list of directories from which to draw input   *OPTIONAL*> ]${USAGE_ENDLINE}"
 USAGE="${USAGE}[ --wb_toolpath           <The ART Work Bench tool path (Default: ART 13)   *OPTIONAL*> ]${USAGE_ENDLINE}"
